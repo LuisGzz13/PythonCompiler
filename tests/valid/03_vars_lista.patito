@@ -1,0 +1,8 @@
+programa varsLista;
+vars
+    a, b, c : entero;
+    x, y : flotante;
+inicio
+{
+}
+fin

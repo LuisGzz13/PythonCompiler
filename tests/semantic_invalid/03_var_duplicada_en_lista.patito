@@ -1,0 +1,7 @@
+programa varDupEnLista;
+vars
+    a, b, a : entero;
+inicio
+{
+}
+fin

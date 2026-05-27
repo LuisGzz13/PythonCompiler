@@ -1,0 +1,9 @@
+programa mixto;
+vars
+    a, b : entero;
+    p : flotante;
+inicio
+{
+    p = a + b;
+}
+fin

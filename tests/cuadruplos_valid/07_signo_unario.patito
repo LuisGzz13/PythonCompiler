@@ -1,0 +1,8 @@
+programa signoUn;
+vars
+    a, x : entero;
+inicio
+{
+    x = -a + 1;
+}
+fin

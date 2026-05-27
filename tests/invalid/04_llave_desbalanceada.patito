@@ -1,0 +1,8 @@
+programa llaveDesb;
+vars
+    x : entero;
+inicio
+{
+    x = 1;
+
+fin

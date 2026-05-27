@@ -1,0 +1,11 @@
+programa paramDup;
+
+nula func(x : entero, y : flotante, x : entero) {
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

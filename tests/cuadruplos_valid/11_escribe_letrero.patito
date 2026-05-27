@@ -1,0 +1,8 @@
+programa escLet;
+inicio
+{
+    escribe("hola");
+    escribe("mundo");
+    escribe("hola");
+}
+fin

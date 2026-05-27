@@ -1,0 +1,8 @@
+programa sumaSimple;
+vars
+    a, b, x : entero;
+inicio
+{
+    x = a + b;
+}
+fin

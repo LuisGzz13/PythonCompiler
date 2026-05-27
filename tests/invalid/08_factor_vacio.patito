@@ -1,0 +1,8 @@
+programa factorVacio;
+vars
+    x : entero;
+inicio
+{
+    x = 1 + ;
+}
+fin

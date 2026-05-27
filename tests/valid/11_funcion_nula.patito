@@ -1,0 +1,16 @@
+programa funcionNula;
+vars
+    x : entero;
+
+nula saludar() {
+    {
+        escribe("Hola desde una funcion");
+    }
+} ;
+
+inicio
+{
+    saludar();
+    x = 5;
+}
+fin

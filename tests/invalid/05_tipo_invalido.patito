@@ -1,0 +1,7 @@
+programa tipoMalo;
+vars
+    nombre : cadena;
+inicio
+{
+}
+fin

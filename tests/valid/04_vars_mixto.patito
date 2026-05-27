@@ -1,0 +1,10 @@
+programa varsMixto;
+vars
+    contador : entero;
+    promedio : flotante;
+    i, j, k : entero;
+    pi, e : flotante;
+inicio
+{
+}
+fin

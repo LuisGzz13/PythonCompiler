@@ -1,0 +1,9 @@
+programa flot;
+vars
+    p, r : flotante;
+inicio
+{
+    p = 3.14 * 2.0;
+    r = p + 0.5;
+}
+fin

@@ -1,0 +1,13 @@
+programa listaVars;
+vars
+    a, b, c : entero;
+    p, q : flotante;
+inicio
+{
+    a = 1;
+    b = 2;
+    c = a + b;
+    p = 3.14;
+    q = p;
+}
+fin

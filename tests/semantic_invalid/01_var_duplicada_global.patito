@@ -1,0 +1,8 @@
+programa varDupGlobal;
+vars
+    x : entero;
+    x : flotante;
+inicio
+{
+}
+fin

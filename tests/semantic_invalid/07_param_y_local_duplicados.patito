@@ -1,0 +1,13 @@
+programa paramLocalDup;
+
+nula func(x : entero) {
+    vars
+        x : flotante;
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

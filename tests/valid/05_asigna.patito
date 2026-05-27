@@ -1,0 +1,12 @@
+programa asigna;
+vars
+    a, b : entero;
+    p : flotante;
+inicio
+{
+    a = 10;
+    b = a;
+    a = b + 5;
+    p = 3.14;
+}
+fin

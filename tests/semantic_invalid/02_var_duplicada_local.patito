@@ -1,0 +1,14 @@
+programa varDupLocal;
+
+nula funcion() {
+    vars
+        x : entero;
+        x : flotante;
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

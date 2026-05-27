@@ -1,0 +1,8 @@
+programa asociaIzq;
+vars
+    x : entero;
+inicio
+{
+    x = 10 - 3 - 2;
+}
+fin

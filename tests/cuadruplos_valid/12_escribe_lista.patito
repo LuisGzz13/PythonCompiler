@@ -1,0 +1,9 @@
+programa escLista;
+vars
+    x, a, b : entero;
+inicio
+{
+    x = 5;
+    escribe("x vale ", x, " y a+b es ", a + b);
+}
+fin

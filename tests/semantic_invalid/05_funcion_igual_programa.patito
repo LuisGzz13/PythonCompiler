@@ -1,0 +1,11 @@
+programa miPrograma;
+
+nula miPrograma() {
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

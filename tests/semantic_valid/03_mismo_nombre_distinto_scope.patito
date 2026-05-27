@@ -1,0 +1,23 @@
+programa scopesIndependientes;
+vars
+    x : entero;
+
+nula primera(x : flotante) {
+    {
+        escribe(x);
+    }
+} ;
+
+nula segunda() {
+    vars
+        x : entero;
+    {
+        x = 5;
+    }
+} ;
+
+inicio
+{
+    x = 1;
+}
+fin

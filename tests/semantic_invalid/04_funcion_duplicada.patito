@@ -1,0 +1,16 @@
+programa funcDup;
+
+nula procesar() {
+    {
+    }
+} ;
+
+nula procesar(x : entero) {
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

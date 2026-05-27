@@ -1,0 +1,9 @@
+programa rel;
+vars
+    a, b : entero;
+inicio
+{
+    escribe(a < b);
+    escribe(a == b);
+}
+fin

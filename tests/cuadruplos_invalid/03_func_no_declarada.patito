@@ -1,0 +1,8 @@
+programa funcNoDecl;
+vars
+    x : entero;
+inicio
+{
+    x = noExiste() + 1;
+}
+fin

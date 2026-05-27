@@ -1,0 +1,9 @@
+programa basico;
+vars
+    contador : entero;
+    promedio : flotante;
+inicio
+{
+    contador = 0;
+}
+fin

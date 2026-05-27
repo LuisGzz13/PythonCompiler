@@ -1,0 +1,26 @@
+programa funcionParams;
+vars
+    r : entero;
+
+nula sumar(a : entero, b : entero) {
+    vars
+        s : entero;
+    {
+        s = a + b;
+        escribe("suma = ", s);
+    }
+} ;
+
+nula mezcla(x : entero, p : flotante, q : flotante) {
+    {
+        escribe(x, p, q);
+    }
+} ;
+
+inicio
+{
+    sumar(3, 4);
+    mezcla(1, 2.5, 3.5);
+    r = 0;
+}
+fin

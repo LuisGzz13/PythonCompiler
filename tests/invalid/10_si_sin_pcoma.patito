@@ -1,0 +1,11 @@
+programa siMalo;
+vars
+    x : entero;
+inicio
+{
+    si (x > 0) {
+        x = 1;
+    }
+    x = 2;
+}
+fin

@@ -1,0 +1,8 @@
+programa asignaVar;
+vars
+    a, x : entero;
+inicio
+{
+    x = a;
+}
+fin

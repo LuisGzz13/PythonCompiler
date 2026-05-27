@@ -1,0 +1,8 @@
+programa parens;
+vars
+    a, b, c, x : entero;
+inicio
+{
+    x = (a + b) * c;
+}
+fin

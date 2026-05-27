@@ -1,0 +1,23 @@
+programa funciones;
+vars
+    n : entero;
+
+nula calcular(x : entero, y : flotante) {
+    vars
+        z : flotante;
+    {
+        z = y;
+    }
+} ;
+
+nula otra() {
+    {
+        escribe("otra");
+    }
+} ;
+
+inicio
+{
+    n = 10;
+}
+fin

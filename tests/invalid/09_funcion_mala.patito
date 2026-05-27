@@ -1,0 +1,11 @@
+programa funcionMala;
+
+nula sinParens {
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

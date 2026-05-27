@@ -1,0 +1,32 @@
+programa llamadas;
+vars
+    a, b : entero;
+
+nula uno() {
+    {
+        escribe(1);
+    }
+} ;
+
+nula imprimir(x : entero) {
+    {
+        escribe("valor = ", x);
+    }
+} ;
+
+entero obtener() {
+    {
+    }
+} ;
+
+inicio
+{
+    uno();
+    imprimir(42);
+    imprimir(a + 1);
+    imprimir(a * 2 + 3);
+    a = 10;
+    a = obtener() + 1;
+    b = (obtener() * 2) - obtener();
+}
+fin

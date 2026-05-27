@@ -1,0 +1,8 @@
+programa flotAEnt;
+vars
+    x : entero;
+inicio
+{
+    x = 3.14;
+}
+fin

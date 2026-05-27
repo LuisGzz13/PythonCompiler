@@ -1,0 +1,6 @@
+programa letreroMalo;
+inicio
+{
+    escribe("hola sin cerrar);
+}
+fin

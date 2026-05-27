@@ -1,0 +1,17 @@
+programa ciclo;
+vars
+    i, n, suma : entero;
+inicio
+{
+    i = 0;
+    n = 10;
+    suma = 0;
+    mientras (i < n) haz {
+        suma = suma + i;
+        i = i + 1;
+    } ;
+    mientras (suma > 0) haz {
+        suma = suma - 1;
+    } ;
+}
+fin

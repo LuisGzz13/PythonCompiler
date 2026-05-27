@@ -1,0 +1,20 @@
+programa funcDupConVars;
+
+nula procesar() {
+    vars
+        a : entero;
+    {
+    }
+} ;
+
+nula procesar() {
+    vars
+        b : entero;
+    {
+    }
+} ;
+
+inicio
+{
+}
+fin

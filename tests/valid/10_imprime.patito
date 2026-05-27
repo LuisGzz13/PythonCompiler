@@ -1,0 +1,16 @@
+programa imprime;
+vars
+    x : entero;
+    p : flotante;
+inicio
+{
+    x = 7;
+    p = 2.5;
+    escribe("Hola mundo");
+    escribe(x);
+    escribe(p);
+    escribe(x + 1);
+    escribe("x vale ", x);
+    escribe("suma: ", x + 1, " y ", p * 2.0);
+}
+fin

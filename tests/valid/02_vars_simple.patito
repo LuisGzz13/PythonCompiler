@@ -1,0 +1,7 @@
+programa varsSimple;
+vars
+    x : entero;
+inicio
+{
+}
+fin

@@ -1,0 +1,41 @@
+programa completo;
+vars
+    n, i, factorial : entero;
+    promedio : flotante;
+
+nula imprimirRango(desde : entero, hasta : entero) {
+    vars
+        k : entero;
+    {
+        k = desde;
+        mientras (k < hasta) haz {
+            escribe("k = ", k);
+            k = k + 1;
+        } ;
+    }
+} ;
+
+inicio
+{
+    n = 5;
+    factorial = 1;
+    i = 1;
+    mientras (i < n + 1) haz {
+        factorial = factorial * i;
+        i = i + 1;
+    } ;
+    escribe("factorial de ", n, " = ", factorial);
+
+    si (factorial > 100) {
+        escribe("es grande");
+    } sino {
+        escribe("es chico");
+    } ;
+
+    promedio = 0.0;
+    promedio = (1.0 + 2.0 + 3.0 + 4.0 + 5.0) / 5.0;
+    escribe("promedio = ", promedio);
+
+    imprimirRango(0, 3);
+}
+fin

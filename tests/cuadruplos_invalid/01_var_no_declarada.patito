@@ -1,0 +1,8 @@
+programa varNoDecl;
+vars
+    x : entero;
+inicio
+{
+    x = y;
+}
+fin

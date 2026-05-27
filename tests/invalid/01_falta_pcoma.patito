@@ -1,0 +1,7 @@
+programa faltaPcoma;
+vars
+    x : entero
+inicio
+{
+}
+fin

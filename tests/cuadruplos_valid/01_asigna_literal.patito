@@ -1,0 +1,8 @@
+programa asignaLit;
+vars
+    x : entero;
+inicio
+{
+    x = 5;
+}
+fin

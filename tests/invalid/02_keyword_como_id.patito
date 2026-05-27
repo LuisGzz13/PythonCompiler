@@ -1,0 +1,7 @@
+programa keywordId;
+vars
+    entero : entero;
+inicio
+{
+}
+fin
