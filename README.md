@@ -103,38 +103,3 @@ pytest --lf                     # solo los que fallaron antes
 
 Ver `tests/README.md` para el detalle de las 6 suites y que esperar mientras
 avanzas las sesiones.
-
-## Estructura
-
-```
-patito-py/
-├── README.md               este archivo
-├── requirements.txt
-├── .gitignore
-├── grammar/
-│   └── Patito.g4           gramatica ANTLR (input al generador)
-├── generated/              autogenerado por ANTLR — no editar
-│   ├── PatitoLexer.py
-│   ├── PatitoParser.py
-│   ├── PatitoListener.py
-│   └── PatitoVisitor.py
-├── patito.py               codigo del compilador (tablas, listener, codegen, main)
-├── cubo.py                 cubo semantico (tabla de tipos)
-├── tests/
-│   ├── test_compiler.py    runner de pytest
-│   ├── conftest.py
-│   ├── README.md           explicacion de las 6 suites
-│   └── {valid,invalid,semantic_valid,semantic_invalid,cuadruplos_valid,cuadruplos_invalid}/
-│                           51 archivos .patito de fixtures
-└── docs/                   documentacion por etapa (Markdown)
-```
-
-## Etapas del compilador
-
-| Etapa | Que hace | Donde vive |
-|---|---|---|
-| 1 | Lexico + Sintaxis | autogenerado por ANTLR + driver minimo |
-| 2 | Analisis semantico (tablas + cubo) | `patito.py` + `cubo.py` |
-| 3 | Generacion de cuadruplos | `patito.py` |
-| 4 | Control de flujo + llamadas | (pendiente) |
-| 5 | Maquina virtual | (pendiente) |
