@@ -1,0 +1,8 @@
+programa boolArit;
+vars
+    a, b, x : entero;
+inicio
+{
+    x = (a < b) + 1;
+}
+fin

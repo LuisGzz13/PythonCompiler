@@ -1,0 +1,15 @@
+programa nulaEnExpr;
+vars
+    x : entero;
+
+nula saludar() {
+    {
+        escribe("hola");
+    }
+} ;
+
+inicio
+{
+    x = saludar() + 1;
+}
+fin

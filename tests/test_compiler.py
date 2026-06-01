@@ -1,31 +1,12 @@
 """
 Suite de pruebas del compilador Patito (Python).
 
-Cada test invoca `python patito.py archivo.patito` como subproceso y verifica el
-exit code. Esto duplica el contrato del runner C++ (un programa valido sale con
-0, uno con errores sale con != 0).
+Cada test invoca `python patito.py archivo.patito` como subproceso y verifica:
+  1. exit code esperado (0 para valido, != 0 para invalido)
+  2. stderr esperado (vacio para valido, con al menos un error para invalido)
 
-Las 6 carpetas representan las 3 capas del compilador, cada una con su variante
-valida e invalida:
-
-    valid/                 sintaxis OK    -> exit 0   (Etapa 1)
-    invalid/               sintaxis FAIL  -> exit != 0 (Etapa 1)
-    semantic_valid/        semantica OK   -> exit 0   (Etapa 2)
-    semantic_invalid/      semantica FAIL -> exit != 0 (Etapa 2)
-    cuadruplos_valid/      codigo OK      -> exit 0   (Etapa 3)
-    cuadruplos_invalid/    codigo FAIL    -> exit != 0 (Etapa 3)
-
-Mientras vas avanzando las sesiones, mas tests iran pasando:
-    Sesion 1: pasan valid/, invalid/ (parser solo)
-    Sesion 4: ademas semantic_valid/, semantic_invalid/
-    Sesion 5: ademas cuadruplos_valid/, cuadruplos_invalid/
-
-Uso:
-    pytest -v                       # corre todo, output detallado
-    pytest -v -k "sintaxis"         # solo tests de sintaxis (Etapa 1)
-    pytest -v tests/test_compiler.py::test_cuadruplos_valid  # una sola suite
-    pytest -x                       # se detiene al primer fallo
-    pytest --lf                     # corre solo los que fallaron la vez pasada
+Esto cierra el hueco de que pytest solo veia exit codes y no se daba cuenta
+si los mensajes de error salian bien (o si salia ruido en programas validos).
 """
 
 import subprocess
@@ -34,33 +15,44 @@ from pathlib import Path
 
 import pytest
 
-# ----------------------------------------------------------------------
-# Localizacion de paths
-# ----------------------------------------------------------------------
-ROOT = Path(__file__).parent.parent          # carpeta Patito-Python/
-PATITO = ROOT / "patito.py"                  # el compilador
-TESTS = ROOT / "tests"                       # carpeta de fixtures
+ROOT = Path(__file__).parent.parent
+PATITO = ROOT / "patito.py"
+TESTS = ROOT / "tests"
 
 
-def _ejecutar(archivo: Path) -> int:
-    """Corre el compilador contra `archivo` y devuelve el exit code."""
+def _ejecutar(archivo: Path):
+    """Corre el compilador y devuelve (exit_code, stdout, stderr)."""
     r = subprocess.run(
         [sys.executable, str(PATITO), str(archivo)],
         capture_output=True,
         text=True,
         timeout=10,
     )
-    return r.returncode
+    return r.returncode, r.stdout, r.stderr
 
 
-def _archivos(subdir: str) -> list[Path]:
-    """Devuelve la lista ordenada de .patito en la subcarpeta."""
+def _archivos(subdir: str):
     return sorted((TESTS / subdir).glob("*.patito"))
 
 
 def _id(p: Path) -> str:
-    """ID legible que aparece en la salida de pytest (ej. '01_minimo.patito')."""
     return p.name
+
+
+def _check_valido(archivo: Path):
+    """Helper: programa valido debe salir 0 con stderr limpio."""
+    code, _, stderr = _ejecutar(archivo)
+    assert code == 0, f"esperado exit 0, hubo {code}. stderr: {stderr[:200]}"
+    assert stderr.strip() == "", \
+        f"esperado stderr vacio para programa valido, pero hubo: {stderr[:200]}"
+
+
+def _check_invalido(archivo: Path):
+    """Helper: programa invalido debe salir != 0 con al menos un error en stderr."""
+    code, _, stderr = _ejecutar(archivo)
+    assert code != 0, f"esperado exit != 0 para programa invalido"
+    assert stderr.strip() != "", \
+        f"programa invalido salio con exit {code} pero sin reportar error en stderr"
 
 
 # ----------------------------------------------------------------------
@@ -68,14 +60,12 @@ def _id(p: Path) -> str:
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("archivo", _archivos("valid"), ids=_id)
 def test_sintaxis_valida(archivo):
-    """Programas sintacticamente correctos: el compilador debe aceptar (exit 0)."""
-    assert _ejecutar(archivo) == 0, f"se esperaba exit 0 para {archivo.name}"
+    _check_valido(archivo)
 
 
 @pytest.mark.parametrize("archivo", _archivos("invalid"), ids=_id)
 def test_sintaxis_invalida(archivo):
-    """Programas con errores de sintaxis: el compilador debe rechazar (exit != 0)."""
-    assert _ejecutar(archivo) != 0, f"se esperaba exit != 0 para {archivo.name}"
+    _check_invalido(archivo)
 
 
 # ----------------------------------------------------------------------
@@ -83,14 +73,12 @@ def test_sintaxis_invalida(archivo):
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("archivo", _archivos("semantic_valid"), ids=_id)
 def test_semantica_valida(archivo):
-    """Sintaxis y semantica correctas: el compilador debe aceptar (exit 0)."""
-    assert _ejecutar(archivo) == 0, f"se esperaba exit 0 para {archivo.name}"
+    _check_valido(archivo)
 
 
 @pytest.mark.parametrize("archivo", _archivos("semantic_invalid"), ids=_id)
 def test_semantica_invalida(archivo):
-    """Errores semanticos (variables/funciones duplicadas, etc.): exit != 0."""
-    assert _ejecutar(archivo) != 0, f"se esperaba exit != 0 para {archivo.name}"
+    _check_invalido(archivo)
 
 
 # ----------------------------------------------------------------------
@@ -98,11 +86,9 @@ def test_semantica_invalida(archivo):
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("archivo", _archivos("cuadruplos_valid"), ids=_id)
 def test_cuadruplos_valida(archivo):
-    """Programas que generan codigo correctamente: exit 0."""
-    assert _ejecutar(archivo) == 0, f"se esperaba exit 0 para {archivo.name}"
+    _check_valido(archivo)
 
 
 @pytest.mark.parametrize("archivo", _archivos("cuadruplos_invalid"), ids=_id)
 def test_cuadruplos_invalida(archivo):
-    """Errores en expresiones (var no declarada, tipos incompatibles, etc.): exit != 0."""
-    assert _ejecutar(archivo) != 0, f"se esperaba exit != 0 para {archivo.name}"
+    _check_invalido(archivo)
