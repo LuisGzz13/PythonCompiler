@@ -1,0 +1,16 @@
+programa argTipoMalo;
+vars
+    r : entero;
+
+nula f(a : entero) {
+    {
+        escribe(a);
+    }
+} ;
+
+inicio
+{
+    f(3.5);
+    r = 0;
+}
+fin

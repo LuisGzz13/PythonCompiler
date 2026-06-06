@@ -1,0 +1,16 @@
+programa argsDeMas;
+vars
+    r : entero;
+
+nula f(a : entero) {
+    {
+        escribe(a);
+    }
+} ;
+
+inicio
+{
+    f(1, 2);
+    r = 0;
+}
+fin

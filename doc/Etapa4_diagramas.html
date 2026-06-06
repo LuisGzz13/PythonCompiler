@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito · Etapa 4 — Diagramas de puntos neurálgicos</title>
+<style>
+  :root{
+    --ink:#1f2937; --muted:#6b7280;
+    --pn:#f59e0b; --gotof:#d97706; --goto:#2563eb; --gosub:#059669;
+  }
+  *{ box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        color:var(--ink); background:#f1f5f9; margin:0; padding:0 0 70px; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 20px; }
+  header.top{ background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; padding:34px 0; margin-bottom:24px; }
+  header.top h1{ margin:0 0 6px; font-size:26px; }
+  header.top p{ margin:0; opacity:.92; font-size:15px; }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:22px 24px;
+         margin:0 0 22px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card h2{ margin:0 0 4px; font-size:19px; }
+  .card h2 .num{ display:inline-flex; width:27px; height:27px; align-items:center; justify-content:center;
+                 background:#4f46e5; color:#fff; border-radius:7px; font-size:14px; margin-right:10px;
+                 vertical-align:middle; }
+  .sub{ color:var(--muted); margin:2px 0 14px; font-size:14px; }
+  .sub code{ background:#f3f4f6; padding:1px 6px; border-radius:5px; font-size:13px; }
+  .desc{ margin:14px 0 0; padding:0; list-style:none; }
+  .desc li{ padding:8px 0 8px 28px; position:relative; border-top:1px dashed #e5e7eb; font-size:14px; line-height:1.45; }
+  .desc li:before{ content:""; position:absolute; left:5px; top:14px; width:11px; height:11px;
+                   border-radius:50%; background:var(--pn); }
+  .desc b{ color:#92400e; }
+  .desc code, .note code{ background:#f3f4f6; padding:1px 5px; border-radius:4px; font-size:12.5px;
+          font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .legend{ display:flex; flex-wrap:wrap; gap:16px 20px; margin:0; padding:16px 18px; font-size:13px;
+           background:#fff; border:1px solid #e5e7eb; border-radius:12px; }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .sw{ width:24px; height:0; border-top-width:3px; border-top-style:solid; display:inline-block; }
+  .swb{ width:15px; height:15px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,.15); }
+  .note{ background:#fffbeb; border-left:4px solid #f59e0b; padding:11px 15px; border-radius:8px;
+         font-size:13.5px; margin-top:16px; line-height:1.5; }
+  svg{ display:block; width:100%; height:auto; margin:8px 0 2px; }
+  svg text{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; fill:#111827; }
+  svg text.idx{ fill:#9ca3af; font-size:12px; }
+  svg text.pn{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:12.5px; fill:#92400e; }
+  svg text.lbl{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#374151; }
+  svg text.ttl{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:13px; fill:#fff; font-weight:600; }
+  svg rect.quad{ fill:#eef2ff; stroke:#a5b4fc; stroke-width:1.3; }
+  svg rect.box{ fill:#ecfeff; stroke:#67e8f9; stroke-width:1.3; }
+  svg rect.def{ fill:#ecfdf5; stroke:#6ee7b7; stroke-width:1.3; }
+  svg path.jump{ fill:none; stroke-width:2; }
+  footer{ text-align:center; color:#9ca3af; font-size:12.5px; margin-top:30px; }
+</style>
+</head>
+<body>
+
+<!-- marcadores de flecha (compartidos por todos los diagramas) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ah-amber" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/></marker>
+  <marker id="ah-blue"  markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"/></marker>
+  <marker id="ah-green" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"/></marker>
+</defs></svg>
+
+<header class="top"><div class="wrap">
+  <h1>Patito · Etapa 4 — Puntos neurálgicos (diagramas)</h1>
+  <p>Generación de código para control de flujo (<code style="color:#fff">si/sino</code>, <code style="color:#fff">mientras</code>) y funciones (<code style="color:#fff">ERA/PARAM/GOSUB/ENDFUNC</code>). Complemento visual de <code style="color:#fff">doc/Etapa4.md</code>.</p>
+</div></header>
+
+<div class="wrap">
+
+  <div class="legend">
+    <span><span class="swb" style="background:#eef2ff"></span> Cuádruplo emitido</span>
+    <span><span class="swb" style="background:#ecfeff"></span> Bloque de código</span>
+    <span><span class="swb" style="background:#fef3c7;border-color:#f59e0b"></span> Punto neurálgico (acción)</span>
+    <span><span class="sw" style="border-top-color:#d97706"></span> Salto <code>GOTOF</code> (si falso)</span>
+    <span><span class="sw" style="border-top-color:#2563eb"></span> Salto <code>GOTO</code></span>
+    <span><span class="sw" style="border-top-color:#059669"></span> Salto <code>GOSUB</code></span>
+  </div>
+  <div style="height:22px"></div>
+
+  <!-- ============================================================ -->
+  <!-- A. ESQUELETO -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">A</span> Esqueleto del programa — <code>GOTO</code>-main</h2>
+    <p class="sub">Las funciones se declaran <b>antes</b> de <code>inicio</code>, así que sus cuádruplos quedan primero. El <code>GOTO</code> del índice 0 brinca sobre ellas hasta <code>main</code>.</p>
+
+    <svg viewBox="0 0 920 232" role="img" aria-label="Diagrama del esqueleto del programa">
+      <!-- filas -->
+      <text class="idx" x="56" y="45" text-anchor="end">[0]</text>
+      <rect class="quad" x="70" y="24" width="320" height="32" rx="6"/>
+      <text x="86" y="45">(GOTO, _, _, main)</text>
+
+      <rect class="box" x="70" y="72" width="320" height="40" rx="6"/>
+      <text class="idx" x="56" y="96" text-anchor="end">[1+]</text>
+      <text class="lbl" x="86" y="96">··· cuerpo de la función f ···</text>
+
+      <text class="idx" x="56" y="149" text-anchor="end">[k]</text>
+      <rect class="quad" x="70" y="128" width="320" height="32" rx="6"/>
+      <text x="86" y="149">(ENDFUNC, _, _, _)</text>
+
+      <rect class="box" x="70" y="176" width="320" height="40" rx="6"/>
+      <text class="idx" x="56" y="200" text-anchor="end">[k+1]</text>
+      <text class="lbl" x="86" y="200">··· inicio: cuerpo de main ···</text>
+
+      <!-- flecha GOTO -> main -->
+      <path class="jump" d="M 390,40 C 482,40 482,196 398,196" stroke="#2563eb" marker-end="url(#ah-blue)"/>
+
+      <!-- anotaciones PN -->
+      <text class="pn" x="512" y="38">enterPrograma → emite el GOTO (índice 0)</text>
+      <text class="pn" x="512" y="52">enterCuerpo(main) → lo backpatchea ↓</text>
+      <text class="pn" x="512" y="96">enterFuncs → graba cuad_inicio = 1</text>
+      <text class="pn" x="512" y="149">exitFuncs → emite ENDFUNC</text>
+      <text class="pn" x="512" y="200">◄ destino del GOTO-main (arranque real)</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b>enterPrograma</b> emite <code>(GOTO, _, _, ?)</code> en el índice 0 y guarda su índice en <code>idx_goto_main</code>.</li>
+      <li><b>enterFuncs</b> graba <code>cuad_inicio = len(fila)</code> — el destino al que saltará el <code>GOSUB</code> de cada llamada.</li>
+      <li><b>exitFuncs</b> emite <code>ENDFUNC</code> al cerrar el cuerpo de la función.</li>
+      <li><b>enterCuerpo</b> (sólo para el cuerpo de <code>main</code>, único hijo de <code>programa</code>) hace <code>backpatch</code> del GOTO-main al primer cuádruplo de <code>main</code>.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- B. SI / SINO -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">B</span> Condicional <code>si / sino</code></h2>
+    <p class="sub">Ejemplo: <code>si (a &gt; b) { x = 1; } sino { x = 2; } ;</code></p>
+
+    <svg viewBox="0 0 920 272" role="img" aria-label="Diagrama del condicional si/sino">
+      <!-- filas (top_i = 20 + (i-1)*42) -->
+      <text class="idx" x="56" y="41" text-anchor="end">[1]</text>
+      <rect class="quad" x="70" y="20" width="300" height="32" rx="6"/>
+      <text x="86" y="41">(&gt;, 1000, 1001, 11000)</text>
+
+      <text class="idx" x="56" y="83" text-anchor="end">[2]</text>
+      <rect class="quad" x="70" y="62" width="300" height="32" rx="6"/>
+      <text x="86" y="83">(GOTOF, 11000, _, 5)</text>
+
+      <text class="idx" x="56" y="125" text-anchor="end">[3]</text>
+      <rect class="quad" x="70" y="104" width="300" height="32" rx="6"/>
+      <text x="86" y="125">(=, 13000, _, 1002)</text>
+
+      <text class="idx" x="56" y="167" text-anchor="end">[4]</text>
+      <rect class="quad" x="70" y="146" width="300" height="32" rx="6"/>
+      <text x="86" y="167">(GOTO, _, _, 6)</text>
+
+      <text class="idx" x="56" y="209" text-anchor="end">[5]</text>
+      <rect class="quad" x="70" y="188" width="300" height="32" rx="6"/>
+      <text x="86" y="209">(=, 13001, _, 1002)</text>
+
+      <text class="idx" x="56" y="251" text-anchor="end">[6]</text>
+      <rect class="box" x="70" y="230" width="300" height="32" rx="6"/>
+      <text class="lbl" x="86" y="251">··· fin del si ···</text>
+
+      <!-- flechas -->
+      <path class="jump" d="M 370,78 C 452,78 452,204 374,204" stroke="#d97706" marker-end="url(#ah-amber)"/>
+      <path class="jump" d="M 370,162 C 414,162 414,246 374,246" stroke="#2563eb" marker-end="url(#ah-blue)"/>
+
+      <!-- anotaciones PN -->
+      <text class="pn" x="496" y="41">exitExpresion → cuádruplo relacional</text>
+      <text class="pn" x="496" y="77">_manejar_condicion → emite GOTOF</text>
+      <text class="pn" x="496" y="91" fill="#b45309">(salta al sino si la condición es falsa)</text>
+      <text class="pn" x="496" y="161">enterSinoOpc → emite GOTO y</text>
+      <text class="pn" x="496" y="175" fill="#b45309">backpatch del GOTOF al inicio del sino</text>
+      <text class="pn" x="496" y="251">exitCondicion → backpatch del GOTO al fin</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b>_manejar_condicion</b> (desde <code>exitExpresion</code>): la condición ya está evaluada; valida que sea <code>bool</code>, emite <code>GOTOF</code> y apila su índice en <code>pila_saltos</code>.</li>
+      <li><b>enterSinoOpc</b>: emite el <code>GOTO</code> que brinca el cuerpo del <code>sino</code>, y hace <code>backpatch</code> del <code>GOTOF</code> al inicio del <code>sino</code> (índice 5).</li>
+      <li><b>exitCondicion</b>: hace <code>backpatch</code> del salto pendiente (el <code>GOTO</code>, índice 4) al fin de la condición (índice 6).</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- C. MIENTRAS -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">C</span> Ciclo <code>mientras</code></h2>
+    <p class="sub">Ejemplo: <code>mientras (a &lt; b) haz { x = x + 1; } ;</code></p>
+
+    <svg viewBox="0 0 920 272" role="img" aria-label="Diagrama del ciclo mientras">
+      <text class="idx" x="56" y="41" text-anchor="end">[1]</text>
+      <rect class="quad" x="70" y="20" width="300" height="32" rx="6"/>
+      <text x="86" y="41">(&lt;, 1000, 1001, 11000)</text>
+
+      <text class="idx" x="56" y="83" text-anchor="end">[2]</text>
+      <rect class="quad" x="70" y="62" width="300" height="32" rx="6"/>
+      <text x="86" y="83">(GOTOF, 11000, _, 6)</text>
+
+      <text class="idx" x="56" y="125" text-anchor="end">[3]</text>
+      <rect class="quad" x="70" y="104" width="300" height="32" rx="6"/>
+      <text x="86" y="125">(+, 1002, 13000, 9000)</text>
+
+      <text class="idx" x="56" y="167" text-anchor="end">[4]</text>
+      <rect class="quad" x="70" y="146" width="300" height="32" rx="6"/>
+      <text x="86" y="167">(=, 9000, _, 1002)</text>
+
+      <text class="idx" x="56" y="209" text-anchor="end">[5]</text>
+      <rect class="quad" x="70" y="188" width="300" height="32" rx="6"/>
+      <text x="86" y="209">(GOTO, _, _, 1)</text>
+
+      <text class="idx" x="56" y="251" text-anchor="end">[6]</text>
+      <rect class="box" x="70" y="230" width="300" height="32" rx="6"/>
+      <text class="lbl" x="86" y="251">··· fin del ciclo ···</text>
+
+      <!-- GOTOF (sale) y GOTO (regresa) -->
+      <path class="jump" d="M 370,78 C 460,78 460,246 374,246" stroke="#d97706" marker-end="url(#ah-amber)"/>
+      <path class="jump" d="M 370,204 C 414,204 414,36 374,36" stroke="#2563eb" marker-end="url(#ah-blue)"/>
+
+      <text class="pn" x="496" y="41">enterCiclo → guarda retorno = 1</text>
+      <text class="pn" x="496" y="55" fill="#b45309">(inicio de la condición)</text>
+      <text class="pn" x="496" y="83">_manejar_condicion → GOTOF (sale si falso)</text>
+      <text class="pn" x="496" y="203">exitCiclo → emite GOTO(retorno) y</text>
+      <text class="pn" x="496" y="217" fill="#b45309">backpatch del GOTOF a la salida</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b>enterCiclo</b>: apila <code>retorno = len(fila)</code> — el inicio de la condición, a donde el ciclo regresará.</li>
+      <li><b>_manejar_condicion</b>: emite el <code>GOTOF</code> que sale del ciclo si la condición es falsa.</li>
+      <li><b>exitCiclo</b>: emite <code>GOTO</code> de regreso al <code>retorno</code> (índice 1) y hace <code>backpatch</code> del <code>GOTOF</code> a la salida (índice 6). El regreso apunta al <b>inicio de la condición</b>, así se re-evalúa cada vuelta.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- D. LLAMADA -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">D</span> Llamada a función — <code>ERA / PARAM / GOSUB</code></h2>
+    <p class="sub">Ejemplo: <code>sumar(3, 4);</code> con <code>sumar(a:entero, b:entero)</code>, <code>a@5000</code>, <code>b@5001</code>.</p>
+
+    <svg viewBox="0 0 920 220" role="img" aria-label="Diagrama de llamada a función">
+      <!-- caja de definicion (izquierda) -->
+      <rect class="def" x="40" y="44" width="220" height="78" rx="8"/>
+      <text class="lbl" x="54" y="68" style="fill:#065f46">Definición de sumar</text>
+      <text x="54" y="90" style="font-size:12px">cuad_inicio = 1</text>
+      <text x="54" y="110" style="font-size:12px">··· cuerpo ··· ENDFUNC</text>
+
+      <!-- secuencia de invocacion (derecha) -->
+      <text class="idx" x="324" y="45" text-anchor="end">[10]</text>
+      <rect class="quad" x="338" y="24" width="250" height="32" rx="6"/>
+      <text x="352" y="45">(ERA, _, _, sumar)</text>
+
+      <text class="idx" x="324" y="87" text-anchor="end">[11]</text>
+      <rect class="quad" x="338" y="66" width="250" height="32" rx="6"/>
+      <text x="352" y="87">(PARAM, 13000, _, 5000)</text>
+
+      <text class="idx" x="324" y="129" text-anchor="end">[12]</text>
+      <rect class="quad" x="338" y="108" width="250" height="32" rx="6"/>
+      <text x="352" y="129">(PARAM, 13001, _, 5001)</text>
+
+      <text class="idx" x="324" y="171" text-anchor="end">[13]</text>
+      <rect class="quad" x="338" y="150" width="250" height="32" rx="6"/>
+      <text x="352" y="171">(GOSUB, sumar, _, 1)</text>
+
+      <!-- flecha GOSUB -> cuerpo -->
+      <path class="jump" d="M 338,166 C 292,166 292,92 262,86" stroke="#059669" marker-end="url(#ah-green)"/>
+
+      <text class="pn" x="606" y="44">enterLlamada → ERA (reserva frame)</text>
+      <text class="pn" x="606" y="86">_manejar_argumento → PARAM 3 → a</text>
+      <text class="pn" x="606" y="128">_manejar_argumento → PARAM 4 → b</text>
+      <text class="pn" x="606" y="164">exitLlamada → valida #args y tipos,</text>
+      <text class="pn" x="606" y="178" fill="#b45309">emite GOSUB → cuad_inicio (1)</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b>enterLlamada</b>: verifica que la función exista, emite <code>ERA sumar</code> y apila el contexto en <code>pila_llamadas</code> (soporta llamadas anidadas).</li>
+      <li><b>_manejar_argumento</b> (desde <code>exitExpresion</code>): por cada argumento valida su tipo contra el parámetro <i>k</i> y emite <code>PARAM</code> hacia la dirección del parámetro.</li>
+      <li><b>exitLlamada</b>: valida que el <b>número de argumentos</b> coincida, emite <code>GOSUB</code> al <code>cuad_inicio</code>. Si la llamada es factor (dentro de una expresión), deja un temporal del tipo de retorno.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- E. MEMORIA -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">E</span> Distribución de direcciones virtuales</h2>
+    <p class="sub">Por (segmento × tipo). Globales nunca se resetean; locales y temporales se resetean al entrar a cada función.</p>
+
+    <svg viewBox="0 0 920 360" role="img" aria-label="Mapa de direcciones virtuales">
+      <!-- encabezados de columna -->
+      <rect x="150" y="36" width="170" height="30" rx="6" fill="#4f46e5"/>
+      <text class="ttl" x="235" y="56" text-anchor="middle">GLOBAL</text>
+      <rect x="330" y="36" width="170" height="30" rx="6" fill="#0d9488"/>
+      <text class="ttl" x="415" y="56" text-anchor="middle">LOCAL</text>
+      <rect x="510" y="36" width="170" height="30" rx="6" fill="#d97706"/>
+      <text class="ttl" x="595" y="56" text-anchor="middle">TEMPORAL</text>
+
+      <!-- etiquetas de fila -->
+      <text class="lbl" x="140" y="100" text-anchor="end">entero</text>
+      <text class="lbl" x="140" y="158" text-anchor="end">flotante</text>
+      <text class="lbl" x="140" y="216" text-anchor="end">bool</text>
+
+      <!-- fila entero -->
+      <rect x="150" y="76" width="170" height="46" rx="6" fill="#e0e7ff" stroke="#a5b4fc"/>
+      <text x="235" y="104" text-anchor="middle">1000–1999</text>
+      <rect x="330" y="76" width="170" height="46" rx="6" fill="#ccfbf1" stroke="#5eead4"/>
+      <text x="415" y="104" text-anchor="middle">5000–5999</text>
+      <rect x="510" y="76" width="170" height="46" rx="6" fill="#fef3c7" stroke="#fcd34d"/>
+      <text x="595" y="104" text-anchor="middle">9000–9999</text>
+
+      <!-- fila flotante -->
+      <rect x="150" y="134" width="170" height="46" rx="6" fill="#e0e7ff" stroke="#a5b4fc"/>
+      <text x="235" y="162" text-anchor="middle">2000–2999</text>
+      <rect x="330" y="134" width="170" height="46" rx="6" fill="#ccfbf1" stroke="#5eead4"/>
+      <text x="415" y="162" text-anchor="middle">6000–6999</text>
+      <rect x="510" y="134" width="170" height="46" rx="6" fill="#fef3c7" stroke="#fcd34d"/>
+      <text x="595" y="162" text-anchor="middle">10000–10999</text>
+
+      <!-- fila bool -->
+      <rect x="150" y="192" width="170" height="46" rx="6" fill="#e0e7ff" stroke="#a5b4fc"/>
+      <text x="235" y="220" text-anchor="middle">3000–3999</text>
+      <rect x="330" y="192" width="170" height="46" rx="6" fill="#ccfbf1" stroke="#5eead4"/>
+      <text x="415" y="220" text-anchor="middle">7000–7999</text>
+      <rect x="510" y="192" width="170" height="46" rx="6" fill="#fef3c7" stroke="#fcd34d"/>
+      <text x="595" y="220" text-anchor="middle">11000–11999</text>
+
+      <!-- constantes -->
+      <rect x="150" y="276" width="170" height="30" rx="6" fill="#e11d48"/>
+      <text class="ttl" x="235" y="296" text-anchor="middle">CONSTANTES</text>
+      <rect x="330" y="276" width="350" height="30" rx="6" fill="none"/>
+      <rect x="150" y="312" width="170" height="38" rx="6" fill="#ffe4e6" stroke="#fda4af"/>
+      <text x="235" y="336" text-anchor="middle">ent 13000–13999</text>
+      <rect x="330" y="312" width="170" height="38" rx="6" fill="#ffe4e6" stroke="#fda4af"/>
+      <text x="415" y="336" text-anchor="middle">flot 14000–14999</text>
+      <rect x="510" y="312" width="170" height="38" rx="6" fill="#ffe4e6" stroke="#fda4af"/>
+      <text x="595" y="336" text-anchor="middle">letrero 15000–15999</text>
+
+      <!-- nota huecos -->
+      <text class="lbl" x="710" y="104" style="font-size:12px; fill:#6b7280">Huecos 4000 / 8000 /</text>
+      <text class="lbl" x="710" y="120" style="font-size:12px; fill:#6b7280">12000 = reserva.</text>
+    </svg>
+
+    <div class="note">
+      Cada <code>ERA</code> abre un frame nuevo; por eso dos funciones distintas reúsan <code>5000</code>, <code>6000</code>, etc. sin conflicto. El <code>PARAM</code> escribe en las direcciones de parámetro del frame recién reservado y el <code>GOSUB</code> lo activa.
+    </div>
+  </div>
+
+  <footer>Patito · Etapa 4 · TC3002B — diagramas de puntos neurálgicos · complemento de doc/Etapa4.md</footer>
+
+</div>
+</body>
+</html>

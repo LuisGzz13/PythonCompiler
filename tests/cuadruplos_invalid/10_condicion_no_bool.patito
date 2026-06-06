@@ -1,0 +1,10 @@
+programa condicionNoBool;
+vars
+    x : entero;
+inicio
+{
+    si (x) {
+        x = 1;
+    } ;
+}
+fin

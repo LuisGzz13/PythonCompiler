@@ -1,0 +1,16 @@
+programa argsDeMenos;
+vars
+    r : entero;
+
+nula f(a : entero, b : entero) {
+    {
+        escribe(a);
+    }
+} ;
+
+inicio
+{
+    f(1);
+    r = 0;
+}
+fin
