@@ -20,14 +20,22 @@ class TablaConstantes:
     Usa deduplicacion de constantes para evitar repeticiones.
     asignando eon el mismo lexema a la misma direccion.
     """
+    
+    # Base de cada segmento de constantes. Atributo de clase para que sea la
+    # UNICA fuente de verdad: la VM lo importa para indexar memoria_constantes.
+    _BASE = {
+        "entero":   13000,
+        "flotante": 14000,
+        "letrero":  15000,
+    }
 
     def __init__(self):
         self._ents = {}
         self._floats = {}
         self._letreros = {}
-        self._next_ent = 13000
-        self._next_float = 14000
-        self._next_letrero = 15000
+        self._next_ent     = self._BASE["entero"]
+        self._next_float   = self._BASE["flotante"]
+        self._next_letrero = self._BASE["letrero"]
     
     def direccion_de_numerica(self, lexema, tipo):
         """Para constantes numericas. Devuelve direccion (existente o nueva)."""
@@ -81,8 +89,10 @@ class GeneradorCuadruplos:
         self.pila_operandos = [] 
         self.pila_tipos = []
         self.pila_operadores = []
+        self.pila_saltos = [] # indices de saltos pendientes de backpatch
         self.fila = []
         self._ultimo_propagado = False
+        self.idx_goto_main = None # indice del GOTO inicial hacia main
     # --- Operaciones de pila ---
     def push_operando(self, direccion, tipo):
         self.pila_operandos.append(direccion)
@@ -178,9 +188,42 @@ class GeneradorCuadruplos:
     def backpatch(self, indice, target):
         """
         Muta el campo resultado del cuadruplo en self.fila[indice].
-        Sin uso en Sesion 3; listo para Etapa 4 (resolver saltos GOTOF/GOTO).
+        (resolver saltos GOTOF/GOTO).
         """
         self.fila[indice].resultado = target
+        
+    # --- Saltos (control de flujo) ---
+    def emitir_goto(self):
+        """GOTO con destino pendiente, regresa el indice para backpatch"""
+        self.fila.append(Cuadruplo(op="GOTO", opIzq=None, opDer=None, resultado=None))
+        return len(self.fila) - 1
+    
+    def emitir_goto_falso(self, dir_cond):
+        """GOTOF con destino pendiente, regresa el indice para backpatch"""
+        self.fila.append(Cuadruplo(op="GOTOF", opIzq=dir_cond, opDer=None, resultado=None))
+        return len(self.fila) - 1
+    
+    def emitir_goto_a(self, destino):
+        """GOTO con destino fijo, emite el cuadruplo"""
+        self.fila.append(Cuadruplo(op="GOTO", opIzq=None, opDer=None, resultado=destino))
+        
+    #---- Funciones ---
+    def emitir_era(self, nombre_func):
+        """ERA con nombre de funcion, emite el cuadruplo"""
+        self.fila.append(Cuadruplo(op="ERA", opIzq=None, opDer=None, resultado=nombre_func))
+        
+    def emitir_param(self, direccion_arg, direccion_param):
+        """PARAM con direccion de argumento y direccion de parametro, emite el cuadruplo"""
+        self.fila.append(Cuadruplo(op="PARAM", opIzq=direccion_arg, opDer=None, resultado=direccion_param))
+    
+    def emitir_gosub(self, nombre_func, cuad_inicio):
+        """GOSUB con nombre de funcion y cuadruplo de inicio, emite el cuadruplo"""
+        self.fila.append(Cuadruplo(op="GOSUB", opIzq=nombre_func, opDer=None, resultado=cuad_inicio))
+        
+    def emitir_endfunc(self):
+        """ENDFUNC, emite el cuadruplo"""
+        self.fila.append(Cuadruplo(op="ENDFUNC", opIzq=None, opDer=None, resultado=None))
+        
 
     def ultimo_fue_propagado(self):
         return self._ultimo_propagado

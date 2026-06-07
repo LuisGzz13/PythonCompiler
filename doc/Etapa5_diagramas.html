@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito · Etapa 5 — Máquina Virtual: memoria y ejecución</title>
+<style>
+  :root{
+    --ink:#1f2937; --muted:#6b7280;
+    --pn:#f59e0b; --gotof:#d97706; --goto:#2563eb; --gosub:#059669;
+  }
+  *{ box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        color:var(--ink); background:#f1f5f9; margin:0; padding:0 0 70px; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 20px; }
+  header.top{ background:linear-gradient(135deg,#059669,#0d9488); color:#fff; padding:34px 0; margin-bottom:24px; }
+  header.top h1{ margin:0 0 6px; font-size:26px; }
+  header.top p{ margin:0; opacity:.92; font-size:15px; }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:22px 24px;
+         margin:0 0 22px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card h2{ margin:0 0 4px; font-size:19px; }
+  .card h2 .num{ display:inline-flex; width:27px; height:27px; align-items:center; justify-content:center;
+                 background:#059669; color:#fff; border-radius:7px; font-size:14px; margin-right:10px;
+                 vertical-align:middle; }
+  .sub{ color:var(--muted); margin:2px 0 14px; font-size:14px; }
+  .sub code{ background:#f3f4f6; padding:1px 6px; border-radius:5px; font-size:13px; }
+  .desc{ margin:14px 0 0; padding:0; list-style:none; }
+  .desc li{ padding:8px 0 8px 28px; position:relative; border-top:1px dashed #e5e7eb; font-size:14px; line-height:1.45; }
+  .desc li:before{ content:""; position:absolute; left:5px; top:14px; width:11px; height:11px;
+                   border-radius:50%; background:var(--pn); }
+  .desc b{ color:#065f46; }
+  .desc code, .note code{ background:#f3f4f6; padding:1px 5px; border-radius:4px; font-size:12.5px;
+          font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .legend{ display:flex; flex-wrap:wrap; gap:16px 20px; margin:0; padding:16px 18px; font-size:13px;
+           background:#fff; border:1px solid #e5e7eb; border-radius:12px; }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .swb{ width:15px; height:15px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,.15); }
+  .note{ background:#ecfdf5; border-left:4px solid #059669; padding:11px 15px; border-radius:8px;
+         font-size:13.5px; margin-top:16px; line-height:1.5; }
+  svg{ display:block; width:100%; height:auto; margin:8px 0 2px; }
+  svg text{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; fill:#111827; }
+  svg text.idx{ fill:#9ca3af; font-size:12px; }
+  svg text.pn{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:12.5px; fill:#065f46; }
+  svg text.lbl{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; fill:#374151; }
+  svg text.ttl{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:13px; fill:#fff; font-weight:600; }
+  svg text.small{ font-size:11.5px; }
+  svg rect.cte{ fill:#fee2e2; stroke:#fca5a5; stroke-width:1.3; }
+  svg rect.glob{ fill:#dbeafe; stroke:#93c5fd; stroke-width:1.3; }
+  svg rect.frame{ fill:#dcfce7; stroke:#86efac; stroke-width:1.3; }
+  svg rect.prep{ fill:#fef3c7; stroke:#fcd34d; stroke-width:1.3; }
+  svg rect.empty{ fill:#f9fafb; stroke:#d1d5db; stroke-width:1; stroke-dasharray:4 3; }
+  svg rect.active{ fill:#dcfce7; stroke:#16a34a; stroke-width:2; }
+  svg path.arrow{ fill:none; stroke-width:2; }
+  footer{ text-align:center; color:#9ca3af; font-size:12.5px; margin-top:30px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ah-green" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"/></marker>
+  <marker id="ah-blue"  markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"/></marker>
+  <marker id="ah-amber" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/></marker>
+</defs></svg>
+
+<header class="top"><div class="wrap">
+  <h1>Patito · Etapa 5 — Memoria de Ejecución y Máquina Virtual</h1>
+  <p>Mapa de memoria, estructuras de datos, métodos de acceso y flujo de ejecución. Complemento visual de <code style="color:#fff">doc/Etapa5.md</code>.</p>
+</div></header>
+
+<div class="wrap">
+
+  <div class="legend">
+    <span><span class="swb" style="background:#fee2e2"></span> Memoria de constantes (inmutable)</span>
+    <span><span class="swb" style="background:#dbeafe"></span> Memoria global</span>
+    <span><span class="swb" style="background:#dcfce7"></span> Frame de ejecución (locales + temps)</span>
+    <span><span class="swb" style="background:#fef3c7"></span> Frame en preparación (ERA)</span>
+  </div>
+  <div style="height:22px"></div>
+
+  <!-- ============================================================ -->
+  <!-- A. MAPA GLOBAL DE LA VM -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">A</span> Mapa global de la VM</h2>
+    <p class="sub">Las cuatro estructuras que la VM mantiene durante toda la ejecución. Las <b>direcciones virtuales</b> (heredadas del compilador) actúan como índice: el <b>rango</b> de cada dirección decide en qué estructura vive el dato.</p>
+
+    <svg viewBox="0 0 920 360" role="img" aria-label="Mapa global de memoria de la VM">
+      <!-- Memoria de constantes -->
+      <rect class="cte" x="40" y="30" width="280" height="120" rx="8"/>
+      <text class="lbl" x="180" y="52" text-anchor="middle" style="font-weight:600;fill:#7f1d1d">memoria_constantes</text>
+      <text class="small" x="180" y="70" text-anchor="middle" style="fill:#7f1d1d">dict[direccion → valor], inmutable</text>
+      <text class="small" x="180" y="94" text-anchor="middle">13000–13999 enteros</text>
+      <text class="small" x="180" y="112" text-anchor="middle">14000–14999 flotantes</text>
+      <text class="small" x="180" y="130" text-anchor="middle">15000–15999 letreros</text>
+      <text class="small" x="180" y="146" text-anchor="middle" style="fill:#6b7280">poblada del compilador al iniciar la VM</text>
+
+      <!-- Memoria global -->
+      <rect class="glob" x="40" y="170" width="280" height="120" rx="8"/>
+      <text class="lbl" x="180" y="192" text-anchor="middle" style="font-weight:600;fill:#1e3a8a">memoria_global</text>
+      <text class="small" x="180" y="210" text-anchor="middle" style="fill:#1e3a8a">dict[direccion → valor], mutable</text>
+      <text class="small" x="180" y="234" text-anchor="middle">1000–1999 enteros</text>
+      <text class="small" x="180" y="252" text-anchor="middle">2000–2999 flotantes</text>
+      <text class="small" x="180" y="270" text-anchor="middle">3000–3999 booleanos</text>
+      <text class="small" x="180" y="286" text-anchor="middle" style="fill:#6b7280">vive durante toda la ejecucion</text>
+
+      <!-- Pila de frames -->
+      <rect class="frame" x="350" y="30" width="280" height="260" rx="8"/>
+      <text class="lbl" x="490" y="52" text-anchor="middle" style="font-weight:600;fill:#065f46">pila_frames: list[Frame]</text>
+      <text class="small" x="490" y="70" text-anchor="middle" style="fill:#065f46">crece con GOSUB, decrece con ENDFUNC</text>
+      <!-- Mini frames -->
+      <rect class="empty" x="370" y="90" width="240" height="32" rx="5"/>
+      <text class="small" x="490" y="111" text-anchor="middle" style="fill:#9ca3af">(tope: frame actual)</text>
+      <rect class="empty" x="370" y="128" width="240" height="32" rx="5"/>
+      <text class="small" x="490" y="149" text-anchor="middle" style="fill:#9ca3af">···</text>
+      <rect class="active" x="370" y="240" width="240" height="32" rx="5"/>
+      <text class="small" x="490" y="261" text-anchor="middle" style="fill:#065f46;font-weight:600">main (pila_frames[0])</text>
+      <text class="small" x="490" y="225" text-anchor="middle" style="fill:#065f46">main siempre es el bottom</text>
+
+      <!-- Pila prep -->
+      <rect class="prep" x="660" y="30" width="240" height="260" rx="8"/>
+      <text class="lbl" x="780" y="52" text-anchor="middle" style="font-weight:600;fill:#92400e">pila_prep: list[Frame]</text>
+      <text class="small" x="780" y="70" text-anchor="middle" style="fill:#92400e">crece con ERA, decrece con GOSUB</text>
+      <rect class="empty" x="680" y="90" width="200" height="32" rx="5"/>
+      <text class="small" x="780" y="111" text-anchor="middle" style="fill:#9ca3af">(vacia al iniciar)</text>
+      <text class="small" x="780" y="160" text-anchor="middle" style="fill:#92400e">PILA, no slot:</text>
+      <text class="small" x="780" y="178" text-anchor="middle" style="fill:#92400e">soporta f(g(x))</text>
+
+      <!-- IP -->
+      <rect x="40" y="306" width="860" height="44" rx="8" fill="#f3f4f6" stroke="#d1d5db"/>
+      <text class="lbl" x="60" y="333" style="font-weight:600">IP (instruction pointer)</text>
+      <text class="small" x="240" y="333">indice del proximo cuadruplo en gen.fila a ejecutar</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b>memoria_constantes</b> se carga del compilador con type-conversion: <code>int(lex)</code>, <code>float(lex)</code>, letreros sin las comillas. Nunca se modifica en runtime.</li>
+      <li><b>memoria_global</b> persiste durante toda la ejecución. Las globales nunca se resetean.</li>
+      <li><b>pila_frames</b>: cada función activa tiene su frame con locales y temps. <b>Main es <code>pila_frames[0]</code></b> — empujado al iniciar la VM. El routing es uniforme: <code>local/temp</code> siempre van al <code>pila_frames[-1]</code>.</li>
+      <li><b>pila_prep</b>: frames creados por <code>ERA</code> pero aún no activos. <code>GOSUB</code> hace <code>pop</code> y los empuja a <code>pila_frames</code>. Es PILA para soportar llamadas anidadas <code>f(g(x))</code>.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- B. ANATOMIA DE UN FRAME -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">B</span> Anatomía de un <code>Frame</code> y métodos de acceso</h2>
+    <p class="sub">Un <code>Frame</code> es el bloque de memoria de UNA función activa. Tiene cuatro campos. Los métodos <code>leer/escribir</code> rutean direcciones al frame actual.</p>
+
+    <svg viewBox="0 0 920 280" role="img" aria-label="Anatomia de un frame">
+      <!-- Frame caja -->
+      <rect class="frame" x="40" y="30" width="380" height="220" rx="10"/>
+      <text class="lbl" x="230" y="55" text-anchor="middle" style="font-weight:600;fill:#065f46">Frame</text>
+
+      <!-- Campos del frame -->
+      <rect x="60" y="74" width="340" height="34" rx="5" fill="#ffffff" stroke="#86efac"/>
+      <text x="74" y="96">nombre: str</text>
+      <text class="small" x="380" y="96" text-anchor="end" style="fill:#6b7280">"f", "main", etc.</text>
+
+      <rect x="60" y="116" width="340" height="34" rx="5" fill="#ffffff" stroke="#86efac"/>
+      <text x="74" y="138">locales: dict</text>
+      <text class="small" x="380" y="138" text-anchor="end" style="fill:#6b7280">{5000: 7, 5001: 0, ...}</text>
+
+      <rect x="60" y="158" width="340" height="34" rx="5" fill="#ffffff" stroke="#86efac"/>
+      <text x="74" y="180">temps: dict</text>
+      <text class="small" x="380" y="180" text-anchor="end" style="fill:#6b7280">{9000: 8, ...}</text>
+
+      <rect x="60" y="200" width="340" height="34" rx="5" fill="#ffffff" stroke="#86efac"/>
+      <text x="74" y="222">ip_retorno: int</text>
+      <text class="small" x="380" y="222" text-anchor="end" style="fill:#6b7280">a donde volver al ENDFUNC</text>
+
+      <!-- Metodos -->
+      <text class="lbl" x="460" y="55" style="font-weight:600;fill:#065f46">Métodos de acceso</text>
+
+      <rect x="460" y="74" width="440" height="50" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="476" y="94" style="font-weight:600">leer(direccion)</text>
+      <text class="small" x="476" y="115">decide por rango: constante / global / frame_actual</text>
+
+      <rect x="460" y="132" width="440" height="50" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="476" y="152" style="font-weight:600">escribir(direccion, valor)</text>
+      <text class="small" x="476" y="173">global → memoria_global; local/temp → frame_actual</text>
+
+      <rect x="460" y="190" width="440" height="60" rx="6" fill="#fef3c7" stroke="#fcd34d"/>
+      <text x="476" y="210" style="font-weight:600">escribir_en_prep(direccion, valor)</text>
+      <text class="small" x="476" y="228">ESPECIAL para PARAM: escribe en pila_prep[-1].locales,</text>
+      <text class="small" x="476" y="244">no en el frame actual (caller)</text>
+    </svg>
+
+    <ul class="desc">
+      <li><b><code>leer(dir)</code></b>: aplica <code>_segmento_y_tipo(dir)</code> para saber si la dirección es constante (lee de <code>memoria_constantes</code>), global (de <code>memoria_global</code>), o local/temp (del <code>frame_actual</code>). Si no hay valor escrito, devuelve el default por tipo.</li>
+      <li><b><code>escribir(dir, valor)</code></b>: mismo routing al revés. Escribir a una constante levanta <code>RuntimeError</code>.</li>
+      <li><b><code>escribir_en_prep(dir, valor)</code></b>: lo usa exclusivamente <code>PARAM</code>. Escribe en el <code>top de pila_prep</code> (el callee aún no activo), no en el frame del caller. Por esto no se corrompen variables del caller cuando <code>caller.5000</code> y <code>callee.5000</code> comparten número.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- C. FLUJO DE UNA LLAMADA SIMPLE -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">C</span> Flujo de una llamada: <code>sumar(3, 4);</code></h2>
+    <p class="sub">Cinco snapshots de la pila a lo largo de la ejecución de <code>ERA → PARAM → PARAM → GOSUB → ENDFUNC</code>.</p>
+
+    <svg viewBox="0 0 920 380" role="img" aria-label="Flujo de una llamada">
+      <!-- Snapshot 1: antes de ERA -->
+      <text class="small" x="80" y="40" text-anchor="middle" style="font-weight:600">1. antes</text>
+      <text class="small" x="80" y="58" text-anchor="middle" style="fill:#6b7280">pila_prep: []</text>
+      <rect class="frame" x="40" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="80" y="94" text-anchor="middle">main</text>
+
+      <!-- Snapshot 2: tras ERA sumar -->
+      <text class="small" x="240" y="40" text-anchor="middle" style="font-weight:600">2. ERA sumar</text>
+      <text class="small" x="240" y="58" text-anchor="middle" style="fill:#92400e">pila_prep: [sumar]</text>
+      <rect class="frame" x="200" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="240" y="94" text-anchor="middle">main</text>
+      <rect class="prep" x="200" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="240" y="144" text-anchor="middle">sumar (prep)</text>
+
+      <!-- Snapshot 3: tras PARAM x2 -->
+      <text class="small" x="400" y="40" text-anchor="middle" style="font-weight:600">3. PARAM 3→a, PARAM 4→b</text>
+      <rect class="frame" x="360" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="400" y="94" text-anchor="middle">main</text>
+      <rect class="prep" x="360" y="120" width="80" height="60" rx="5"/>
+      <text class="small" x="400" y="142" text-anchor="middle">sumar (prep)</text>
+      <text class="small" x="400" y="158" text-anchor="middle" style="fill:#92400e">a=3, b=4</text>
+
+      <!-- Snapshot 4: tras GOSUB -->
+      <text class="small" x="560" y="40" text-anchor="middle" style="font-weight:600">4. GOSUB</text>
+      <text class="small" x="560" y="58" text-anchor="middle" style="fill:#92400e">pila_prep: []</text>
+      <rect class="frame" x="520" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="560" y="94" text-anchor="middle">main</text>
+      <rect class="active" x="520" y="120" width="80" height="60" rx="5"/>
+      <text class="small" x="560" y="142" text-anchor="middle" style="font-weight:600">sumar ACTIVO</text>
+      <text class="small" x="560" y="158" text-anchor="middle">a=3, b=4</text>
+
+      <!-- Snapshot 5: tras ENDFUNC -->
+      <text class="small" x="720" y="40" text-anchor="middle" style="font-weight:600">5. ENDFUNC</text>
+      <text class="small" x="720" y="58" text-anchor="middle" style="fill:#6b7280">vuelve a main</text>
+      <rect class="active" x="680" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="720" y="94" text-anchor="middle">main</text>
+
+      <!-- Flechas entre snapshots -->
+      <path class="arrow" d="M 125,90 L 195,90" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 285,130 L 355,130" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 445,150 L 515,150" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 605,90 L 675,90" stroke="#059669" marker-end="url(#ah-green)"/>
+
+      <!-- Notas debajo -->
+      <text class="small" x="80" y="240" text-anchor="middle" style="fill:#6b7280">solo main</text>
+      <text class="small" x="240" y="240" text-anchor="middle" style="fill:#6b7280">_nuevo_frame</text>
+      <text class="small" x="240" y="256" text-anchor="middle" style="fill:#6b7280">apilado en prep</text>
+      <text class="small" x="400" y="240" text-anchor="middle" style="fill:#6b7280">PARAM lee del caller</text>
+      <text class="small" x="400" y="256" text-anchor="middle" style="fill:#6b7280">(main), escribe en prep</text>
+      <text class="small" x="560" y="240" text-anchor="middle" style="fill:#6b7280">prep → frame actual</text>
+      <text class="small" x="560" y="256" text-anchor="middle" style="fill:#6b7280">ip_retorno = IP+1</text>
+      <text class="small" x="720" y="240" text-anchor="middle" style="fill:#6b7280">pop del frame</text>
+      <text class="small" x="720" y="256" text-anchor="middle" style="fill:#6b7280">IP = ip_retorno</text>
+
+      <!-- Cuadruplos al pie -->
+      <text class="lbl" x="40" y="310" style="font-weight:600">Stream de cuádruplos:</text>
+      <text x="40" y="334" style="font-size:12.5px">(ERA, _, _, sumar) → (PARAM, 13000, _, 5000) → (PARAM, 13001, _, 5001) → (GOSUB, sumar, _, cuad_inicio) → ··· cuerpo de sumar ··· → (ENDFUNC, _, _, _)</text>
+    </svg>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- D. LLAMADA ANIDADA -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">D</span> Llamada anidada: <code>f(g(7))</code> y por qué <code>pila_prep</code> es pila</h2>
+    <p class="sub">Si <code>pila_prep</code> fuera un solo slot, el segundo <code>ERA</code> sobreescribiría el frame de f y el último <code>PARAM</code> no tendría dónde escribir. Como es <b>pila</b>, ambos coexisten.</p>
+
+    <svg viewBox="0 0 920 320" role="img" aria-label="Llamada anidada f(g(x))">
+      <!-- Snapshot 1: ERA f -->
+      <text class="small" x="90" y="40" text-anchor="middle" style="font-weight:600">1. ERA f</text>
+      <rect class="frame" x="50" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="90" y="94" text-anchor="middle">main</text>
+      <rect class="prep" x="50" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="90" y="144" text-anchor="middle">f (prep)</text>
+
+      <!-- Snapshot 2: ERA g (anidado) -->
+      <text class="small" x="270" y="40" text-anchor="middle" style="font-weight:600">2. ERA g</text>
+      <text class="small" x="270" y="58" text-anchor="middle" style="fill:#92400e">prep: [f, g]</text>
+      <rect class="frame" x="230" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="270" y="94" text-anchor="middle">main</text>
+      <rect class="prep" x="230" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="270" y="144" text-anchor="middle">f (prep)</text>
+      <rect class="prep" x="230" y="170" width="80" height="40" rx="5"/>
+      <text class="small" x="270" y="194" text-anchor="middle">g (prep)</text>
+
+      <!-- Snapshot 3: PARAM 7 → g, GOSUB g -->
+      <text class="small" x="450" y="40" text-anchor="middle" style="font-weight:600">3. PARAM 7→g, GOSUB g</text>
+      <text class="small" x="450" y="58" text-anchor="middle" style="fill:#92400e">prep: [f]</text>
+      <rect class="frame" x="410" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="450" y="94" text-anchor="middle">main</text>
+      <rect class="active" x="410" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="450" y="144" text-anchor="middle" style="font-weight:600">g ACTIVO</text>
+      <rect class="prep" x="410" y="170" width="80" height="40" rx="5"/>
+      <text class="small" x="450" y="194" text-anchor="middle">f (prep)</text>
+
+      <!-- Snapshot 4: g termina, PARAM temp_g → f, GOSUB f -->
+      <text class="small" x="660" y="40" text-anchor="middle" style="font-weight:600">4. g acaba, PARAM 0→f</text>
+      <text class="small" x="660" y="58" text-anchor="middle" style="fill:#92400e">prep: [f]</text>
+      <rect class="frame" x="620" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="660" y="94" text-anchor="middle">main</text>
+      <rect class="prep" x="620" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="660" y="144" text-anchor="middle">f (prep)</text>
+      <text class="small" x="660" y="158" text-anchor="middle" style="fill:#92400e">y=0 (phantom)</text>
+
+      <!-- Snapshot 5: GOSUB f -->
+      <text class="small" x="860" y="40" text-anchor="middle" style="font-weight:600">5. GOSUB f</text>
+      <rect class="frame" x="820" y="70" width="80" height="40" rx="5"/>
+      <text class="small" x="860" y="94" text-anchor="middle">main</text>
+      <rect class="active" x="820" y="120" width="80" height="40" rx="5"/>
+      <text class="small" x="860" y="144" text-anchor="middle" style="font-weight:600">f ACTIVO</text>
+
+      <!-- Flechas -->
+      <path class="arrow" d="M 135,140 L 225,140" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 315,140 L 405,140" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 495,140 L 615,140" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 705,140 L 815,140" stroke="#059669" marker-end="url(#ah-green)"/>
+
+      <!-- Stream cuádruplos -->
+      <text class="lbl" x="40" y="240" style="font-weight:600">Stream de cuádruplos:</text>
+      <text x="40" y="265" style="font-size:12px">(ERA, _, _, f) → (ERA, _, _, g) → (PARAM, 13000, _, 5000_de_g) → (GOSUB, g, _, ci_g)</text>
+      <text x="40" y="284" style="font-size:12px"> → ··· cuerpo g ··· → (ENDFUNC) → (PARAM, 9000, _, 5000_de_f) → (GOSUB, f, _, ci_f) → ··· cuerpo f ···</text>
+      <text x="40" y="306" style="font-size:12px;fill:#6b7280">Nota: temp 9000 de g (su retorno phantom) está en el FRAME DE MAIN, porque el compilador lo alocó cuando estaba en scope main.</text>
+    </svg>
+
+    <div class="note">
+      <b>La sutileza de PARAM (regla 2 del modelo):</b> en el snapshot 4, el <code>PARAM</code> que pasa el temp de <code>g</code> a <code>f</code> lee del <b>frame actual</b> (main, tras el <code>ENDFUNC</code> de g) y escribe en el <b>top de <code>pila_prep</code></b> (el prep de f). Sin esa distinción, escribiría sobre el frame de main y corromperia datos.
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- E. RECURSION -->
+  <!-- ============================================================ -->
+  <div class="card">
+    <h2><span class="num">E</span> Recursión directa: <code>contar(3)</code> con caso base</h2>
+    <p class="sub">La pila de frames crece a medida que <code>contar</code> se llama a sí misma, y decrece al volver del caso base.</p>
+
+    <svg viewBox="0 0 920 280" role="img" aria-label="Pila de frames en recursion">
+      <!-- t1: solo main -->
+      <text class="small" x="80" y="40" text-anchor="middle" style="font-weight:600">t1: inicio</text>
+      <rect class="active" x="40" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="80" y="89" text-anchor="middle">main</text>
+
+      <!-- t2: contar(3) -->
+      <text class="small" x="220" y="40" text-anchor="middle" style="font-weight:600">t2: contar(3)</text>
+      <rect class="frame" x="180" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="220" y="89" text-anchor="middle">main</text>
+      <rect class="active" x="180" y="115" width="80" height="40" rx="5"/>
+      <text class="small" x="220" y="139" text-anchor="middle">contar n=3</text>
+
+      <!-- t3: contar(2) -->
+      <text class="small" x="360" y="40" text-anchor="middle" style="font-weight:600">t3: contar(2)</text>
+      <rect class="frame" x="320" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="360" y="89" text-anchor="middle">main</text>
+      <rect class="frame" x="320" y="115" width="80" height="40" rx="5"/>
+      <text class="small" x="360" y="139" text-anchor="middle">contar n=3</text>
+      <rect class="active" x="320" y="165" width="80" height="40" rx="5"/>
+      <text class="small" x="360" y="189" text-anchor="middle">contar n=2</text>
+
+      <!-- t4: contar(1) caso base -->
+      <text class="small" x="500" y="40" text-anchor="middle" style="font-weight:600">t4: contar(1) caso base</text>
+      <rect class="frame" x="460" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="500" y="89" text-anchor="middle">main</text>
+      <rect class="frame" x="460" y="115" width="80" height="40" rx="5"/>
+      <text class="small" x="500" y="139" text-anchor="middle">contar n=3</text>
+      <rect class="frame" x="460" y="165" width="80" height="40" rx="5"/>
+      <text class="small" x="500" y="189" text-anchor="middle">contar n=2</text>
+      <rect class="active" x="460" y="215" width="80" height="40" rx="5"/>
+      <text class="small" x="500" y="239" text-anchor="middle">contar n=1</text>
+
+      <!-- t5: vuelve a contar(2) tras ENDFUNC -->
+      <text class="small" x="650" y="40" text-anchor="middle" style="font-weight:600">t5: ENDFUNC, vuelve</text>
+      <rect class="frame" x="610" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="650" y="89" text-anchor="middle">main</text>
+      <rect class="frame" x="610" y="115" width="80" height="40" rx="5"/>
+      <text class="small" x="650" y="139" text-anchor="middle">contar n=3</text>
+      <rect class="active" x="610" y="165" width="80" height="40" rx="5"/>
+      <text class="small" x="650" y="189" text-anchor="middle">contar n=2</text>
+
+      <!-- t6: vuelve a main -->
+      <text class="small" x="820" y="40" text-anchor="middle" style="font-weight:600">t6: fin</text>
+      <rect class="active" x="780" y="65" width="80" height="40" rx="5"/>
+      <text class="small" x="820" y="89" text-anchor="middle">main</text>
+
+      <!-- Flechas -->
+      <path class="arrow" d="M 125,85 L 175,85" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 265,135 L 315,135" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 405,185 L 455,185" stroke="#059669" marker-end="url(#ah-green)"/>
+      <path class="arrow" d="M 545,185 L 605,185" stroke="#2563eb" marker-end="url(#ah-blue)"/>
+      <path class="arrow" d="M 695,135 L 775,90" stroke="#2563eb" marker-end="url(#ah-blue)"/>
+    </svg>
+
+    <ul class="desc">
+      <li>Cada <code>GOSUB</code> empuja un frame nuevo. Cada <code>ENDFUNC</code> hace pop y restaura el <code>IP</code> guardado.</li>
+      <li>Recursión <b>directa</b> funciona porque <code>contar</code> está en <code>func_dir</code> antes de caminar su cuerpo en compilación. Recursión <b>mutua</b> no funciona (limitación de referencias hacia adelante).</li>
+      <li>Límite de seguridad: <b>1000 frames simultáneos</b>. Si se excede, <code>RuntimeError</code>: "stack overflow (recursión infinita?)".</li>
+    </ul>
+  </div>
+
+  <footer>Patito · Etapa 5 · TC3002B — diagramas de memoria de ejecución · complemento de doc/Etapa5.md</footer>
+
+</div>
+</body>
+</html>

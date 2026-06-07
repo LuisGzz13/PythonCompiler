@@ -19,6 +19,8 @@ sys.path.insert(0, 'generated')
 
 from PatitoListener import PatitoListener
 from cuadruplos import Cuadruplo, TablaConstantes, GeneradorCuadruplos
+from PatitoParser import PatitoParser
+from cubo import tipo_resultado
 
 
 # ============================================================
@@ -57,6 +59,7 @@ class FuncInfo:
         self.variables = {} # iniciliza diccionario de variables vacio
         self.linea = linea # asigna la linea de declaracion de la funcion
         self.cuad_inicio = None 
+        self.recursos = None  # snapshot {(seg,tipo): count} para que la VM reserve el frame
 
 
 # ============================================================
@@ -113,6 +116,16 @@ class AsignadorMemoria:
         dir_actual = self._contadores[clave]
         self._contadores[clave] += 1
         return dir_actual
+    
+    def snapshot_recursos(self):
+        """Devuelve un dict con claves como ("local", "entero") → 2 ("esta función usó 2 enteros locales"). 
+        Las globales no se incluyen porque no son per-frame..
+        """
+        recursos = {}
+        for (seg, tipo) in self._contadores:
+            if seg in ("local", "temp"):
+                recursos[(seg, tipo)] = self._contadores[(seg, tipo)] - self._BASE[(seg, tipo)]
+        return recursos
 
 
 # ============================================================
@@ -175,7 +188,8 @@ class SemanticAnalyzer(PatitoListener):
         self.en_func_duplicada = False # flag para detectar funciones duplicadas
         self.mem = AsignadorMemoria() 
         self.cte = TablaConstantes() 
-        self.gen = GeneradorCuadruplos(self.mem, self.cte) #  de cuadruplos
+        self.gen = GeneradorCuadruplos(self.mem, self.cte)
+        self.pila_llamadas = [] # pila de llamadas a funciones (para anidados)
 
     def error(self, linea, col, msg):
         """Reporta error semantico a stderr y suma al contador."""
@@ -208,6 +222,16 @@ class SemanticAnalyzer(PatitoListener):
         self.nombre_programa = nombre
         self.func_dir[nombre] = FuncInfo(tipo_retorno="programa", linea=linea)
         self.scope_actual = self.func_dir[nombre]
+        self.gen.idx_goto_main = self.gen.emitir_goto()
+        
+    # ========================================================
+    # PN-1B (Etapa 5): exitPrograma -> snapshot de recursos de main
+    # ========================================================
+    def exitPrograma(self, ctx):
+        # Main es el ultimo en compilarse (despues de todas las funciones).
+        # Capturamos sus recursos para que la VM pueda reservar el frame inicial.
+        programa = self.func_dir[self.nombre_programa]
+        programa.recursos = self.mem.snapshot_recursos()
 
     # ========================================================
     # PN-2 (Etapa 2): enterFuncs -> registra funcion + parametros
@@ -235,6 +259,7 @@ class SemanticAnalyzer(PatitoListener):
         self.func_dir[nombre] = nueva
         self.scope_actual = nueva
         self.mem.reset_scope_local()
+        nueva.cuad_inicio = len(self.gen.fila)
 
         for id_node, tipo in _params_de_paramsOpc(ctx.paramsOpc()):
             self._registrar_parametro(id_node, tipo)
@@ -260,8 +285,27 @@ class SemanticAnalyzer(PatitoListener):
         if self.en_func_duplicada:
             self.en_func_duplicada = False
             return
+        
+        # Snapshot ANTES del switch de scope, self.scope_actual aun apunta a la funcion actual.
+        self.scope_actual.recursos = self.mem.snapshot_recursos()
+        self.gen.emitir_endfunc()
         self.scope_actual = self.func_dir[self.nombre_programa]
-
+        
+        
+    
+    # ========================================================
+    # PN-4E (Etapa 4): enterCuerpo -> rellena el GOTO-main al iniciar 'main'
+    # ========================================================
+    def enterCuerpo(self, ctx):
+        if self.en_func_duplicada:
+            return
+        # El cuerpo de 'main' es el unico cuerpo hijo directo de 'programa'.
+        # Al entrar a el, ya pasamos todas las funciones, asi que aqui empieza main.
+        if isinstance(ctx.parentCtx, PatitoParser.ProgramaContext):
+            # Etapa 5: limpiamos contadores antes de que main empiece a usarlos.
+            # Si no, main "hereda" los valores que dejo la ultima funcion.
+            self.mem.reset_scope_local()
+            self.gen.backpatch(self.gen.idx_goto_main, len(self.gen.fila))
     # ========================================================
     # PN-4 (Etapa 2): enterDeclaracion -> registra cada variable
     # ========================================================
@@ -293,45 +337,20 @@ class SemanticAnalyzer(PatitoListener):
     # ========================================================
     def exitFactor(self, ctx):
         """
-        factor : PIZQ expresion PDER   (1: nada)
-               | llamada                (2: temporal fantasma)
-               | signoOpc ID            (3: push var)
-               | signoOpc cte           (4: push constante)
+        PN3-A: empuja operandos a la pila desde un factor.
+
+        factor : PIZQ expresion PDER   ← ya emitio + dejo operando en la pila (nada que hacer)
+            | llamada                ← enter/exitLlamada ya emitieron ERA/PARAM/GOSUB + temporal
+            | signoOpc ID            ← se maneja abajo
+            | signoOpc cte           ← se maneja abajo
         """
         if self.en_func_duplicada:
             return
 
-        # Caso 1: parentesis
-        if ctx.PIZQ() is not None:
-            return
-
-        # Caso 2: llamada en expresion
-        if ctx.llamada() is not None:
-            llamada_ctx = ctx.llamada()
-            nombre_func = llamada_ctx.ID().getText()
-            linea = llamada_ctx.ID().getSymbol().line
-
-            if nombre_func not in self.func_dir or nombre_func == self.nombre_programa:
-                self.error(linea, 0, f"funcion '{nombre_func}' no declarada")
-                self.gen.push_operando(None, "error")
-                return
-
-            f = self.func_dir[nombre_func]
-            if f.tipo_retorno == "nula":
-                self.error(linea, 0,
-                    f"no se puede usar funcion '{nombre_func}' (retorno nula) en una expresion")
-                self.gen.push_operando(None, "error")
-                return
-
-            # Temporal fantasma (Etapa 4 emitira ERA/PARAM/GOSUB reales)
-            dir_temp = self.mem.nuevo_temporal(f.tipo_retorno)
-            self.gen.push_operando(dir_temp, f.tipo_retorno)
-            return
-
-        # Casos 3 y 4: signoOpc seguido de ID o cte
         signo = ctx.signoOpc()
         tiene_menos = signo is not None and signo.MENOS() is not None
 
+        # Variable ID
         if ctx.ID() is not None:
             nombre = ctx.ID().getText()
             linea = ctx.ID().getSymbol().line
@@ -344,14 +363,17 @@ class SemanticAnalyzer(PatitoListener):
                 return
 
             if tiene_menos:
+                # -x se emite como (0 - x) usando un cuadruplo directo.
                 cero_dir = self.cte.direccion_de_numerica("0", "entero")
                 t = self.mem.nuevo_temporal(v.tipo)
-                self.gen.emitir_directo(Cuadruplo(op="-", opIzq=cero_dir, opDer=v.direccion, resultado=t))
+                self.gen.emitir_directo(
+                    Cuadruplo(op="-", opIzq=cero_dir, opDer=v.direccion, resultado=t))
                 self.gen.push_operando(t, v.tipo)
             else:
                 self.gen.push_operando(v.direccion, v.tipo)
             return
 
+        # Constante
         if ctx.cte() is not None:
             cte_ctx = ctx.cte()
             if cte_ctx.CTE_ENT() is not None:
@@ -362,11 +384,13 @@ class SemanticAnalyzer(PatitoListener):
                 tipo = "flotante"
 
             if tiene_menos:
-                lex = "-" + lex  # "-5" distinta de "5"
+                lex = "-" + lex  # "-5" usa entrada distinta de "5" en la tabla de constantes
 
             dir_cte = self.cte.direccion_de_numerica(lex, tipo)
             self.gen.push_operando(dir_cte, tipo)
-
+        
+    
+    
     # ========================================================
     # PN3-B1/B2 (Etapa 3): enterExp / exitExp  (+ -)
     # ========================================================
@@ -432,13 +456,21 @@ class SemanticAnalyzer(PatitoListener):
     def exitExpresion(self, ctx):
         if self.en_func_duplicada:
             return
+        # 1. Procesamiento relacional (solo si hay opRel: < > == !=)
         rel_opc = ctx.relOpc()
-        if rel_opc is None or rel_opc.opRel() is None:
-            return
-        res = self.gen.pop_y_emitir_binario()
-        if res == "error" and not self.gen.ultimo_fue_propagado():
-            linea = ctx.start.line
-            self.error(linea, 0, "tipos incompatibles en expresion relacional")
+        if rel_opc is not None and rel_opc.opRel() is not None:
+            res = self.gen.pop_y_emitir_binario()
+            if res == "error" and not self.gen.ultimo_fue_propagado():
+                linea = ctx.start.line
+                self.error(linea, 0, "tipos incompatibles en expresion relacional")
+        # 2. Despacho segun el contexto del padre (Etapa 4):
+        #    - condicion/ciclo  -> esta expresion ES una condicion  -> GOTOF
+        #    - (chunk 4 agregara: argLista/argResto -> PARAM)
+        parent = ctx.parentCtx
+        if isinstance(parent, (PatitoParser.CondicionContext, PatitoParser.CicloContext)):
+            self._manejar_condicion(ctx)
+        elif isinstance(parent, (PatitoParser.ArgListaContext, PatitoParser.ArgRestoContext)):
+            self._manejar_argumento(ctx)
 
     # ========================================================
     # PN3-E (Etapa 3): exitAsigna  (=)
@@ -478,3 +510,161 @@ class SemanticAnalyzer(PatitoListener):
                 dir_expr = self.gen.top_operando()
                 self.gen.pop_operando()
                 self.gen.emitir_print(dir_expr)
+                
+    def _manejar_condicion(self, ctx):
+        """
+        PN-4A: la expresion de un 'si'/'mientras' termino de evaluarse. Su
+        resultado (tope de pila) debe ser bool. Emite GOTOF y guarda su indice
+        en pila_saltos para backpatch.
+
+        INVARIANTE: siempre empuja EXACTAMENTE un indice a pila_saltos, porque
+        exitCondicion/exitCiclo hacen pop incondicional. Por eso el GOTOF se
+        emite SIEMPRE (aun con error de tipo o pila vacia).
+        """
+        
+        if self.gen.pilas_operandos_vacia():
+            # Defensivo: no deberia pasar (siempre hay operando o None para no desbalancear la pila).
+            # Aun asi emitimos+empujamos para no romper el invariante.
+            self.gen.pila_saltos.append(self.gen.emitir_goto_falso(None))
+            return
+
+        tipo = self.gen.top_tipo()
+        dir_cond = self.gen.top_operando()
+        self.gen.pop_operando()
+        
+        if tipo != "bool" and tipo != "error":
+            self.error(ctx.start.line, 0, "la condicion de si/mientras debe ser tipo bool")
+        
+        self.gen.pila_saltos.append(self.gen.emitir_goto_falso(dir_cond))
+    
+    # --- ciclo: MIENTRAS (cond) HAZ cuerpo ---
+    def enterCiclo(self, ctx):
+        if self.en_func_duplicada:
+            return
+        # Punto de retorno: aqui empieza la condicion; el GOTO del final regresa aca.
+        self.gen.pila_saltos.append(len(self.gen.fila))
+
+    def exitCiclo(self, ctx):
+        if self.en_func_duplicada:
+            return
+        falso = self.gen.pila_saltos.pop()     # GOTOF de la condicion
+        retorno = self.gen.pila_saltos.pop()   # inicio de la condicion
+        self.gen.emitir_goto_a(retorno)        # regresa a re-evaluar la condicion
+        self.gen.backpatch(falso, len(self.gen.fila))  # GOTOF -> salida del ciclo
+            
+    # --- condicion: SI (cond) cuerpo sinoOpc PCOMA ---
+    def enterSinoOpc(self, ctx):
+        if self.en_func_duplicada:
+            return
+        if ctx.SINO() is None:   # rama epsilon: no hay 'sino'
+            return
+        falso = self.gen.pila_saltos.pop()        # GOTOF del 'si'
+        indice_goto = self.gen.emitir_goto()      # GOTO que brinca el cuerpo del 'sino'
+        self.gen.pila_saltos.append(indice_goto)
+        self.gen.backpatch(falso, len(self.gen.fila))  # GOTOF -> inicio del 'sino'
+
+    def exitCondicion(self, ctx):
+        if self.en_func_duplicada:
+            return
+        # Salto pendiente: el GOTOF (si no hubo 'sino') o el GOTO (si lo hubo).
+        indice = self.gen.pila_saltos.pop()
+        self.gen.backpatch(indice, len(self.gen.fila))
+
+
+    # ========================================================
+    # ETAPA 4 - LLAMADA A FUNCIONES (ERA / PARAM / GOSUB)
+    # ========================================================
+    
+    def enterLlamada(self, ctx):
+        """
+        PN-4B: inicio de llamada. Verifica que la funcion exista, emite ERA y
+        apila el contexto (para validar argumentos y soportar llamadas anidadas).
+        """
+        
+        if self.en_func_duplicada:
+            return
+        nombre = ctx.ID().getText()
+        linea = ctx.ID().getSymbol().line
+        
+        # checa si la funcion existe o no, y que no sea el nombre del programa principal
+        if nombre not in self.func_dir or nombre == self.nombre_programa:
+            self.error(linea, 0, f"funcion '{nombre}' no declarada")
+            self.pila_llamadas.append(
+                {"valida": False, "func": None, "nombre": nombre, "n": 0, "linea": linea})
+            return
+        
+        f = self.func_dir[nombre]
+        self.gen.emitir_era(nombre)
+        self.pila_llamadas.append(
+            {"valida": True, "func": f, "nombre": nombre, "n": 0, "linea": linea})
+        
+    
+    
+    def _manejar_argumento(self, ctx):
+        """
+        PN-4C: un argumento termino de evaluarse (tope de pila). Lo empareja con
+        el parametro k de la funcion en curso, valida su tipo y emite PARAM.
+        """
+        
+        if not self.pila_llamadas or self.gen.pilas_operandos_vacia():
+            return
+        contexto = self.pila_llamadas[-1]
+        dir_arg = self.gen.top_operando()
+        tipo_arg = self.gen.top_tipo()
+        self.gen.pop_operando() # consume el argumento SIEMPRE
+        
+        idx = contexto["n"]
+        contexto["n"] += 1
+        
+        if not contexto["valida"]:
+            return      # funcion inexistente: ya reportamos
+        f = contexto["func"]
+        if idx >= len(f.params):
+            return      # sobran args; el conteo se valida en exitLlamada
+        if tipo_arg == "error":
+            return      # error ya reportado mas abajo en el arbol
+            
+        param = f.params[idx]
+        if tipo_resultado("=", param.tipo, tipo_arg) is None:
+            self.error(contexto["linea"], 0,
+                f"argumento {idx + 1} de '{contexto['nombre']}': "
+                f"se esperaba {param.tipo}, se recibio {tipo_arg}")
+            return
+        self.gen.emitir_param(dir_arg, param.direccion)
+    
+    def exitLlamada(self, ctx):
+        """
+        PN-4D: fin de llamada. Valida el numero de argumentos, emite GOSUB y, si
+        la llamada se usa como factor, deja el resultado (temporal) en la pila.
+        """
+        if self.en_func_duplicada:
+            return
+        contexto = self.pila_llamadas.pop()
+        es_factor = isinstance(ctx.parentCtx, PatitoParser.FactorContext)
+
+        if not contexto["valida"]:
+            if es_factor:
+                self.gen.push_operando(None, "error")
+            return
+
+        f = contexto["func"]
+        nombre = contexto["nombre"]
+        linea = contexto["linea"]
+
+        if contexto["n"] != len(f.params):
+            self.error(linea, 0,
+                f"funcion '{nombre}' espera {len(f.params)} argumento(s), "
+                f"recibio {contexto['n']}")
+
+        self.gen.emitir_gosub(nombre, f.cuad_inicio)
+
+        # Si la llamada esta dentro de una expresion necesita dejar un valor.
+        if es_factor:
+            if f.tipo_retorno == "nula":
+                self.error(linea, 0,
+                    f"no se puede usar funcion '{nombre}' (retorno nula) en una expresion")
+                self.gen.push_operando(None, "error")
+            else:
+                # Temporal fantasma: el retorno real se difiere (no toca la gramatica).
+                dir_temp = self.mem.nuevo_temporal(f.tipo_retorno)
+                self.gen.push_operando(dir_temp, f.tipo_retorno)

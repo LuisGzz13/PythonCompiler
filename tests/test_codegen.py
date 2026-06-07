@@ -334,3 +334,62 @@ def test_condicion_aritmetica_no_bool_es_error():
     # mientras (x + 1) ...  -> entero, no bool -> error.
     a = compilar("programa p; vars x : entero; inicio { mientras (x + 1) haz { x = 1; } ; } fin")
     assert a.errores >= 1
+
+# ----------------------------------------------------------------------
+# Grupo 8 (Etapa 4): anidamientos mezclados — pila_saltos con kinds distintos
+# ----------------------------------------------------------------------
+def test_mientras_dentro_de_si_anidamiento_mezclado():
+    # si exterior con MAS DE UN estatuto en el cuerpo (el while + una asignacion).
+    # Asi el fin del while cae estrictamente ANTES del fin del si.
+    # pila_saltos: [GOTOF_si] -> [GOTOF_si, retorno_while] -> [GOTOF_si, retorno_while, GOTOF_while]
+    # exitCiclo saca los 2 del while; exitCondicion saca el GOTOF_si al final.
+    src = (
+        "programa p; vars x : entero; "
+        "inicio { si (x < 10) { mientras (x < 5) haz { x = x + 1; } ; x = 99; } ; } fin"
+    )
+    a = compilar(src)
+    fila = a.gen.fila
+    assert a.errores == 0
+    gotofs = [(i, q) for i, q in enumerate(fila) if q.op == "GOTOF"]
+    assert len(gotofs) == 2, "un GOTOF por si y otro por mientras"
+    (i_si, gotof_si), (i_while, gotof_while) = gotofs
+    # El GOTOF del 'mientras' (interno) salta DENTRO del cuerpo del 'si' (externo).
+    assert gotof_while.resultado < gotof_si.resultado, \
+        "salida del while cae antes del fin del si"
+    # El GOTOF del 'si' (externo) salta DESPUES de toda la construccion.
+    assert gotof_si.resultado == len(fila)
+
+
+def test_si_dentro_de_mientras_anidamiento_mezclado():
+    # mientras exterior con MAS DE UN estatuto en el cuerpo (el si + una asignacion).
+    # Asi el fin del si cae estrictamente ANTES del fin del mientras.
+    # pila_saltos: [retorno_while] -> [retorno_while, GOTOF_while] -> [retorno_while, GOTOF_while, GOTOF_si]
+    # exitCondicion saca el GOTOF_si; exitCiclo saca el GOTOF_while y luego el retorno.
+    src = (
+        "programa p; vars x : entero; "
+        "inicio { mientras (x < 10) haz { si (x < 5) { x = x + 1; } ; x = x + 2; } ; } fin"
+    )
+    a = compilar(src)
+    fila = a.gen.fila
+    assert a.errores == 0
+    gotofs = [(i, q) for i, q in enumerate(fila) if q.op == "GOTOF"]
+    assert len(gotofs) == 2
+    (i_while, gotof_while), (i_si, gotof_si) = gotofs
+    # El GOTOF del 'si' (interno) salta DENTRO del cuerpo del 'mientras' (externo).
+    assert gotof_si.resultado < gotof_while.resultado, \
+        "salida del si cae antes del fin del mientras"
+    # El ultimo GOTO regresa al inicio de la condicion del mientras.
+    goto_regreso = [q for q in fila if q.op == "GOTO"][-1]
+    idx_cond_while = [i for i, q in enumerate(fila) if q.op == "<"][0]
+    assert goto_regreso.resultado == idx_cond_while, "el GOTO final regresa al inicio del mientras"
+    
+    
+def test_gotof_lleva_la_direccion_de_la_condicion_en_opIzq():
+    # Regresion: el GOTOF debe llevar la dir del temp bool en opIzq, si no la
+    # VM no tiene que evaluar y crashea con 'direccion invalida al leer None'.
+    a = compilar("programa p; vars x : entero; inicio { si (x < 1) { x = 2; } ; } fin")
+    fila = a.gen.fila
+    comp = [q for q in fila if q.op == "<"][0]
+    gotof = [q for q in fila if q.op == "GOTOF"][0]
+    assert gotof.opIzq == comp.resultado, \
+        "GOTOF.opIzq debe ser la direccion del temp bool de la condicion"
