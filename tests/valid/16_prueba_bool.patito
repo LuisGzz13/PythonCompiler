@@ -1,0 +1,14 @@
+programa pruebaBoolCompleto;
+vars a, b : entero;
+inicio
+{
+    a = 5;
+    b = 3;
+    escribe(a < b);
+    escribe(a > b);
+    escribe(a == b);
+    escribe(a != b);
+    escribe(a < a);
+    escribe(a == a);
+}
+fin

@@ -40,15 +40,17 @@ class ContadorErrores(ErrorListener):
 def main ():
     # revisa que se haya pasado un archivo como argumento por eso son 2 (python patito.py(1) archivo.patito(2))
     if len(sys.argv) < 2:
-        print("Uso: python patito.py [--cuadruplos] [--ejecutar] archivo.patito", file=sys.stderr)
+        print("Uso: python patito.py [--cuadruplos] [--dir] [--ejecutar] archivo.patito", file=sys.stderr)
         sys.exit(2)
     
     args = sys.argv[1:]
     imprimir_cuadruplos = "--cuadruplos" in args
     ejecutar = "--ejecutar" in args
+    imprimir_directorio = "--dir" in args
+    
     archivos = [a for a in args if not a.startswith("--")]
     if len(archivos) != 1:
-        print("Uso: python patito.py [--cuadruplos] [--ejecutar] archivo.patito", file=sys.stderr)
+        print("Uso: python patito.py [--cuadruplos] [--dir] [--ejecutar] archivo.patito", file=sys.stderr)
         sys.exit(2)
     
     # pipeline de lectura y analisis
@@ -98,6 +100,8 @@ def main ():
         except RuntimeError as e:
             print(f"VM error: {e}", file=sys.stderr)
             sys.exit(1)
+    if imprimir_directorio:
+        analizador.imprimir_directorio()
     sys.exit(0) # si no hay errores, sale con codigo 0 (exito)
     
 if __name__ == "__main__":

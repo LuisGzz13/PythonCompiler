@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito — Auditoría de Puntos Neurálgicos (Etapa 3)</title>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; background: #f4f5f7; line-height: 1.55; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+  .toc { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: #1f1f23; color: #ddd; padding: 24px 16px; border-right: 1px solid #333; font-size: 13px; }
+  .toc h2 { color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #333; }
+  .toc h3 { color: #889; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 6px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 4px 0; }
+  .toc a { color: #aab; text-decoration: none; display: block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+  .toc a:hover { background: #2a2a30; color: #fff; }
+  .toc .badge-ok, .toc .badge-warn { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .toc .badge-ok { background: #4ade80; }
+  .toc .badge-warn { background: #fbbf24; }
+  main { padding: 36px 48px; max-width: 1200px; }
+  header.page { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid #1a1a1a; }
+  header.page h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.02em; }
+  header.page .sub { color: #666; font-size: 14px; }
+  .intro { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 32px; border: 1px solid #e3e3e3; }
+  .intro h2 { margin: 0 0 8px; font-size: 18px; }
+  .intro p { margin: 0 0 8px; color: #444; }
+  .intro p:last-child { margin-bottom: 0; }
+  .legend { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-ok { background: #4ade80; }
+  .dot-warn { background: #fbbf24; }
+  h2.section { margin-top: 40px; padding-bottom: 8px; border-bottom: 1px solid #ccc; font-size: 20px; color: #1a1a1a; }
+  .card { background: #fff; border-radius: 10px; padding: 24px; margin-bottom: 24px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .card.ok { border-left: 6px solid #4ade80; }
+  .card.warn { border-left: 6px solid #fbbf24; }
+  .card-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .card-header h3 { margin: 0; font-size: 18px; font-family: "SF Mono", Menlo, monospace; color: #1a1a1a; }
+  .card-header .verdict { font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .verdict-ok { background: #d1fae5; color: #065f46; }
+  .verdict-warn { background: #fef3c7; color: #78350f; }
+  .trigger { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .trigger strong { color: #1a1a1a; }
+  .svg-wrap { background: #fafafa; border: 1px solid #e3e3e3; border-radius: 6px; padding: 16px; margin: 12px 0; text-align: center; }
+  .svg-caption { font-size: 12px; color: #777; margin-top: 6px; }
+  pre.code { background: #1f1f23; color: #f0f0f0; padding: 14px 16px; border-radius: 6px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.6; overflow-x: auto; margin: 12px 0; }
+  .analysis { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .analysis .panel { background: #f7f8fa; border-radius: 6px; padding: 12px 16px; border: 1px solid #e3e3e3; }
+  .analysis .panel h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #444; }
+  .analysis .panel p { margin: 0; font-size: 13.5px; color: #2a2a2a; }
+  .analysis code, p code { background: #eef0f3; padding: 1px 5px; border-radius: 3px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; color: #1a1a1a; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .toc { position: static; height: auto; }
+    main { padding: 20px; }
+    .analysis { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="toc">
+  <h2>Auditoría de PNs</h2>
+  <h3>Etapa 2</h3>
+  <ol>
+    <li><a href="#pn2-1"><span class="badge-ok"></span>PN2-1 enterPrograma</a></li>
+    <li><a href="#pn2-2"><span class="badge-ok"></span>PN2-2 enterFuncs</a></li>
+    <li><a href="#pn2-3"><span class="badge-ok"></span>PN2-3 exitFuncs</a></li>
+    <li><a href="#pn2-4"><span class="badge-ok"></span>PN2-4 enterDeclaracion</a></li>
+  </ol>
+  <h3>Etapa 3</h3>
+  <ol>
+    <li><a href="#pn3-a"><span class="badge-ok"></span>PN3-A exitFactor</a></li>
+    <li><a href="#pn3-b1"><span class="badge-warn"></span>PN3-B1 enterExp</a></li>
+    <li><a href="#pn3-b2"><span class="badge-ok"></span>PN3-B2 exitExp</a></li>
+    <li><a href="#pn3-c1"><span class="badge-warn"></span>PN3-C1 enterTermino</a></li>
+    <li><a href="#pn3-c2"><span class="badge-ok"></span>PN3-C2 exitTermino</a></li>
+    <li><a href="#pn3-d1"><span class="badge-warn"></span>PN3-D1 enterRelOpc</a></li>
+    <li><a href="#pn3-d2"><span class="badge-ok"></span>PN3-D2 exitExpresion</a></li>
+    <li><a href="#pn3-e"><span class="badge-ok"></span>PN3-E exitAsigna</a></li>
+    <li><a href="#pn3-f"><span class="badge-ok"></span>PN3-F exitImpElem</a></li>
+  </ol>
+  <h3>Conclusión</h3>
+  <ol>
+    <li><a href="#conclusion">Veredicto global</a></li>
+  </ol>
+</aside>
+
+<main>
+
+<header class="page">
+  <h1>Auditoría visual de Puntos Neurálgicos</h1>
+  <p class="sub">¿Cada uno es necesario y eficiente? · Patito Etapa 3 · Luis Manuel Gonzalez Martinez</p>
+</header>
+
+<div class="intro">
+  <h2>Propósito de esta auditoría</h2>
+  <p>Cada punto neurálgico (PN) del analizador semántico se examina aquí contra dos preguntas: <strong>¿es necesario?</strong> (¿se podría omitir sin perder funcionalidad?) y <strong>¿es eficiente?</strong> (¿hace solo el trabajo mínimo requerido?).</p>
+  <p>Para cada PN se muestra: un diagrama SVG del estado de las pilas antes y después de su ejecución, el código del override, qué pasaría si se eliminara, y un veredicto.</p>
+  <div class="legend">
+    <div class="item"><span class="dot dot-ok"></span> Necesario y eficiente</div>
+    <div class="item"><span class="dot dot-warn"></span> Parte obligada del algoritmo clásico de 3 pilas (Aho/Ullman); su trabajo es mantener invariantes de las pilas que el <em>exit</em> luego consume</div>
+  </div>
+</div>
+
+<h2 class="section">Etapa 2: registro de scopes, variables y funciones</h2>
+
+<!-- ============== PN2-1 ============== -->
+<div class="card ok" id="pn2-1">
+  <div class="card-header">
+    <h3>PN2-1 · enterPrograma</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a la regla raíz <code>programa</code>, una sola vez por programa.</div>
+
+  <div class="svg-wrap">
+    <svg width="500" height="220" viewBox="0 0 500 220">
+      <!-- Antes -->
+      <text x="100" y="20" font-size="12" font-weight="bold" fill="#1a1a1a" text-anchor="middle">ANTES</text>
+      <rect x="40" y="40" width="120" height="120" fill="none" stroke="#999" stroke-width="1.5" rx="4"/>
+      <text x="100" y="105" font-size="11" fill="#aaa" text-anchor="middle">(vacio)</text>
+      <text x="100" y="180" font-size="11" fill="#666" text-anchor="middle">FunctionDirectory</text>
+
+      <!-- Flecha -->
+      <line x1="180" y1="100" x2="320" y2="100" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow)"/>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/>
+        </marker>
+      </defs>
+
+      <!-- Despues -->
+      <text x="400" y="20" font-size="12" font-weight="bold" fill="#1a1a1a" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="40" width="120" height="120" fill="#e6efff" stroke="#4a6fa5" stroke-width="1.5" rx="4"/>
+      <rect x="350" y="60" width="100" height="40" fill="#fff" stroke="#4a6fa5" stroke-width="1"/>
+      <text x="400" y="78" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="600">"miPrograma"</text>
+      <text x="400" y="92" font-size="10" fill="#666" text-anchor="middle">retorno: nula</text>
+      <text x="400" y="180" font-size="11" fill="#666" text-anchor="middle">scopeActual ──┘</text>
+    </svg>
+    <div class="svg-caption">El directorio pasa de vacío a tener una entrada con el nombre del programa.</div>
+  </div>
+
+  <pre class="code">void enterPrograma(ProgramaContext* ctx) {
+    auto* idNode = ctx-&gt;ID();
+    nombrePrograma = idNode-&gt;getText();
+    auto* entry = funcs.agregar(nombrePrograma, Tipo::NULA, linea);
+    scopeActual = entry;
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>scopeActual sería <code>nullptr</code> al procesar las primeras declaraciones globales. <code>enterDeclaracion</code> haría early-return y NO se registraría ninguna variable global. El programa quedaría sin scope donde habitar.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Es la única forma de inicializar el scope global. No hay alternativa más barata.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN2-2 ============== -->
+<div class="card ok" id="pn2-2">
+  <div class="card-header">
+    <h3>PN2-2 · enterFuncs</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a cada declaración de función. Una vez por función.</div>
+
+  <div class="svg-wrap">
+    <svg width="540" height="240" viewBox="0 0 540 240">
+      <text x="120" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES (scope = programa)</text>
+      <rect x="40" y="40" width="160" height="160" fill="#e6efff" stroke="#4a6fa5" stroke-width="1.5" rx="4"/>
+      <rect x="50" y="55" width="140" height="30" fill="#fff" stroke="#4a6fa5"/>
+      <text x="120" y="74" font-size="10" text-anchor="middle">miPrograma (global)</text>
+
+      <line x1="220" y1="120" x2="320" y2="120" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow2)"/>
+      <defs><marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+
+      <text x="420" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS (scope = sumar)</text>
+      <rect x="340" y="40" width="160" height="160" fill="#e6efff" stroke="#4a6fa5" stroke-width="1.5" rx="4"/>
+      <rect x="350" y="55" width="140" height="30" fill="#fff" stroke="#4a6fa5"/>
+      <text x="420" y="74" font-size="10" text-anchor="middle">miPrograma (global)</text>
+      <rect x="350" y="95" width="140" height="50" fill="#fef3c7" stroke="#d8a020" stroke-width="1.5"/>
+      <text x="420" y="113" font-size="10" text-anchor="middle" font-weight="600">sumar()</text>
+      <text x="420" y="128" font-size="9" text-anchor="middle">params: a,b ent</text>
+      <text x="420" y="220" font-size="11" text-anchor="middle" fill="#666">scopeActual = sumar</text>
+    </svg>
+    <div class="svg-caption">Se registra la nueva función + se mueve el scope activo. Etapa 3: además resetea contadores locales y temporales.</div>
+  </div>
+
+  <pre class="code">void enterFuncs(FuncsContext* ctx) {
+    // ... validar duplicado ...
+    scopeActual = nuevo;
+    mem.resetScopeLocal();   // Etapa 3
+    // Procesar parametros (los registra como vars locales con direccion).
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Las funciones nunca se registrarían en el directorio. Sus parámetros y vars locales caerían en el scope global, generando duplicados y vars locales "globales". Etapa 3: las direcciones locales nunca se resetearían entre funciones, agotando rápido el rango.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Hace 3 cosas (registrar, switch scope, reset memoria), todas necesarias y ninguna duplicada.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN2-3 ============== -->
+<div class="card ok" id="pn2-3">
+  <div class="card-header">
+    <h3>PN2-3 · exitFuncs</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al salir de una declaración de función. Una vez por función.</div>
+
+  <div class="svg-wrap">
+    <svg width="500" height="180" viewBox="0 0 500 180">
+      <text x="100" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES (scope = sumar)</text>
+      <rect x="40" y="40" width="120" height="50" fill="#fef3c7" stroke="#d8a020"/>
+      <text x="100" y="68" font-size="11" text-anchor="middle">scopeActual</text>
+      <text x="100" y="84" font-size="10" text-anchor="middle">= sumar</text>
+
+      <line x1="180" y1="65" x2="320" y2="65" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow3)"/>
+      <defs><marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+      <text x="250" y="55" font-size="10" text-anchor="middle" fill="#4a6fa5">restaurar global</text>
+
+      <text x="400" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS (scope = programa)</text>
+      <rect x="340" y="40" width="120" height="50" fill="#e6efff" stroke="#4a6fa5"/>
+      <text x="400" y="68" font-size="11" text-anchor="middle">scopeActual</text>
+      <text x="400" y="84" font-size="10" text-anchor="middle">= miPrograma</text>
+
+      <text x="250" y="130" font-size="11" text-anchor="middle" fill="#666">+ enFuncDuplicada = false</text>
+    </svg>
+    <div class="svg-caption">Restaura scope global para que las siguientes funciones/declaraciones se manejen correctamente.</div>
+  </div>
+
+  <pre class="code">void exitFuncs(FuncsContext* /*ctx*/) {
+    scopeActual = funcs.obtener(nombrePrograma);
+    enFuncDuplicada = false;
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Las funciones DECLARADAS DESPUÉS quedarían registradas dentro del scope de la función anterior. Por ejemplo, definir <code>nula f1(){} nula f2(){}</code> haría que <code>f2</code> y sus parámetros vivieran "dentro" de <code>f1</code>. Caos.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Dos asignaciones simples. No hay forma más barata de hacerlo.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN2-4 ============== -->
+<div class="card ok" id="pn2-4">
+  <div class="card-header">
+    <h3>PN2-4 · enterDeclaracion</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a cada renglón <code>id : tipo;</code> dentro de un bloque vars.</div>
+
+  <div class="svg-wrap">
+    <svg width="540" height="240" viewBox="0 0 540 240">
+      <text x="120" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES</text>
+      <rect x="40" y="40" width="160" height="180" fill="#e6efff" stroke="#4a6fa5"/>
+      <text x="120" y="58" font-size="10" text-anchor="middle" font-weight="600">scope: miPrograma</text>
+      <text x="120" y="120" font-size="11" text-anchor="middle" fill="#aaa">VariableTable: vacia</text>
+
+      <line x1="220" y1="120" x2="320" y2="120" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow4)"/>
+      <defs><marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+      <text x="270" y="110" font-size="10" text-anchor="middle" fill="#4a6fa5">procesar "a, b : entero;"</text>
+
+      <text x="420" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="40" width="160" height="180" fill="#e6efff" stroke="#4a6fa5"/>
+      <text x="420" y="58" font-size="10" text-anchor="middle" font-weight="600">scope: miPrograma</text>
+      <rect x="350" y="75" width="140" height="60" fill="#fff" stroke="#4a6fa5"/>
+      <text x="420" y="92" font-size="10" text-anchor="middle">a : entero [1000]</text>
+      <text x="420" y="108" font-size="10" text-anchor="middle">b : entero [1001]</text>
+      <text x="420" y="123" font-size="9" text-anchor="middle" fill="#666">(con direcciones)</text>
+    </svg>
+    <div class="svg-caption">Las dos vars se agregan a la tabla. Etapa 3: con su dirección asignada por AsignadorMemoria.</div>
+  </div>
+
+  <pre class="code">void enterDeclaracion(DeclaracionContext* ctx) {
+    Tipo tipo = extraerTipo(ctx-&gt;tipo());
+    bool esGlobal = (scopeActual-&gt;nombre == nombrePrograma);
+
+    for (cada id en lista) {
+        int direccion = esGlobal ? mem.nuevaGlobal(tipo) : mem.nuevaLocal(tipo);
+        scopeActual-&gt;variables.agregar(nombre, tipo, linea, direccion);
+        // valida duplicados via el return false de agregar
+    }
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Las variables nunca se registrarían. Toda referencia posterior a una variable fallaría con "variable no declarada". El programa entero se convertiría en un montón de errores.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Una iteración sobre la lista, una inserción por var. La asignación de dirección es O(1).</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="section">Etapa 3: generación de cuádruplos</h2>
+
+<!-- ============== PN3-A ============== -->
+<div class="card ok" id="pn3-a">
+  <div class="card-header">
+    <h3>PN3-A · exitFactor</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al salir de cada <code>&lt;FACTOR&gt;</code>. Es el único lugar donde se empujan operandos atómicos a las pilas.</div>
+
+  <div class="svg-wrap">
+    <svg width="540" height="260" viewBox="0 0 540 260">
+      <text x="120" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES (factor = "a")</text>
+      <rect x="40" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="70" y="42" font-size="10" text-anchor="middle">pilaOperandos</text>
+      <text x="70" y="105" font-size="11" fill="#aaa" text-anchor="middle">(vacia)</text>
+      <rect x="110" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="140" y="42" font-size="10" text-anchor="middle">pilaTipos</text>
+      <text x="140" y="105" font-size="11" fill="#aaa" text-anchor="middle">(vacia)</text>
+
+      <line x1="200" y1="100" x2="320" y2="100" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow5)"/>
+      <defs><marker id="arrow5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+      <text x="260" y="90" font-size="10" text-anchor="middle" fill="#4a6fa5">buscar "a" → push</text>
+
+      <text x="420" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="370" y="42" font-size="10" text-anchor="middle">pilaOperandos</text>
+      <rect x="345" y="118" width="50" height="28" fill="#d1fae5" stroke="#065f46"/>
+      <text x="370" y="136" font-size="11" text-anchor="middle" font-weight="600">1000</text>
+      <rect x="410" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="440" y="42" font-size="10" text-anchor="middle">pilaTipos</text>
+      <rect x="415" y="118" width="50" height="28" fill="#d1fae5" stroke="#065f46"/>
+      <text x="440" y="136" font-size="11" text-anchor="middle" font-weight="600">ENT</text>
+
+      <text x="120" y="200" font-size="11" fill="#666" text-anchor="middle">Casos: id, cte, ( expr ), llamada</text>
+      <text x="420" y="200" font-size="11" fill="#666" text-anchor="middle">Empuja (direccion, tipo)</text>
+    </svg>
+    <div class="svg-caption">Cada operando atómico (variable, constante, llamada, expr en paréntesis) empuja su dirección y tipo a las pilas.</div>
+  </div>
+
+  <pre class="code">void exitFactor(FactorContext* ctx) {
+    if (ctx-&gt;PIZQ()) return;             // ( expr ): ya empujado
+    if (ctx-&gt;llamada()) { ... push phantom ... }
+    if (ctx-&gt;ID())  { busca var; push direccion+tipo }
+    if (ctx-&gt;cte()) { registra const; push direccion+tipo }
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Las pilas siempre estarían vacías cuando PN3-B2/C2/D2 intenten popear operandos. Ningún cuádruplo se generaría. El programa "compila" sin código intermedio.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Cada factor produce exactamente un push (o nada en el caso de paréntesis donde el push ya ocurrió internamente).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-B1 ============== -->
+<div class="card warn" id="pn3-b1">
+  <div class="card-header">
+    <h3>PN3-B1 · enterExp (con MAS o MENOS)</h3>
+    <span class="verdict verdict-warn">Necesario por la rúbrica</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a una regla <code>exp : exp '+' termino</code> o <code>exp : exp '-' termino</code>.</div>
+
+  <div class="svg-wrap">
+    <svg width="540" height="200" viewBox="0 0 540 200">
+      <text x="120" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES</text>
+      <rect x="40" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="70" y="42" font-size="10" text-anchor="middle">pilaOperadores</text>
+      <text x="70" y="105" font-size="11" fill="#aaa" text-anchor="middle">(vacia)</text>
+
+      <line x1="120" y1="100" x2="320" y2="100" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow6)"/>
+      <defs><marker id="arrow6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+      <text x="220" y="90" font-size="10" text-anchor="middle" fill="#4a6fa5">push '+'</text>
+
+      <text x="420" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="50" width="60" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="370" y="42" font-size="10" text-anchor="middle">pilaOperadores</text>
+      <rect x="345" y="118" width="50" height="28" fill="#fef3c7" stroke="#d8a020"/>
+      <text x="370" y="136" font-size="11" text-anchor="middle" font-weight="600">+</text>
+    </svg>
+    <div class="svg-caption">Apila el operador para que PN3-B2 lo pueda popear al final. La pila acumula operadores anidados durante recursiones.</div>
+  </div>
+
+  <pre class="code">void enterExp(ExpContext* ctx) {
+    if (ctx-&gt;MAS())   gen.pushOperador(Operador::MAS);
+    if (ctx-&gt;MENOS()) gen.pushOperador(Operador::MENOS);
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Sin este PN la <code>pilaOperadores</code> nunca recibiría <code>+</code>/<code>-</code>, por lo que PN3-B2 no podría hacer <em>pop</em> del operador esperado por el algoritmo clásico de 3 pilas. La invariante "el operador binario actual vive en el tope de la pila durante el procesamiento de sus operandos" se rompería.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí: una sola operación O(1) sobre la pila. Es el punto exacto donde el algoritmo de Aho/Ullman dicta empujar el operador (antes de evaluar los operandos) para preservar precedencia y asociatividad. Mantenerlo es lo que permite reescribir esta etapa hacia un parser tabular en el futuro sin tocar nada más del generador.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-B2 ============== -->
+<div class="card ok" id="pn3-b2">
+  <div class="card-header">
+    <h3>PN3-B2 · exitExp (con MAS o MENOS)</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al salir de una <code>exp</code> que tenía operador, después de procesar ambos hijos.</div>
+
+  <div class="svg-wrap">
+    <svg width="600" height="260" viewBox="0 0 600 260">
+      <text x="140" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES</text>
+      <rect x="40" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="65" y="42" font-size="9" text-anchor="middle">Operandos</text>
+      <rect x="45" y="118" width="40" height="24" fill="#d1fae5"/><text x="65" y="134" font-size="10" text-anchor="middle">1001</text>
+      <rect x="45" y="144" width="40" height="24" fill="#d1fae5"/><text x="65" y="160" font-size="10" text-anchor="middle">1000</text>
+
+      <rect x="100" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="125" y="42" font-size="9" text-anchor="middle">Tipos</text>
+      <rect x="105" y="118" width="40" height="24" fill="#d1fae5"/><text x="125" y="134" font-size="10" text-anchor="middle">ENT</text>
+      <rect x="105" y="144" width="40" height="24" fill="#d1fae5"/><text x="125" y="160" font-size="10" text-anchor="middle">ENT</text>
+
+      <rect x="160" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="185" y="42" font-size="9" text-anchor="middle">Operad.</text>
+      <rect x="165" y="144" width="40" height="24" fill="#fef3c7"/><text x="185" y="160" font-size="10" text-anchor="middle">+</text>
+
+      <line x1="230" y1="120" x2="350" y2="120" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow7)"/>
+      <defs><marker id="arrow7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+      <text x="290" y="105" font-size="10" text-anchor="middle" fill="#4a6fa5">pop, validar cubo,</text>
+      <text x="290" y="115" font-size="10" text-anchor="middle" fill="#4a6fa5">asignar t, emit, push t</text>
+
+      <text x="465" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="370" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="395" y="42" font-size="9" text-anchor="middle">Operandos</text>
+      <rect x="375" y="144" width="40" height="24" fill="#bfdbfe" stroke="#1e40af"/><text x="395" y="160" font-size="10" text-anchor="middle">9000</text>
+
+      <rect x="430" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="455" y="42" font-size="9" text-anchor="middle">Tipos</text>
+      <rect x="435" y="144" width="40" height="24" fill="#bfdbfe" stroke="#1e40af"/><text x="455" y="160" font-size="10" text-anchor="middle">ENT</text>
+
+      <rect x="490" y="50" width="50" height="120" fill="#fafafa" stroke="#999"/>
+      <text x="515" y="42" font-size="9" text-anchor="middle">Operad.</text>
+      <text x="515" y="120" font-size="11" fill="#aaa" text-anchor="middle">(vacia)</text>
+
+      <text x="300" y="220" font-size="11" font-weight="600" fill="#1a1a1a" text-anchor="middle">Emite cuadruplo: (+, 1000, 1001, 9000)</text>
+    </svg>
+    <div class="svg-caption">Pop del operador y de los 2 operandos, validación con cubo, emisión del cuádruplo, push del resultado temporal.</div>
+  </div>
+
+  <pre class="code">void exitExp(ExpContext* ctx) {
+    if (ctx-&gt;MAS() == nullptr &amp;&amp; ctx-&gt;MENOS() == nullptr) return;
+    Tipo res = gen.popYEmitirBinario();
+    if (res == Tipo::ERROR) error("tipos incompatibles para '+/-'");
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Las pilas crecerían sin generar cuádruplos. El programa "compila" sin código intermedio. Las pilas terminarían desbalanceadas al final del programa.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Es la única manera de emitir cuádruplos para suma/resta. Delega toda la complejidad a <code>popYEmitirBinario</code>, que es O(1).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-C1 + C2 (resumido juntos) ============== -->
+<div class="card warn" id="pn3-c1">
+  <div class="card-header">
+    <h3>PN3-C1 · enterTermino (con POR o ENTRE)</h3>
+    <span class="verdict verdict-warn">Algoritmo de 3 pilas</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a una regla <code>termino : termino '*' factor</code> o <code>termino : termino '/' factor</code>.</div>
+
+  <pre class="code">void enterTermino(TerminoContext* ctx) {
+    if (ctx-&gt;POR())   gen.pushOperador(Operador::POR);
+    if (ctx-&gt;ENTRE()) gen.pushOperador(Operador::ENTRE);
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>La <code>pilaOperadores</code> nunca recibiría <code>*</code>/<code>/</code>, por lo que PN3-C2 no encontraría operador al hacer <em>pop</em>. La precedencia de <code>*</code>/<code>/</code> sobre <code>+</code>/<code>-</code> deja de quedar asentada en la pila para casos anidados como <code>a + b * c</code>.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí: <em>push</em> en O(1). Es el dual exacto de PN3-B1 una nivel más profundo en la jerarquía de precedencia, y mantiene la simetría que pide el algoritmo clásico.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card ok" id="pn3-c2">
+  <div class="card-header">
+    <h3>PN3-C2 · exitTermino (con POR o ENTRE)</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al salir de una <code>termino</code> que tenía <code>*</code> o <code>/</code>.</div>
+
+  <pre class="code">void exitTermino(TerminoContext* ctx) {
+    if (ctx-&gt;POR() == nullptr &amp;&amp; ctx-&gt;ENTRE() == nullptr) return;
+    Tipo res = gen.popYEmitirBinario();
+    if (res == Tipo::ERROR) error("tipos incompatibles para '*' o '/'");
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Multiplicaciones y divisiones nunca emitirían cuádruplos. <code>a * b</code> dejaría <code>a</code> y <code>b</code> en la pila sin procesar.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Mismo razonamiento que PN3-B2. Delega a popYEmitirBinario.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-D1 + D2 ============== -->
+<div class="card warn" id="pn3-d1">
+  <div class="card-header">
+    <h3>PN3-D1 · enterRelOpc (con opRel no-épsilon)</h3>
+    <span class="verdict verdict-warn">Algoritmo de 3 pilas</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al entrar a una <code>relOpc</code> que tiene un operador relacional (no épsilon).</div>
+
+  <pre class="code">void enterRelOpc(RelOpcContext* ctx) {
+    auto* opRel = ctx-&gt;opRel();
+    if (opRel == nullptr) return;
+    if (opRel-&gt;MAYOR())    gen.pushOperador(Operador::MAYOR);
+    if (opRel-&gt;MENOR())    gen.pushOperador(Operador::MENOR);
+    if (opRel-&gt;DISTINTO()) gen.pushOperador(Operador::DISTINTO);
+    if (opRel-&gt;IGUAL2())   gen.pushOperador(Operador::IGUAL2);
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Sin este PN, PN3-D2 no tendría operador relacional en la pila al cierre de la expresión. El cuádruplo relacional no podría emitirse usando la misma rutina <code>popYEmitirBinario</code> que usan los aritméticos: habría que duplicar la lógica leyendo el operador desde el contexto sintáctico.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí: un <em>push</em> O(1). Mantiene la simetría con PN3-B1 y PN3-C1, lo que permite reutilizar <code>popYEmitirBinario</code> sin ramificar por familia de operador.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card ok" id="pn3-d2">
+  <div class="card-header">
+    <h3>PN3-D2 · exitExpresion (con relOpc no-épsilon)</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al terminar una <code>expresion</code> que tenía relOpc. Es donde se emite el cuádruplo relacional.</div>
+
+  <div class="svg-wrap">
+    <svg width="500" height="180" viewBox="0 0 500 180">
+      <text x="100" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES (a, b en pilas; &lt; en operadores)</text>
+      <rect x="30" y="50" width="170" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="115" y="80" font-size="10" text-anchor="middle">[1001, 1000] / [ENT, ENT]</text>
+      <text x="115" y="100" font-size="10" text-anchor="middle">operadores: [&lt;]</text>
+
+      <line x1="220" y1="100" x2="320" y2="100" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow8)"/>
+      <defs><marker id="arrow8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+
+      <text x="400" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="50" width="130" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="405" y="80" font-size="10" text-anchor="middle">[11000] / [BOOL]</text>
+      <text x="405" y="100" font-size="10" text-anchor="middle">operadores: []</text>
+
+      <text x="250" y="170" font-size="11" font-weight="600" text-anchor="middle">Emite: (&lt;, 1000, 1001, 11000)  →  resultado tipo BOOL</text>
+    </svg>
+  </div>
+
+  <pre class="code">void exitExpresion(ExpresionContext* ctx) {
+    auto* relOpc = ctx-&gt;relOpc();
+    if (relOpc == nullptr || relOpc-&gt;opRel() == nullptr) return;
+    Tipo res = gen.popYEmitirBinario();
+    if (res == Tipo::ERROR) error("tipos incompatibles en expresion relacional");
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Comparaciones <code>a &lt; b</code> nunca emitirían cuádruplos. Los <code>si</code> y <code>mientras</code> (Etapa 4) no tendrían el BOOL para decidir saltos.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Single check del context, delega a popYEmitirBinario, valida cubo.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-E ============== -->
+<div class="card ok" id="pn3-e">
+  <div class="card-header">
+    <h3>PN3-E · exitAsigna</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al terminar de procesar <code>id = expresion ;</code>. El RHS ya dejó su resultado en pilaOperandos.</div>
+
+  <div class="svg-wrap">
+    <svg width="500" height="200" viewBox="0 0 500 200">
+      <text x="100" y="20" font-size="12" font-weight="bold" text-anchor="middle">ANTES (RHS evaluado)</text>
+      <rect x="30" y="50" width="150" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="105" y="80" font-size="10" text-anchor="middle">operandos: [9001]</text>
+      <text x="105" y="100" font-size="10" text-anchor="middle">tipos: [ENT]</text>
+      <text x="105" y="125" font-size="10" fill="#666" text-anchor="middle">destino: x [dir=1003]</text>
+
+      <line x1="200" y1="100" x2="320" y2="100" stroke="#4a6fa5" stroke-width="2" marker-end="url(#arrow9)"/>
+      <defs><marker id="arrow9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/></marker></defs>
+
+      <text x="400" y="20" font-size="12" font-weight="bold" text-anchor="middle">DESPUÉS</text>
+      <rect x="340" y="50" width="130" height="100" fill="#fafafa" stroke="#999"/>
+      <text x="405" y="100" font-size="11" fill="#aaa" text-anchor="middle">(vacias)</text>
+
+      <text x="250" y="180" font-size="11" font-weight="600" text-anchor="middle">Emite: (=, 9001, _, 1003)</text>
+    </svg>
+  </div>
+
+  <pre class="code">void exitAsigna(AsignaContext* ctx) {
+    // Resuelve destino, pop RHS, valida cubo, emite '='
+    const VariableInfo* v = buscarVar(nombre);
+    if (v == nullptr) { error("no declarada"); ... return; }
+    Tipo res = gen.emitirAsignacion(v-&gt;direccion, v-&gt;tipo);
+    if (res == Tipo::ERROR) error("tipos incompatibles en asignacion");
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>El RHS quedaría en la pila sin asignarse a la variable destino. No habría cuádruplos de asignación. Las vars nunca cambiarían en runtime.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Una sola búsqueda de la variable destino y un emit. Sin redundancia.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== PN3-F ============== -->
+<div class="card ok" id="pn3-f">
+  <div class="card-header">
+    <h3>PN3-F · exitImpElem</h3>
+    <span class="verdict verdict-ok">Necesario</span>
+  </div>
+  <div class="trigger"><strong>Dispara:</strong> al salir de cada elemento de la lista del <code>escribe(...)</code>.</div>
+
+  <pre class="code">void exitImpElem(ImpElemContext* ctx) {
+    if (ctx-&gt;LETRERO()) {
+        int dir = cte.direccionDeLetrero(lex);
+        gen.emitirPrint(dir);
+    } else {  // era expresion
+        int dir = gen.topOperando();
+        gen.emitirPrint(dir);
+        gen.popOperando();
+    }
+}</pre>
+
+  <div class="analysis">
+    <div class="panel">
+      <h4>¿Qué pasaría sin él?</h4>
+      <p>Ningún cuádruplo PRINT se emitiría. Los letreros se registrarían (si otro PN los manejara) pero no se imprimirían en ejecución.</p>
+    </div>
+    <div class="panel">
+      <h4>¿Es eficiente?</h4>
+      <p>Sí. Un solo cuádruplo por elemento. La distinción letrero vs expresión es necesaria porque vienen de distinto lado de la gramática.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== CONCLUSIÓN ============== -->
+<h2 class="section" id="conclusion">Veredicto global</h2>
+
+<div class="card ok">
+  <p>De los <strong>13 puntos neurálgicos</strong> implementados:</p>
+  <ul>
+    <li><strong>10 son estrictamente necesarios</strong> (badge verde): sin ellos el compilador deja de funcionar.</li>
+    <li><strong>3 implementan la mecánica clásica de la <code>pilaOperadores</code></strong> (badge amarillo): PN3-B1, PN3-C1, PN3-D1 — los <em>enter</em> que empujan el operador binario antes de procesar sus operandos. Son los puntos exactos donde el algoritmo de Aho/Ullman dicta hacer el <em>push</em>; sin ellos PN3-B2, PN3-C2 y PN3-D2 no podrían usar <code>popYEmitirBinario</code> de forma uniforme y la invariante de la pila de operadores se perdería.</li>
+  </ul>
+  <p><strong>Por qué la auditoría los marca aparte (badge amarillo):</strong></p>
+  <ol>
+    <li>Son puntos de <em>preparación</em>: no emiten cuádruplo por sí mismos, solo dejan la pila lista para que el <em>exit</em> correspondiente lo haga. Esto los hace conceptualmente distintos de los <em>exit</em> verdes, que sí ejecutan el trabajo observable.</li>
+    <li>El badge amarillo destaca que la rúbrica pide explícitamente las 3 pilas (operandos, tipos, <strong>operadores</strong>) — esta familia de PNs es la que materializa esa tercera pila.</li>
+    <li>Mantener el patrón "push en enter, pop en exit" hace el código <strong>simétrico</strong> y trivial de extender. Cuando Etapa 4 agregue saltos a parchar para <code>si</code>/<code>mientras</code>, los nuevos PNs encajan en la misma forma.</li>
+  </ol>
+  <p><strong>Conclusión:</strong> el conjunto de puntos neurálgicos es <em>completo y defensible</em>. Cada PN tiene un propósito documentado, una invariante que mantiene sobre las pilas, y un consumidor claro aguas abajo. Ninguno se eliminó tras la auditoría.</p>
+</div>
+
+<footer style="margin-top: 40px; padding: 20px 0; border-top: 1px solid #ccc; color: #777; font-size: 13px;">
+  <p>Auditoría visual generada como parte de la entrega de Etapa 3 — Proyecto Patito.</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

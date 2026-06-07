@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito Etapa 2 — Walkthrough línea por línea</title>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.55;
+  }
+  .layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+  .toc {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    background: #1f1f23; color: #ddd; padding: 24px 18px;
+    border-right: 1px solid #333; font-size: 13px;
+  }
+  .toc h2 {
+    color: #fff; font-size: 14px; text-transform: uppercase;
+    letter-spacing: 0.08em; margin: 0 0 12px;
+    padding-bottom: 8px; border-bottom: 1px solid #333;
+  }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 6px 0; }
+  .toc a {
+    color: #aab; text-decoration: none; display: block;
+    padding: 4px 8px; border-radius: 4px;
+  }
+  .toc a:hover { background: #2a2a30; color: #fff; }
+  .toc ol ol { margin-left: 12px; margin-top: 4px; }
+  .toc ol ol a { font-size: 12px; color: #889; padding: 2px 8px; }
+  .toc .file { font-weight: 600; color: #fff; }
+  main { padding: 40px 56px; max-width: 1100px; }
+  header.page {
+    margin-bottom: 40px; padding-bottom: 24px;
+    border-bottom: 2px solid #1a1a1a;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.02em; }
+  header.page .sub { color: #666; font-size: 15px; }
+  h2.section {
+    margin-top: 56px; padding-bottom: 8px;
+    border-bottom: 1px solid #ccc; font-size: 22px;
+  }
+  h3.subsection { margin-top: 36px; font-size: 17px; color: #444; }
+  p.intro { color: #444; max-width: 75ch; }
+  .file-card {
+    background: #fff; border: 1px solid #e0e0e0;
+    border-left: 4px solid #4a6fa5; padding: 16px 20px;
+    margin: 16px 0 24px; border-radius: 4px;
+  }
+  .file-card.modified { border-left-color: #d8a020; }
+  .file-card .filename {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px; font-weight: 600; color: #4a6fa5;
+  }
+  .file-card.modified .filename { color: #8a5c00; }
+  .file-card .role { color: #555; font-size: 14px; margin-top: 4px; }
+  .file-card .tag {
+    display: inline-block; font-size: 11px; background: #e6efff;
+    color: #2a4a7a; padding: 2px 8px; border-radius: 10px;
+    margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .file-card.modified .tag { background: #fff0c8; color: #6a4500; }
+  .block {
+    margin: 18px 0 24px; background: #fff;
+    border: 1px solid #e3e3e3; border-radius: 6px; overflow: hidden;
+  }
+  .block .code {
+    background: #1f1f23; color: #f0f0f0;
+    padding: 14px 18px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.7;
+    overflow-x: auto; white-space: pre;
+  }
+  .block .code .ln {
+    display: inline-block; width: 30px; text-align: right;
+    margin-right: 14px; color: #666; user-select: none;
+  }
+  .block .explain {
+    padding: 14px 20px; background: #f7f8fa;
+    border-top: 1px solid #e3e3e3; font-size: 14px; color: #2a2a2a;
+  }
+  .block .explain p { margin: 0 0 8px; }
+  .block .explain p:last-child { margin-bottom: 0; }
+  .block .explain ul { margin: 4px 0 8px; padding-left: 22px; }
+  .block .explain li { margin: 3px 0; }
+  .block .explain strong { color: #1a1a1a; }
+  .block .explain code, code.inline {
+    background: #eef0f3; padding: 1px 5px; border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px; color: #1a1a1a;
+  }
+  .note {
+    background: #fff8e6; border-left: 4px solid #d8a020;
+    padding: 12px 16px; margin: 16px 0;
+    font-size: 14px; border-radius: 4px;
+  }
+  .note strong { color: #8a5c00; }
+  .pipeline {
+    background: #f0f4fa; border-left: 4px solid #4a6fa5;
+    padding: 12px 16px; margin: 16px 0;
+    font-size: 14px; border-radius: 4px;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .toc { position: static; height: auto; }
+    main { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="toc">
+  <h2>Walkthrough Etapa 2</h2>
+  <ol>
+    <li><a href="#intro" class="file">Visión general</a></li>
+    <li><a href="#types" class="file">SemanticTypes.h</a></li>
+    <li><a href="#cube-h" class="file">SemanticCube.h</a></li>
+    <li><a href="#cube-cpp" class="file">SemanticCube.cpp</a>
+      <ol>
+        <li><a href="#cube-tipoToStr">tipoToStr / opToStr</a></li>
+        <li><a href="#cube-resultado">resultado()</a></li>
+      </ol>
+    </li>
+    <li><a href="#table-h" class="file">SymbolTable.h</a>
+      <ol>
+        <li><a href="#table-h-info">VariableInfo / ParametroInfo</a></li>
+        <li><a href="#table-h-vartable">VariableTable</a></li>
+        <li><a href="#table-h-funcinfo">FunctionInfo</a></li>
+        <li><a href="#table-h-dir">FunctionDirectory</a></li>
+      </ol>
+    </li>
+    <li><a href="#table-cpp" class="file">SymbolTable.cpp</a>
+      <ol>
+        <li><a href="#table-cpp-vt">Implementación VariableTable</a></li>
+        <li><a href="#table-cpp-dir">Implementación FunctionDirectory</a></li>
+        <li><a href="#table-cpp-print">imprimir() (orden determinista)</a></li>
+      </ol>
+    </li>
+    <li><a href="#analyzer-h" class="file">SemanticAnalyzer.h</a></li>
+    <li><a href="#analyzer-cpp" class="file">SemanticAnalyzer.cpp</a>
+      <ol>
+        <li><a href="#an-ctor">Constructor + helpers</a></li>
+        <li><a href="#an-prog">enterPrograma</a></li>
+        <li><a href="#an-funcs">enterFuncs</a></li>
+        <li><a href="#an-exit">exitFuncs</a></li>
+        <li><a href="#an-decl">enterDeclaracion</a></li>
+      </ol>
+    </li>
+    <li><a href="#main-delta" class="file">main.cpp (cambios)</a></li>
+    <li><a href="#cmake-delta" class="file">CMakeLists.txt (cambios)</a></li>
+    <li><a href="#runner-delta" class="file">run_tests.sh (cambios)</a></li>
+  </ol>
+</aside>
+
+<main>
+
+<header class="page">
+  <h1>Patito Etapa 2 — Walkthrough línea por línea</h1>
+  <p class="sub">Análisis semántico · Cubo + Directorio de Funciones + Tablas de Variables · Luis Manuel Gonzalez Martinez · A01722501</p>
+</header>
+
+<section id="intro">
+  <h2 class="section">Visión general</h2>
+  <p class="intro">Etapa 2 agrega <strong>una pasada más</strong> sobre el árbol de parseo que produjo Etapa 1: el <em>analizador semántico</em>. Su trabajo es recorrer el árbol, registrar cada función en un <strong>Directorio de Funciones</strong> y cada variable en su <strong>Tabla de Variables</strong>, y reportar violaciones (en esta etapa, solo duplicados). Además se diseña el <strong>Cubo Semántico</strong> que en Etapa 3 servirá para validar tipos en expresiones.</p>
+
+  <div class="pipeline">
+    <strong>Pipeline actualizado:</strong><br>
+    archivo.patito → <code class="inline">PatitoLexer</code> → <code class="inline">PatitoParser</code> → <strong><code class="inline">SemanticAnalyzer</code></strong> (listener) → reporta OK / FAIL
+  </div>
+
+  <p class="intro">Lo nuevo en esta etapa son <strong>7 archivos C++</strong> dentro de <code class="inline">src/semantic/</code>, más modificaciones a <code class="inline">src/main.cpp</code>, <code class="inline">CMakeLists.txt</code> y <code class="inline">tests/run_tests.sh</code> para integrar todo. Este walkthrough explica los archivos nuevos línea por línea, y muestra solo las partes <em>añadidas</em> de los archivos modificados.</p>
+
+  <p class="intro">El módulo está organizado en cuatro unidades:</p>
+  <ul>
+    <li><strong>SemanticTypes.h</strong> — los <code class="inline">enum class</code> de tipos y operadores que el resto del módulo usa.</li>
+    <li><strong>SemanticCube.{h,cpp}</strong> — el cubo semántico, una función que dada <code class="inline">(tipo, operador, tipo)</code> devuelve el tipo resultado.</li>
+    <li><strong>SymbolTable.{h,cpp}</strong> — las estructuras que almacenan funciones y variables.</li>
+    <li><strong>SemanticAnalyzer.{h,cpp}</strong> — el listener que recorre el árbol y llena las estructuras anteriores en los puntos neurálgicos.</li>
+  </ul>
+</section>
+
+<!-- =========================================== -->
+<!--               SEMANTICTYPES.H               -->
+<!-- =========================================== -->
+
+<section id="types">
+  <h2 class="section">src/semantic/SemanticTypes.h</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SemanticTypes.h</div>
+    <div class="role">Define los enums fundamentales (<code>Tipo</code> y <code>Operador</code>) que viajan por todo el módulo semántico. Solo declaraciones; sin lógica.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>// Tipos del lenguaje Patito y operadores reconocidos por el cubo semantico.
+<span class="ln">2</span>// Etapa 2: solo se diseña el cubo. Su aplicacion en expresiones llega en Etapa 3.</div>
+    <div class="explain">
+      <p>Comentario de cabecera. Documenta el propósito del archivo y deja claro que en esta etapa <strong>solo se diseña</strong> el cubo — su uso real (validar cada expresión) llega en Etapa 3 con la generación de cuádruplos.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">4</span>#pragma once
+<span class="ln">5</span>
+<span class="ln">6</span>#include &lt;string&gt;</div>
+    <div class="explain">
+      <p><code>#pragma once</code> evita que el header se incluya dos veces en la misma unidad de compilación (alternativa moderna a los include guards <code>#ifndef ... #define ... #endif</code>). Es soportado por todos los compiladores que usamos (clang, gcc, MSVC).</p>
+      <p><code>&lt;string&gt;</code> se necesita para las firmas <code>tipoToStr</code> y <code>opToStr</code> que devuelven <code>std::string</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">8</span>namespace patito {</div>
+    <div class="explain">
+      <p>Todo el código semántico vive en el namespace <code>patito</code>. Esto evita colisiones con símbolos del runtime ANTLR (que vive en <code>antlr4</code>) o de la stdlib. En <code>main.cpp</code> usaremos <code>patito::SemanticAnalyzer</code> explícitamente.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">10</span>// Tipos que maneja el analizador.
+<span class="ln">11</span>//  - ENTERO / FLOTANTE: tipos del lenguaje Patito.
+<span class="ln">12</span>//  - NULA: solo para tipo de retorno de funciones.
+<span class="ln">13</span>//  - BOOL: tipo interno, resultado de operadores relacionales.
+<span class="ln">14</span>//  - ERROR: combinacion invalida en el cubo semantico.
+<span class="ln">15</span>enum class Tipo {
+<span class="ln">16</span>    ENTERO,
+<span class="ln">17</span>    FLOTANTE,
+<span class="ln">18</span>    NULA,
+<span class="ln">19</span>    BOOL,
+<span class="ln">20</span>    ERROR
+<span class="ln">21</span>};</div>
+    <div class="explain">
+      <p>Declara los 5 tipos que el analizador maneja. Uso <code>enum class</code> (no el viejo <code>enum</code> de C) para que los valores estén <strong>scopados</strong>: hay que escribir <code>Tipo::ENTERO</code>, no solo <code>ENTERO</code>. Esto evita colisiones con macros y obliga a tipar explícitamente.</p>
+      <ul>
+        <li><code>ENTERO</code>, <code>FLOTANTE</code> — los dos tipos del lenguaje, los que el usuario declara.</li>
+        <li><code>NULA</code> — solo válido como tipo de retorno de función. Las variables no pueden tener este tipo.</li>
+        <li><code>BOOL</code> — tipo interno. El usuario no lo escribe; el cubo lo devuelve cuando dos operandos numéricos se comparan con <code>&gt;</code>, <code>&lt;</code>, <code>==</code> o <code>!=</code>. Sirve para Etapa 3 cuando una expresión así se use en <code>si (...)</code> o <code>mientras (...)</code>.</li>
+        <li><code>ERROR</code> — sentinela. El cubo lo devuelve para combinaciones inválidas (p. ej. sumar dos <code>NULA</code>).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">23</span>// Operadores del lenguaje cubiertos por el cubo semantico.
+<span class="ln">24</span>enum class Operador {
+<span class="ln">25</span>    MAS,      // +
+<span class="ln">26</span>    MENOS,    // -
+<span class="ln">27</span>    POR,      // *
+<span class="ln">28</span>    ENTRE,    // /
+<span class="ln">29</span>    MAYOR,    // &gt;
+<span class="ln">30</span>    MENOR,    // &lt;
+<span class="ln">31</span>    DISTINTO, // !=
+<span class="ln">32</span>    IGUAL2,   // ==
+<span class="ln">33</span>    ASIGNA    // =
+<span class="ln">34</span>};</div>
+    <div class="explain">
+      <p>Los 9 operadores que el cubo reconoce. Los nombres coinciden con los tokens del lexer (<code>MAS</code>, <code>MENOS</code>, etc., en <code>Patito.g4</code>) salvo <code>ASIGNA</code>, que en el lexer se llama <code>IGUAL</code> pero aquí le di un nombre más descriptivo porque "IGUAL" en el contexto semántico se confunde con <code>IGUAL2</code> (==).</p>
+      <p>Cada operador se usará como uno de los tres ejes del cubo: <code>(tipoIzq, Operador, tipoDer) → Tipo</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">36</span>std::string tipoToStr(Tipo t);
+<span class="ln">37</span>std::string opToStr(Operador op);</div>
+    <div class="explain">
+      <p>Funciones libres (no miembros) que convierten un valor del enum a su nombre humano. Esto es lo que el <code>--dir</code> y los mensajes de error usan para imprimir "entero" en vez de "0". Solo declaradas aquí; el cuerpo está en <code>SemanticCube.cpp</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">39</span>} // namespace patito</div>
+    <div class="explain">
+      <p>Cierre del namespace. El comentario después de la llave es una convención: ayuda al lector a saber qué namespace se está cerrando, sobre todo cuando hay anidación.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                SEMANTICCUBE.H               -->
+<!-- =========================================== -->
+
+<section id="cube-h">
+  <h2 class="section">src/semantic/SemanticCube.h</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SemanticCube.h</div>
+    <div class="role">Interfaz pública del cubo semántico: una clase con un solo método estático que responde "(izq, op, der) → resultado".</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln"> 1</span>// Cubo Semantico de Patito.
+<span class="ln"> 2</span>// Dada una pareja de tipos y un operador, devuelve el tipo del resultado
+<span class="ln"> 3</span>// (o Tipo::ERROR si la combinacion no es valida).
+<span class="ln"> 4</span>//
+<span class="ln"> 5</span>// Reglas:
+<span class="ln"> 6</span>//   - Aritmetico (+ - * /): entero op entero -&gt; entero
+<span class="ln"> 7</span>//                            cualquiera con flotante -&gt; flotante
+<span class="ln"> 8</span>//   - Relacional (&gt; &lt; != ==): cualquier combinacion numerica -&gt; BOOL
+<span class="ln"> 9</span>//   - Asignacion (=): entero = entero -&gt; entero
+<span class="ln">10</span>//                     flotante = entero -&gt; flotante (ensanchamiento implicito)
+<span class="ln">11</span>//                     flotante = flotante -&gt; flotante
+<span class="ln">12</span>//                     entero = flotante -&gt; ERROR (perdida de precision)
+<span class="ln">13</span>//
+<span class="ln">14</span>// Etapa 2 solo construye el cubo; Etapa 3 lo aplicara al generar cuadruplos.</div>
+    <div class="explain">
+      <p>Comentario de cabecera con la tabla de reglas del cubo. Ponerlo aquí (en lugar de en el <code>.cpp</code>) es deliberado: el usuario que <code>#include "SemanticCube.h"</code> ve inmediatamente qué resultados esperar sin tener que abrir la implementación.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">16</span>#pragma once
+<span class="ln">17</span>
+<span class="ln">18</span>#include "SemanticTypes.h"</div>
+    <div class="explain">
+      <p>Incluyo <code>SemanticTypes.h</code> porque la declaración de la función usa <code>Tipo</code> y <code>Operador</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">20</span>namespace patito {
+<span class="ln">21</span>
+<span class="ln">22</span>class SemanticCube {
+<span class="ln">23</span>public:
+<span class="ln">24</span>    // Tipo resultado para (izq op der). ERROR si la combinacion no es valida.
+<span class="ln">25</span>    static Tipo resultado(Tipo izq, Operador op, Tipo der);
+<span class="ln">26</span>};
+<span class="ln">27</span>
+<span class="ln">28</span>} // namespace patito</div>
+    <div class="explain">
+      <p>El cubo es una <strong>clase con un único método estático</strong>. No tiene estado (no necesita constructor ni miembros), así que técnicamente podría ser una función libre. La clase existe solo como "namespace" para que el llamador escriba <code>SemanticCube::resultado(...)</code>, que documenta mejor el propósito que una función pelona.</p>
+      <p><code>static</code> significa que no se instancia: se llama como <code>SemanticCube::resultado(...)</code> directamente, sin objeto.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--               SEMANTICCUBE.CPP              -->
+<!-- =========================================== -->
+
+<section id="cube-cpp">
+  <h2 class="section">src/semantic/SemanticCube.cpp</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SemanticCube.cpp</div>
+    <div class="role">Implementación del cubo + los conversores enum → string. Es el archivo donde vive toda la lógica de "qué resulta de mezclar X con Y mediante Z".</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>#include "SemanticCube.h"
+<span class="ln">2</span>
+<span class="ln">3</span>namespace patito {</div>
+    <div class="explain">
+      <p>Incluye su propio header (es la convención) y abre el namespace para que las definiciones siguientes pertenezcan a <code>patito::</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="cube-tipoToStr">tipoToStr y opToStr</h3>
+  <div class="block">
+    <div class="code"><span class="ln"> 5</span>std::string tipoToStr(Tipo t) {
+<span class="ln"> 6</span>    switch (t) {
+<span class="ln"> 7</span>        case Tipo::ENTERO:   return "entero";
+<span class="ln"> 8</span>        case Tipo::FLOTANTE: return "flotante";
+<span class="ln"> 9</span>        case Tipo::NULA:     return "nula";
+<span class="ln">10</span>        case Tipo::BOOL:     return "bool";
+<span class="ln">11</span>        case Tipo::ERROR:    return "error";
+<span class="ln">12</span>    }
+<span class="ln">13</span>    return "?";
+<span class="ln">14</span>}</div>
+    <div class="explain">
+      <p>Convierte un valor del enum a su representación en texto. El <code>switch</code> cubre los 5 valores; el <code>return "?"</code> al final es defensivo: si en el futuro se agrega un nuevo valor al enum y se olvida agregar el <code>case</code>, esta función al menos no compila silenciosamente con un valor basura (devuelve "?"), avisándo el problema.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">16</span>std::string opToStr(Operador op) {
+<span class="ln">17</span>    switch (op) {
+<span class="ln">18</span>        case Operador::MAS:      return "+";
+<span class="ln">19</span>        case Operador::MENOS:    return "-";
+<span class="ln">20</span>        case Operador::POR:      return "*";
+<span class="ln">21</span>        case Operador::ENTRE:    return "/";
+<span class="ln">22</span>        case Operador::MAYOR:    return "&gt;";
+<span class="ln">23</span>        case Operador::MENOR:    return "&lt;";
+<span class="ln">24</span>        case Operador::DISTINTO: return "!=";
+<span class="ln">25</span>        case Operador::IGUAL2:   return "==";
+<span class="ln">26</span>        case Operador::ASIGNA:   return "=";
+<span class="ln">27</span>    }
+<span class="ln">28</span>    return "?";
+<span class="ln">29</span>}</div>
+    <div class="explain">
+      <p>Análogo a <code>tipoToStr</code>, pero para operadores. Devuelve el lexema original ("+", "-", etc.). Útil para mensajes de error en Etapa 3 cuando se reporten incompatibilidades de tipos en una expresión específica.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="cube-resultado">resultado()</h3>
+  <div class="block">
+    <div class="code"><span class="ln">31</span>// Solo aceptamos combinaciones de tipos numericos (ENTERO/FLOTANTE)
+<span class="ln">32</span>// en los operadores. NULA y BOOL no son operandos validos.
+<span class="ln">33</span>static bool esNumerico(Tipo t) {
+<span class="ln">34</span>    return t == Tipo::ENTERO || t == Tipo::FLOTANTE;
+<span class="ln">35</span>}</div>
+    <div class="explain">
+      <p>Helper privado al archivo (<code>static</code> a nivel de archivo significa "internal linkage": no se exporta a otros .cpp). Centraliza el chequeo de "este tipo es válido como operando".</p>
+      <p>El razonamiento: ni <code>NULA</code> (tipo de retorno, no de operando) ni <code>BOOL</code> (resultado intermedio) deberían aparecer a los lados de un operador. Si lo hacen, es un error.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">37</span>Tipo SemanticCube::resultado(Tipo izq, Operador op, Tipo der) {
+<span class="ln">38</span>    if (!esNumerico(izq) || !esNumerico(der)) {
+<span class="ln">39</span>        return Tipo::ERROR;
+<span class="ln">40</span>    }</div>
+    <div class="explain">
+      <p>Apertura de la función pública. La primera línea filtra cualquier combinación que involucre operandos no-numéricos. Esto reduce los casos a manejar después: cuando llegamos a la línea 42 sabemos que tanto <code>izq</code> como <code>der</code> son <code>ENTERO</code> o <code>FLOTANTE</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">42</span>    const bool algunoFlot = (izq == Tipo::FLOTANTE) || (der == Tipo::FLOTANTE);</div>
+    <div class="explain">
+      <p>Atajo útil: "¿alguno de los dos operandos es flotante?". Lo uso para decidir la promoción en operadores aritméticos (un flotante en cualquier lado vuelve el resultado flotante).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">44</span>    switch (op) {
+<span class="ln">45</span>        // Aritmeticos: el flotante "gana" si aparece en cualquiera de los dos.
+<span class="ln">46</span>        case Operador::MAS:
+<span class="ln">47</span>        case Operador::MENOS:
+<span class="ln">48</span>        case Operador::POR:
+<span class="ln">49</span>        case Operador::ENTRE:
+<span class="ln">50</span>            return algunoFlot ? Tipo::FLOTANTE : Tipo::ENTERO;</div>
+    <div class="explain">
+      <p>Los cuatro operadores aritméticos comparten regla y por eso comparten <code>case</code> (técnica clásica del "switch caída"). Si alguno de los operandos es flotante, el resultado lo es. Si los dos son enteros, el resultado es entero.</p>
+      <p>Esto refleja la matemática esperada: <code>3 + 2.5 = 5.5</code> (flotante), <code>3 + 2 = 5</code> (entero).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">52</span>        // Relacionales: cualquier combinacion numerica produce BOOL.
+<span class="ln">53</span>        case Operador::MAYOR:
+<span class="ln">54</span>        case Operador::MENOR:
+<span class="ln">55</span>        case Operador::DISTINTO:
+<span class="ln">56</span>        case Operador::IGUAL2:
+<span class="ln">57</span>            return Tipo::BOOL;</div>
+    <div class="explain">
+      <p>Los cuatro relacionales (<code>&gt;</code>, <code>&lt;</code>, <code>!=</code>, <code>==</code>) devuelven <code>BOOL</code> sin importar la combinación de operandos numéricos. <code>3 &lt; 2.5</code> es perfectamente válido y produce <code>BOOL</code> (false, en realidad), igual que <code>1 == 1</code>.</p>
+      <p>El <code>BOOL</code> resultante es lo que en Etapa 3 alimentará al <code>si</code> y al <code>mientras</code> — esos estatutos exigirán que su expresión sea <code>BOOL</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">59</span>        // Asignacion: izq es el destino, der es la fuente.
+<span class="ln">60</span>        //   entero  = entero   -&gt; OK
+<span class="ln">61</span>        //   flotante = entero  -&gt; OK (ensanchamiento)
+<span class="ln">62</span>        //   flotante = flotante -&gt; OK
+<span class="ln">63</span>        //   entero  = flotante -&gt; ERROR (perdida)
+<span class="ln">64</span>        case Operador::ASIGNA:
+<span class="ln">65</span>            if (izq == Tipo::ENTERO && der == Tipo::FLOTANTE) {
+<span class="ln">66</span>                return Tipo::ERROR;
+<span class="ln">67</span>            }
+<span class="ln">68</span>            return izq;
+<span class="ln">69</span>    }
+<span class="ln">70</span>    return Tipo::ERROR;
+<span class="ln">71</span>}</div>
+    <div class="explain">
+      <p>La asignación es asimétrica (los lados no son intercambiables, a diferencia de <code>+</code>). El único caso de error es asignar un flotante a un entero, porque eso perdería la parte decimal. Las otras tres combinaciones son aceptadas:</p>
+      <ul>
+        <li><code>entero = entero</code>: trivialmente OK, resultado entero.</li>
+        <li><code>flotante = entero</code>: el entero se promueve a flotante (ensanchamiento implícito, sin pérdida).</li>
+        <li><code>flotante = flotante</code>: OK.</li>
+      </ul>
+      <p>El <code>return izq</code> devuelve el tipo del destino, que es lo natural para asignaciones encadenadas (aunque Patito no las soporta, sigue siendo la respuesta semánticamente correcta).</p>
+      <p>El <code>return Tipo::ERROR</code> final (línea 70) es inalcanzable en teoría — el switch cubre todos los operadores del enum — pero ahí está como red de seguridad por si alguien agrega un operador nuevo y olvida un <code>case</code>. Sin él, algunos compiladores se quejarían de "control reaches end of non-void function".</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                 SYMBOLTABLE.H               -->
+<!-- =========================================== -->
+
+<section id="table-h">
+  <h2 class="section">src/semantic/SymbolTable.h</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SymbolTable.h</div>
+    <div class="role">Define <code>VariableInfo</code>, <code>VariableTable</code>, <code>FunctionInfo</code> y <code>FunctionDirectory</code>. Estas son las estructuras que el analizador llena al recorrer el árbol.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln"> 1</span>// Estructuras de la Tabla de Variables y del Directorio de Funciones de Patito.
+<span class="ln"> 2</span>//
+<span class="ln"> 3</span>// Decisiones de diseño:
+<span class="ln"> 4</span>//
+<span class="ln"> 5</span>//  - VariableTable: usa std::unordered_map&lt;string, VariableInfo&gt;
+<span class="ln"> 6</span>//    porque las consultas por nombre son O(1) y las declaraciones se hacen
+<span class="ln"> 7</span>//    una sola vez por variable. No necesitamos orden insercion.
+<span class="ln"> 8</span>//
+<span class="ln"> 9</span>//  - FunctionInfo: agrupa metadata de la funcion (nombre, tipo retorno,
+<span class="ln">10</span>//    parametros ordenados) y su propia VariableTable local. Los parametros
+<span class="ln">11</span>//    quedan en un vector para preservar el orden (importante para las
+<span class="ln">12</span>//    llamadas).
+<span class="ln">13</span>//
+<span class="ln">14</span>//  - FunctionDirectory: tambien std::unordered_map&lt;string, FunctionInfo&gt;.
+<span class="ln">15</span>//    El scope GLOBAL del programa se modela como una entrada especial en
+<span class="ln">16</span>//    este mismo directorio: el nombre del programa se registra como una
+<span class="ln">17</span>//    "funcion" de tipo NULA, y todas las vars globales viven en su
+<span class="ln">18</span>//    VariableTable. Asi el codigo trata todos los scopes uniformemente.</div>
+    <div class="explain">
+      <p>Comentario de cabecera con las decisiones de diseño explícitas. Esto es importante porque las elecciones de estructura no son obvias: alguien podría pensar "¿por qué <code>unordered_map</code> y no <code>map</code>?" o "¿por qué los parámetros en vector?". Las respuestas viven aquí para que el lector no tenga que adivinar.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">20</span>#pragma once
+<span class="ln">21</span>
+<span class="ln">22</span>#include "SemanticTypes.h"
+<span class="ln">23</span>
+<span class="ln">24</span>#include &lt;string&gt;
+<span class="ln">25</span>#include &lt;unordered_map&gt;
+<span class="ln">26</span>#include &lt;vector&gt;
+<span class="ln">27</span>#include &lt;iosfwd&gt;</div>
+    <div class="explain">
+      <p>Incluyes mínimos para las firmas:</p>
+      <ul>
+        <li><code>SemanticTypes.h</code> — necesito <code>Tipo</code> en los miembros.</li>
+        <li><code>&lt;string&gt;</code> — para los nombres.</li>
+        <li><code>&lt;unordered_map&gt;</code> — para las dos tablas hash.</li>
+        <li><code>&lt;vector&gt;</code> — para la lista de parámetros.</li>
+        <li><code>&lt;iosfwd&gt;</code> — declaración forward de <code>std::ostream</code>. Lo uso en lugar de <code>&lt;iostream&gt;</code> porque solo necesito el tipo en la firma de <code>imprimir</code>, no la implementación; esto acelera la compilación de cualquier archivo que solo incluya este header.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">29</span>namespace patito {</div>
+    <div class="explain">
+      <p>Mismo namespace que el resto del módulo semántico.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-h-info">VariableInfo y ParametroInfo</h3>
+  <div class="block">
+    <div class="code"><span class="ln">31</span>struct VariableInfo {
+<span class="ln">32</span>    std::string nombre;
+<span class="ln">33</span>    Tipo tipo;
+<span class="ln">34</span>    int linea;   // linea donde se declaro (para mensajes de error)
+<span class="ln">35</span>};</div>
+    <div class="explain">
+      <p>Estructura plana con los tres datos por variable: nombre, tipo y línea de declaración. Uso <code>struct</code> (no <code>class</code>) porque todos los campos son públicos y no necesito invariantes. La línea se guarda solo para mensajes de error legibles (p. ej. "x ya estaba declarada en línea 12").</p>
+      <p>Más adelante (Etapa 3) este struct crecerá con una dirección de memoria virtual, pero por ahora 3 campos bastan.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-h-vartable">VariableTable</h3>
+  <div class="block">
+    <div class="code"><span class="ln">37</span>class VariableTable {
+<span class="ln">38</span>public:
+<span class="ln">39</span>    // Inserta una variable. Devuelve false si ya existia (duplicado).
+<span class="ln">40</span>    bool agregar(const std::string&amp; nombre, Tipo tipo, int linea);
+<span class="ln">41</span>
+<span class="ln">42</span>    bool existe(const std::string&amp; nombre) const;
+<span class="ln">43</span>    const VariableInfo* obtener(const std::string&amp; nombre) const;
+<span class="ln">44</span>    std::size_t tamano() const { return tabla.size(); }
+<span class="ln">45</span>
+<span class="ln">46</span>    // Iteracion (lectura).
+<span class="ln">47</span>    auto begin() const { return tabla.begin(); }
+<span class="ln">48</span>    auto end()   const { return tabla.end(); }
+<span class="ln">49</span>
+<span class="ln">50</span>private:
+<span class="ln">51</span>    std::unordered_map&lt;std::string, VariableInfo&gt; tabla;
+<span class="ln">52</span>};</div>
+    <div class="explain">
+      <p>Wrapper sobre <code>std::unordered_map</code> con una API minimal:</p>
+      <ul>
+        <li><code>agregar</code> — inserta y devuelve <code>false</code> si el nombre ya estaba. Esta semántica permite que el llamador detecte duplicados con un solo if, sin tener que llamar primero a <code>existe</code> (que sería una doble búsqueda).</li>
+        <li><code>existe</code> y <code>obtener</code> — para usos futuros (Etapa 3 los necesita para validar "variable usada sin declarar").</li>
+        <li><code>tamano</code>, <code>begin</code>, <code>end</code> — para el dump del <code>--dir</code>.</li>
+      </ul>
+      <p><strong>Por qué wrapper y no usar el map directamente:</strong> en el futuro puedo agregar invariantes (por ejemplo, "no se puede agregar después de cerrar el scope") sin tocar a los llamadores. También oculta el tipo concreto del map: si decido cambiar a <code>std::map</code> o a una hash map propia, solo cambia este header.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">54</span>struct ParametroInfo {
+<span class="ln">55</span>    std::string nombre;
+<span class="ln">56</span>    Tipo tipo;
+<span class="ln">57</span>};</div>
+    <div class="explain">
+      <p>Datos por parámetro. No tiene <code>linea</code> porque al imprimir no necesito esa info (los parámetros se reportan junto con su función). Se mantiene como struct separado de <code>VariableInfo</code> para que la lista ordenada de parámetros pueda evolucionar independientemente (p. ej., agregar "pasaje por referencia" más adelante).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-h-funcinfo">FunctionInfo</h3>
+  <div class="block">
+    <div class="code"><span class="ln">59</span>struct FunctionInfo {
+<span class="ln">60</span>    std::string nombre;
+<span class="ln">61</span>    Tipo tipoRetorno;
+<span class="ln">62</span>    std::vector&lt;ParametroInfo&gt; parametros;  // ordenados
+<span class="ln">63</span>    VariableTable variables;                // tabla local de la funcion
+<span class="ln">64</span>    int linea;
+<span class="ln">65</span>};</div>
+    <div class="explain">
+      <p>Toda la información asociada a una función:</p>
+      <ul>
+        <li><code>nombre</code> y <code>tipoRetorno</code> — auto-explicativos.</li>
+        <li><code>parametros</code> — <code>vector</code>, no <code>VariableTable</code>. <strong>El orden importa</strong> para validar llamadas en Etapa 3 (los argumentos se pasan posicionalmente). Si los guardara en una hash map perdería el orden.</li>
+        <li><code>variables</code> — la tabla local. <strong>Cada parámetro también se inserta aquí</strong> para que el detector de duplicados los considere al mismo nivel que las vars locales: en Patito, <code>nula f(x: entero) { vars x : entero; ... }</code> es un duplicado, y este modelo lo atrapa naturalmente.</li>
+        <li><code>linea</code> — dónde se declaró, para ordenar el dump determinísticamente.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-h-dir">FunctionDirectory</h3>
+  <div class="block">
+    <div class="code"><span class="ln">67</span>class FunctionDirectory {
+<span class="ln">68</span>public:
+<span class="ln">69</span>    // Registra una nueva funcion. Devuelve nullptr si el nombre ya estaba en uso.
+<span class="ln">70</span>    // Si la insercion tiene exito, devuelve un puntero estable a la entrada
+<span class="ln">71</span>    // creada (el unordered_map garantiza estabilidad de punteros a value).
+<span class="ln">72</span>    FunctionInfo* agregar(const std::string&amp; nombre, Tipo tipoRetorno, int linea);
+<span class="ln">73</span>
+<span class="ln">74</span>    bool existe(const std::string&amp; nombre) const;
+<span class="ln">75</span>    FunctionInfo*       obtener(const std::string&amp; nombre);
+<span class="ln">76</span>    const FunctionInfo* obtener(const std::string&amp; nombre) const;
+<span class="ln">77</span>
+<span class="ln">78</span>    std::size_t tamano() const { return directorio.size(); }
+<span class="ln">79</span>
+<span class="ln">80</span>    auto begin() const { return directorio.begin(); }
+<span class="ln">81</span>    auto end()   const { return directorio.end(); }
+<span class="ln">82</span>
+<span class="ln">83</span>    // Dump legible del directorio (para depuracion / bandera --dir).
+<span class="ln">84</span>    void imprimir(std::ostream&amp; os) const;
+<span class="ln">85</span>
+<span class="ln">86</span>    private:
+<span class="ln">87</span>    std::unordered_map&lt;std::string, FunctionInfo&gt; directorio;
+<span class="ln">88</span>};
+<span class="ln">89</span>
+<span class="ln">90</span>} // namespace patito</div>
+    <div class="explain">
+      <p>API similar a <code>VariableTable</code> pero con dos peculiaridades:</p>
+      <ul>
+        <li><code>agregar</code> devuelve un <strong>puntero al <code>FunctionInfo</code></strong> recién creado (o <code>nullptr</code> si hubo duplicado). Esto le ahorra al llamador una segunda búsqueda: tras un <code>agregar</code> exitoso, puede empezar a llenar <code>parametros</code> y <code>variables</code> directamente sobre el puntero. <code>std::unordered_map</code> garantiza que sus referencias/punteros a valores no se invalidan cuando se insertan o borran otras entradas (a diferencia de <code>std::vector</code>).</li>
+        <li>Hay dos overloads de <code>obtener</code>: uno const y uno mutable. El const sirve para el dump (que no debe modificar); el mutable sirve para que el analizador agregue variables locales al scope activo.</li>
+      </ul>
+      <p><code>imprimir</code> es la operación que la bandera <code>--dir</code> del binario invoca para volcar todo el directorio al stdout.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                SYMBOLTABLE.CPP              -->
+<!-- =========================================== -->
+
+<section id="table-cpp">
+  <h2 class="section">src/semantic/SymbolTable.cpp</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SymbolTable.cpp</div>
+    <div class="role">Implementación de los métodos declarados en el header. La parte más interesante es <code>imprimir</code>, que ordena por línea de declaración para que la salida sea determinista.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>#include "SymbolTable.h"
+<span class="ln">2</span>
+<span class="ln">3</span>#include &lt;algorithm&gt;
+<span class="ln">4</span>#include &lt;ostream&gt;
+<span class="ln">5</span>#include &lt;vector&gt;</div>
+    <div class="explain">
+      <p>Incluyes adicionales a los del header:</p>
+      <ul>
+        <li><code>&lt;algorithm&gt;</code> — para <code>std::sort</code>.</li>
+        <li><code>&lt;ostream&gt;</code> — implementación de <code>operator&lt;&lt;</code> (el header solo tenía la declaración forward).</li>
+        <li><code>&lt;vector&gt;</code> — para los buffers temporales usados al ordenar.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-cpp-vt">Implementación de VariableTable</h3>
+  <div class="block">
+    <div class="code"><span class="ln">11</span>bool VariableTable::agregar(const std::string&amp; nombre, Tipo tipo, int linea) {
+<span class="ln">12</span>    if (tabla.count(nombre)) return false; // duplicado
+<span class="ln">13</span>    tabla.emplace(nombre, VariableInfo{nombre, tipo, linea});
+<span class="ln">14</span>    return true;
+<span class="ln">15</span>}</div>
+    <div class="explain">
+      <p>Inserción con detección de duplicado:</p>
+      <ul>
+        <li>Línea 12: <code>count(nombre)</code> devuelve 0 o 1 (es un set/map). Si ya existe, regresa <code>false</code> sin modificar nada.</li>
+        <li>Línea 13: <code>emplace</code> construye el <code>VariableInfo</code> en su lugar dentro del map (evita una copia adicional). El struct se inicializa con sintaxis de llaves (<code>{nombre, tipo, linea}</code>).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">17</span>bool VariableTable::existe(const std::string&amp; nombre) const {
+<span class="ln">18</span>    return tabla.count(nombre) &gt; 0;
+<span class="ln">19</span>}
+<span class="ln">20</span>
+<span class="ln">21</span>const VariableInfo* VariableTable::obtener(const std::string&amp; nombre) const {
+<span class="ln">22</span>    auto it = tabla.find(nombre);
+<span class="ln">23</span>    return it == tabla.end() ? nullptr : &amp;it-&gt;second;
+<span class="ln">24</span>}</div>
+    <div class="explain">
+      <p>Dos consultas estándar sobre el map. <code>obtener</code> devuelve puntero (no referencia) para representar "no encontrado" con <code>nullptr</code>, evitando excepciones.</p>
+      <p><code>find</code> devuelve un iterador; si es <code>end()</code> significa que no estaba. <code>it-&gt;second</code> es el valor (<code>VariableInfo</code>); <code>&amp;</code> le saca la dirección.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-cpp-dir">Implementación de FunctionDirectory</h3>
+  <div class="block">
+    <div class="code"><span class="ln">28</span>FunctionInfo* FunctionDirectory::agregar(const std::string&amp; nombre,
+<span class="ln">29</span>                                         Tipo tipoRetorno, int linea) {
+<span class="ln">30</span>    if (directorio.count(nombre)) return nullptr; // duplicado
+<span class="ln">31</span>    auto [it, ok] = directorio.emplace(
+<span class="ln">32</span>        nombre,
+<span class="ln">33</span>        FunctionInfo{nombre, tipoRetorno, {}, {}, linea});
+<span class="ln">34</span>    return ok ? &amp;it-&gt;second : nullptr;
+<span class="ln">35</span>}</div>
+    <div class="explain">
+      <p>Misma lógica que <code>VariableTable::agregar</code> pero devuelve puntero estable a la entrada nueva:</p>
+      <ul>
+        <li>Línea 30: si ya existe, <code>nullptr</code>.</li>
+        <li>Líneas 31-33: <code>emplace</code> retorna un <code>pair&lt;iterator, bool&gt;</code>. La sintaxis <code>auto [it, ok] = ...</code> es <strong>structured bindings</strong> (C++17) que desempaqueta el par en dos variables.</li>
+        <li>El <code>FunctionInfo{nombre, tipoRetorno, {}, {}, linea}</code> se construye con dos <code>{}</code> vacíos para inicializar el vector de parámetros y la <code>VariableTable</code> sin elementos.</li>
+        <li>Línea 34: aunque ya verifiqué que no existe, devuelvo <code>nullptr</code> defensivamente si por alguna razón <code>emplace</code> falló (no debería pasar).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">37</span>bool FunctionDirectory::existe(const std::string&amp; nombre) const {
+<span class="ln">38</span>    return directorio.count(nombre) &gt; 0;
+<span class="ln">39</span>}
+<span class="ln">40</span>
+<span class="ln">41</span>FunctionInfo* FunctionDirectory::obtener(const std::string&amp; nombre) {
+<span class="ln">42</span>    auto it = directorio.find(nombre);
+<span class="ln">43</span>    return it == directorio.end() ? nullptr : &amp;it-&gt;second;
+<span class="ln">44</span>}
+<span class="ln">45</span>
+<span class="ln">46</span>const FunctionInfo* FunctionDirectory::obtener(const std::string&amp; nombre) const {
+<span class="ln">47</span>    auto it = directorio.find(nombre);
+<span class="ln">48</span>    return it == directorio.end() ? nullptr : &amp;it-&gt;second;
+<span class="ln">49</span>}</div>
+    <div class="explain">
+      <p>Tres consultas. Dos versiones de <code>obtener</code> (const y mutable) porque a veces necesito modificar la entrada (al agregar vars locales) y otras solo leerla (al imprimir). El compilador escoge automáticamente la versión correcta según si la instancia es const o no.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="table-cpp-print">imprimir() con orden determinista</h3>
+  <div class="block">
+    <div class="code"><span class="ln">51</span>void FunctionDirectory::imprimir(std::ostream&amp; os) const {
+<span class="ln">52</span>    os &lt;&lt; "=== DIRECTORIO DE FUNCIONES (" &lt;&lt; directorio.size() &lt;&lt; ") ===\n";</div>
+    <div class="explain">
+      <p>Encabezado del dump. Imprime el conteo total, útil para verificar a simple vista cuántos scopes hay.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">54</span>    // Ordenamos por linea de declaracion para que la salida sea determinista
+<span class="ln">55</span>    // y siga el orden natural en que aparecen en el archivo fuente (no el
+<span class="ln">56</span>    // orden interno del unordered_map, que depende del hash).
+<span class="ln">57</span>    std::vector&lt;const FunctionInfo*&gt; ordenadas;
+<span class="ln">58</span>    ordenadas.reserve(directorio.size());
+<span class="ln">59</span>    for (const auto&amp; [nombre, info] : directorio) {
+<span class="ln">60</span>        ordenadas.push_back(&amp;info);
+<span class="ln">61</span>    }
+<span class="ln">62</span>    std::sort(ordenadas.begin(), ordenadas.end(),
+<span class="ln">63</span>              [](const FunctionInfo* a, const FunctionInfo* b) {
+<span class="ln">64</span>                  return a-&gt;linea &lt; b-&gt;linea;
+<span class="ln">65</span>              });</div>
+    <div class="explain">
+      <p>El problema que esto resuelve: <code>std::unordered_map</code> <strong>no garantiza orden</strong> al iterar. Dos corridas pueden devolver las funciones en orden distinto (depende del hash de las strings y del bucket layout). Eso haría que el output de <code>--dir</code> cambie entre corridas — un revisor podría pensar "el doc dice que aparecen en orden X pero yo veo Y; ¿está roto?".</p>
+      <p>La solución: copiar punteros a un <code>vector</code> y ordenarlos por <code>linea</code> antes de imprimir. El resultado es que las funciones siempre aparecen en el orden en que se declararon en el archivo fuente.</p>
+      <ul>
+        <li>Línea 57-58: vector de punteros (no copias, para no duplicar memoria). <code>reserve</code> evita reasignaciones durante el <code>push_back</code>.</li>
+        <li>Línea 59-61: copio los punteros. La sintaxis <code>auto&amp; [nombre, info]</code> es structured bindings sobre los pares del map.</li>
+        <li>Línea 62-65: <code>std::sort</code> con un lambda como comparador. El lambda recibe dos punteros y devuelve <code>true</code> si <code>a</code> va antes que <code>b</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">67</span>    for (const FunctionInfo* infoPtr : ordenadas) {
+<span class="ln">68</span>        const FunctionInfo&amp; info = *infoPtr;
+<span class="ln">69</span>        os &lt;&lt; "  funcion '" &lt;&lt; info.nombre &lt;&lt; "'  retorno=" &lt;&lt; tipoToStr(info.tipoRetorno)
+<span class="ln">70</span>           &lt;&lt; "  linea=" &lt;&lt; info.linea &lt;&lt; "\n";</div>
+    <div class="explain">
+      <p>Itero el vector ya ordenado y imprimo el encabezado de cada función: nombre, tipo de retorno (convertido a texto con <code>tipoToStr</code>) y línea de declaración. La línea 68 desreferencia el puntero para tener una referencia conveniente.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">71</span>        if (!info.parametros.empty()) {
+<span class="ln">72</span>            os &lt;&lt; "    parametros:";
+<span class="ln">73</span>            for (const auto&amp; p : info.parametros) {
+<span class="ln">74</span>                os &lt;&lt; " " &lt;&lt; p.nombre &lt;&lt; ":" &lt;&lt; tipoToStr(p.tipo);
+<span class="ln">75</span>            }
+<span class="ln">76</span>            os &lt;&lt; "\n";
+<span class="ln">77</span>        }</div>
+    <div class="explain">
+      <p>Si la función tiene parámetros, los lista en orden (vienen ya ordenados en el vector). Formato: <code>x:entero y:flotante z:entero</code>. No necesito ordenar este vector porque YO lo construí en orden al procesar la declaración.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">78</span>        if (info.variables.tamano() &gt; 0) {
+<span class="ln">79</span>            // Mismo tratamiento para las variables: ordenar por linea de declaracion.
+<span class="ln">80</span>            std::vector&lt;const VariableInfo*&gt; vars;
+<span class="ln">81</span>            vars.reserve(info.variables.tamano());
+<span class="ln">82</span>            for (const auto&amp; [n, v] : info.variables) vars.push_back(&amp;v);
+<span class="ln">83</span>            std::sort(vars.begin(), vars.end(),
+<span class="ln">84</span>                      [](const VariableInfo* a, const VariableInfo* b) {
+<span class="ln">85</span>                          if (a-&gt;linea != b-&gt;linea) return a-&gt;linea &lt; b-&gt;linea;
+<span class="ln">86</span>                          return a-&gt;nombre &lt; b-&gt;nombre;
+<span class="ln">87</span>                      });
+<span class="ln">88</span>
+<span class="ln">89</span>            os &lt;&lt; "    variables locales (" &lt;&lt; info.variables.tamano() &lt;&lt; "):\n";
+<span class="ln">90</span>            for (const VariableInfo* v : vars) {
+<span class="ln">91</span>                os &lt;&lt; "      " &lt;&lt; v-&gt;nombre &lt;&lt; " : " &lt;&lt; tipoToStr(v-&gt;tipo)
+<span class="ln">92</span>                   &lt;&lt; "  (linea " &lt;&lt; v-&gt;linea &lt;&lt; ")\n";
+<span class="ln">93</span>            }
+<span class="ln">94</span>        }
+<span class="ln">95</span>    }
+<span class="ln">96</span>}</div>
+    <div class="explain">
+      <p>Las variables locales también se ordenan antes de imprimir, por la misma razón (la <code>VariableTable</code> internamente es <code>unordered_map</code>). El comparador tiene un detalle: si dos variables están en la misma línea (caso de <code>a, b, c : entero;</code>, donde las tres tienen línea de la declaración), las ordeno alfabéticamente como criterio secundario para que el resultado sea totalmente determinista.</p>
+      <p>El bloque solo se ejecuta si hay vars locales — funciones sin vars locales (como <code>nula otra() { { } }</code>) no imprimen la línea "variables locales (0)".</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--              SEMANTICANALYZER.H             -->
+<!-- =========================================== -->
+
+<section id="analyzer-h">
+  <h2 class="section">src/semantic/SemanticAnalyzer.h</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SemanticAnalyzer.h</div>
+    <div class="role">Declaración del listener que hereda de <code>PatitoBaseListener</code> (generado por ANTLR). Sobreescribe 4 enter/exit que son los puntos neurálgicos donde se decide registrar algo.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln"> 1</span>// Analisis semantico de Patito (Etapa 2).
+<span class="ln"> 2</span>//
+<span class="ln"> 3</span>// Sigue el patron Listener de ANTLR4: heredo de PatitoBaseListener y
+<span class="ln"> 4</span>// sobreescribo los metodos correspondientes a los PUNTOS NEURALGICOS
+<span class="ln"> 5</span>// donde se decide registrar algo en el directorio o en una tabla de vars.
+<span class="ln"> 6</span>//
+<span class="ln"> 7</span>// Puntos neuralgicos implementados:
+<span class="ln"> 8</span>//
+<span class="ln"> 9</span>//   enterPrograma   -&gt; crea la entrada global con el nombre del programa.
+<span class="ln">10</span>//   enterFuncs      -&gt; registra la funcion y abre su scope local; agrega
+<span class="ln">11</span>//                      sus parametros como variables locales.
+<span class="ln">12</span>//   exitFuncs       -&gt; regresa el scope activo al global.
+<span class="ln">13</span>//   enterDeclaracion-&gt; agrega cada id de la idLista a la tabla del scope
+<span class="ln">14</span>//                      activo (global o de funcion).
+<span class="ln">15</span>//
+<span class="ln">16</span>// Validaciones implementadas (rubrica minima):
+<span class="ln">17</span>//
+<span class="ln">18</span>//   - Variable doblemente declarada (en el mismo scope).
+<span class="ln">19</span>//   - Funcion doblemente declarada.
+<span class="ln">20</span>//   - Funcion con el mismo nombre que el programa.
+<span class="ln">21</span>//   - Parametro doblemente declarado.
+<span class="ln">22</span>//
+<span class="ln">23</span>// Los errores se acumulan; el analizador no aborta al primero.</div>
+    <div class="explain">
+      <p>Comentario que documenta los puntos neurálgicos y las validaciones, todo en un solo lugar. Cualquiera que abra el header sabe inmediatamente qué hace el analizador sin tener que leer la implementación.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">25</span>#pragma once
+<span class="ln">26</span>
+<span class="ln">27</span>#include "PatitoBaseListener.h"
+<span class="ln">28</span>#include "SymbolTable.h"
+<span class="ln">29</span>
+<span class="ln">30</span>#include &lt;string&gt;</div>
+    <div class="explain">
+      <p>Incluyes:</p>
+      <ul>
+        <li><code>PatitoBaseListener.h</code> — generado por ANTLR. Define la clase base con todos los <code>enterRegla</code>/<code>exitRegla</code> vacíos. Heredo de ella y solo override los 4 que necesito.</li>
+        <li><code>SymbolTable.h</code> — necesito los tipos <code>FunctionDirectory</code>, <code>FunctionInfo</code> en los miembros.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">32</span>namespace patito {
+<span class="ln">33</span>
+<span class="ln">34</span>class SemanticAnalyzer : public PatitoBaseListener {
+<span class="ln">35</span>public:
+<span class="ln">36</span>    explicit SemanticAnalyzer(std::string fuente);</div>
+    <div class="explain">
+      <p>Apertura de la clase. Hereda públicamente de <code>PatitoBaseListener</code>. El constructor recibe el nombre del archivo fuente para que aparezca en los mensajes de error. <code>explicit</code> evita conversiones implícitas.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">38</span>    // --- Puntos neuralgicos ---
+<span class="ln">39</span>    void enterPrograma   (PatitoParser::ProgramaContext*    ctx) override;
+<span class="ln">40</span>    void enterFuncs      (PatitoParser::FuncsContext*       ctx) override;
+<span class="ln">41</span>    void exitFuncs       (PatitoParser::FuncsContext*       ctx) override;
+<span class="ln">42</span>    void enterDeclaracion(PatitoParser::DeclaracionContext* ctx) override;</div>
+    <div class="explain">
+      <p>Las <strong>4 overrides</strong>. Cada una corresponde a un punto neurálgico:</p>
+      <ul>
+        <li><code>enterPrograma</code> — disparado al inicio de todo (regla raíz).</li>
+        <li><code>enterFuncs</code> — al inicio de cada declaración de función.</li>
+        <li><code>exitFuncs</code> — al cerrar una función.</li>
+        <li><code>enterDeclaracion</code> — al inicio de cada renglón <code>id : tipo;</code> dentro de un <code>vars</code>.</li>
+      </ul>
+      <p>El <code>override</code> al final no cambia la semántica pero asegura que estoy efectivamente sobreescribiendo un método virtual de la base; si el nombre o la firma no coinciden, el compilador da error en vez de simplemente "no hacer nada".</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">44</span>    // --- Acceso al resultado ---
+<span class="ln">45</span>    int errores() const { return conteo; }
+<span class="ln">46</span>    const FunctionDirectory&amp; directorio() const { return funcs; }</div>
+    <div class="explain">
+      <p>Dos getters que el driver usa después del walk:</p>
+      <ul>
+        <li><code>errores()</code> — cuántos errores semánticos se acumularon.</li>
+        <li><code>directorio()</code> — referencia al directorio, para que el driver pueda imprimirlo si pidió <code>--dir</code>.</li>
+      </ul>
+      <p>Ambos son <code>const</code> porque no modifican el analizador.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">48</span>private:
+<span class="ln">49</span>    FunctionDirectory funcs;        // Directorio de Funciones
+<span class="ln">50</span>    FunctionInfo*     scopeActual;  // apunta a la entrada activa (global o funcion)
+<span class="ln">51</span>    std::string       nombrePrograma;
+<span class="ln">52</span>    std::string       fuente;
+<span class="ln">53</span>    int               conteo;</div>
+    <div class="explain">
+      <p>El estado interno del analizador:</p>
+      <ul>
+        <li><code>funcs</code> — el directorio. Crece a medida que el walk descubre programa y funciones.</li>
+        <li><code>scopeActual</code> — puntero al <code>FunctionInfo</code> "en curso". Cuando estamos fuera de cualquier función, apunta a la entrada global (la del programa). Cuando entramos a una función, se mueve a esa función; cuando salimos, vuelve al global. Por eso las declaraciones de vars saben a qué scope agregarse: simplemente miran <code>scopeActual-&gt;variables</code>.</li>
+        <li><code>nombrePrograma</code> — guardado para poder volver a buscar la entrada global en el directorio (en <code>exitFuncs</code>) sin tener que pasarlo de regreso por algún lado.</li>
+        <li><code>fuente</code> — el nombre del archivo (para los mensajes de error).</li>
+        <li><code>conteo</code> — el acumulador de errores semánticos.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">54</span>    // Cuando una funcion se declara duplicada, el subarbol de su cuerpo
+<span class="ln">55</span>    // sigue siendo recorrido por el walker. Para no contaminar el scope
+<span class="ln">56</span>    // global con esas declaraciones, marcamos el subarbol como "sucio"
+<span class="ln">57</span>    // y enterDeclaracion las ignora hasta exitFuncs.
+<span class="ln">58</span>    bool              enFuncDuplicada;</div>
+    <div class="explain">
+      <p>Bandera que vale lo que dice el comentario. El problema concreto: ANTLR <strong>siempre</strong> recorre el subárbol completo, incluso si decidimos "ignorar" la función entera. Si una función duplicada tiene <code>vars y : entero;</code> adentro, sin esta bandera <code>enterDeclaracion</code> intentaría agregar <code>y</code> al scope que apunte <code>scopeActual</code> — y como no movimos <code>scopeActual</code> (justo porque la función estaba duplicada), <code>y</code> se metería al global, produciendo "variable doblemente declarada en &lt;programa&gt;" si ya había una <code>y</code> ahí. Confuso.</p>
+      <p>La bandera evita ese efecto: una vez activada, <code>enterDeclaracion</code> se vuelve no-op hasta que <code>exitFuncs</code> la apague.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">60</span>    void error(int linea, int col, const std::string&amp; msg);
+<span class="ln">61</span>
+<span class="ln">62</span>    // Convierte el subarbol de tipo a nuestro enum.
+<span class="ln">63</span>    static Tipo extraerTipo(PatitoParser::TipoContext* ctx);
+<span class="ln">64</span>    static Tipo extraerTipoFunc(PatitoParser::TipoFuncContext* ctx);
+<span class="ln">65</span>};
+<span class="ln">66</span>
+<span class="ln">67</span>} // namespace patito</div>
+    <div class="explain">
+      <p>Helpers privados:</p>
+      <ul>
+        <li><code>error</code> — incrementa el contador y formatea el mensaje a <code>std::cerr</code>. Centralizar aquí evita repetir el formato en cada validación.</li>
+        <li><code>extraerTipo</code> y <code>extraerTipoFunc</code> — funciones puras (de ahí el <code>static</code>) que convierten el subárbol de gramática de tipos al enum <code>Tipo</code>. Son utilities, no dependen del estado del analizador.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--             SEMANTICANALYZER.CPP            -->
+<!-- =========================================== -->
+
+<section id="analyzer-cpp">
+  <h2 class="section">src/semantic/SemanticAnalyzer.cpp</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/SemanticAnalyzer.cpp</div>
+    <div class="role">El corazón del análisis. Aquí se implementan los 4 puntos neurálgicos, cada uno con sus validaciones.</div>
+  </div>
+
+  <h3 class="subsection" id="an-ctor">Constructor + helpers</h3>
+  <div class="block">
+    <div class="code"><span class="ln">1</span>#include "SemanticAnalyzer.h"
+<span class="ln">2</span>#include "PatitoParser.h"
+<span class="ln">3</span>
+<span class="ln">4</span>#include &lt;iostream&gt;
+<span class="ln">5</span>#include &lt;utility&gt;</div>
+    <div class="explain">
+      <p><code>PatitoParser.h</code> aparece aquí (no en el header) porque solo lo necesito en la implementación al usar los tipos completos de los Contexts (<code>ProgramaContext</code>, <code>FuncsContext</code>, etc.) para acceder a sus métodos. <code>&lt;iostream&gt;</code> para <code>std::cerr</code> y <code>&lt;utility&gt;</code> para <code>std::move</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln"> 9</span>SemanticAnalyzer::SemanticAnalyzer(std::string fuenteIn)
+<span class="ln">10</span>    : scopeActual(nullptr),
+<span class="ln">11</span>      fuente(std::move(fuenteIn)),
+<span class="ln">12</span>      conteo(0),
+<span class="ln">13</span>      enFuncDuplicada(false) {}</div>
+    <div class="explain">
+      <p>Constructor con lista de inicializadores. Inicializa todos los miembros explícitamente:</p>
+      <ul>
+        <li><code>scopeActual = nullptr</code> — aún no hay scope; se establece en <code>enterPrograma</code>.</li>
+        <li><code>fuente</code> — toma el parámetro con <code>std::move</code> para evitar copia.</li>
+        <li><code>conteo = 0</code> y <code>enFuncDuplicada = false</code> — estados iniciales.</li>
+      </ul>
+      <p><code>funcs</code> y <code>nombrePrograma</code> no aparecen porque sus constructores por defecto (map vacío, string vacío) son suficientes.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">15</span>void SemanticAnalyzer::error(int linea, int col, const std::string&amp; msg) {
+<span class="ln">16</span>    conteo++;
+<span class="ln">17</span>    std::cerr &lt;&lt; "[" &lt;&lt; fuente &lt;&lt; "] linea " &lt;&lt; linea &lt;&lt; ":" &lt;&lt; col
+<span class="ln">18</span>              &lt;&lt; "  semantica: " &lt;&lt; msg &lt;&lt; std::endl;
+<span class="ln">19</span>}</div>
+    <div class="explain">
+      <p>Helper de reporte. Cada llamada incrementa el contador e imprime al stderr con el formato <code>[archivo] linea L:C  semantica: ...</code>. La etiqueta "semantica:" diferencia estos errores de los sintácticos de Etapa 1 (que dicen <code>missing ')'</code>, <code>mismatched input</code>, etc.) y permite que el revisor vea de un vistazo de qué fase es cada problema.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">21</span>Tipo SemanticAnalyzer::extraerTipo(PatitoParser::TipoContext* ctx) {
+<span class="ln">22</span>    if (ctx == nullptr) return Tipo::ERROR;
+<span class="ln">23</span>    if (ctx-&gt;ENTERO())   return Tipo::ENTERO;
+<span class="ln">24</span>    if (ctx-&gt;FLOTANTE()) return Tipo::FLOTANTE;
+<span class="ln">25</span>    return Tipo::ERROR;
+<span class="ln">26</span>}</div>
+    <div class="explain">
+      <p>El parse tree para la regla <code>tipo : ENTERO | FLOTANTE</code> produce un <code>TipoContext</code>. Si en ese ctx <code>ENTERO()</code> no es <code>nullptr</code>, el token presente era <code>entero</code>; análogo con <code>FLOTANTE()</code>. La función traduce eso al enum.</p>
+      <p>Si <code>ctx</code> es <code>nullptr</code> (defensivo, no debería pasar si llegamos aquí limpio del parser), o si por alguna razón ninguno coincide, devuelve <code>ERROR</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">28</span>Tipo SemanticAnalyzer::extraerTipoFunc(PatitoParser::TipoFuncContext* ctx) {
+<span class="ln">29</span>    if (ctx == nullptr) return Tipo::ERROR;
+<span class="ln">30</span>    if (ctx-&gt;NULA())     return Tipo::NULA;
+<span class="ln">31</span>    if (ctx-&gt;tipo())     return extraerTipo(ctx-&gt;tipo());
+<span class="ln">32</span>    return Tipo::ERROR;
+<span class="ln">33</span>}</div>
+    <div class="explain">
+      <p>Lo mismo pero para <code>tipoFunc : NULA | tipo</code>. Si es <code>NULA</code>, devuelve <code>Tipo::NULA</code>. Si es la alternativa <code>tipo</code>, delega a <code>extraerTipo</code> con el sub-context. Reusar evita duplicar el switch.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-prog">Punto neurálgico 1: enterPrograma</h3>
+  <div class="block">
+    <div class="code"><span class="ln">35</span>// ---------- PUNTO NEURALGICO 1: enterPrograma ----------
+<span class="ln">36</span>// Cuando el parser entra a la regla raiz, registramos el programa como
+<span class="ln">37</span>// la entrada del SCOPE GLOBAL en el directorio. Su tipo de retorno es NULA
+<span class="ln">38</span>// (un programa no retorna nada). El scope activo apunta a esa entrada
+<span class="ln">39</span>// hasta que enterFuncs lo desplace temporalmente.
+<span class="ln">40</span>void SemanticAnalyzer::enterPrograma(PatitoParser::ProgramaContext* ctx) {
+<span class="ln">41</span>    auto* idNode = ctx-&gt;ID();
+<span class="ln">42</span>    nombrePrograma = idNode-&gt;getText();
+<span class="ln">43</span>    int linea = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getLine());
+<span class="ln">44</span>
+<span class="ln">45</span>    auto* entry = funcs.agregar(nombrePrograma, Tipo::NULA, linea);
+<span class="ln">46</span>    // El programa apenas inicia, no puede haber colision: asumimos exito.
+<span class="ln">47</span>    scopeActual = entry;
+<span class="ln">48</span>}</div>
+    <div class="explain">
+      <p>Este es el primer override y dispara una vez por programa (la regla raíz).</p>
+      <ul>
+        <li>Línea 41: <code>ctx-&gt;ID()</code> es el token <code>ID</code> de la producción <code>programa : PROGRAMA ID PCOMA ...</code> — el nombre del programa.</li>
+        <li>Línea 42: guarda el texto del id en <code>nombrePrograma</code>. Lo necesito después para regresar al scope global desde <code>exitFuncs</code>.</li>
+        <li>Línea 43: <code>getSymbol()-&gt;getLine()</code> da la línea del token. <code>static_cast&lt;int&gt;</code> convierte el <code>size_t</code> que devuelve ANTLR a <code>int</code> (que es lo que mi struct espera).</li>
+        <li>Línea 45: registra al programa en el directorio como una "función" de tipo retorno <code>NULA</code>. Esta es la decisión de diseño clave: el scope global vive en el mismo contenedor que las funciones del usuario, lo cual simplifica el resto del código.</li>
+        <li>Línea 47: <code>scopeActual</code> queda apuntando a esa entrada. Mientras no entremos a una función, todas las declaraciones de vars caerán aquí.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-funcs">Punto neurálgico 2: enterFuncs</h3>
+  <div class="block">
+    <div class="code"><span class="ln">50</span>// ---------- PUNTO NEURALGICO 2: enterFuncs ----------
+<span class="ln">51</span>// Cuando entramos a una declaracion de funcion:
+<span class="ln">52</span>//   1. Sacamos el nombre y el tipo de retorno.
+<span class="ln">53</span>//   2. Registramos la funcion en el directorio. Si el nombre ya existe
+<span class="ln">54</span>//      (otra funcion o el mismo programa), error de duplicado.
+<span class="ln">55</span>//   3. Cambiamos el scope activo a la funcion recien creada.
+<span class="ln">56</span>//   4. Procesamos los parametros: cada uno entra como variable local
+<span class="ln">57</span>//      en la tabla de la funcion. Si dos parametros tienen el mismo
+<span class="ln">58</span>//      nombre, error.
+<span class="ln">59</span>void SemanticAnalyzer::enterFuncs(PatitoParser::FuncsContext* ctx) {
+<span class="ln">60</span>    auto* idNode = ctx-&gt;ID();
+<span class="ln">61</span>    std::string nombre = idNode-&gt;getText();
+<span class="ln">62</span>    int linea = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getLine());
+<span class="ln">63</span>    int col   = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getCharPositionInLine());
+<span class="ln">64</span>
+<span class="ln">65</span>    Tipo tipoRet = extraerTipoFunc(ctx-&gt;tipoFunc());</div>
+    <div class="explain">
+      <p>Extrae la info básica de la función: nombre, posición (línea y columna del id, para errores precisos), y tipo de retorno (delegando al helper).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">67</span>    auto* nuevo = funcs.agregar(nombre, tipoRet, linea);
+<span class="ln">68</span>    if (nuevo == nullptr) {
+<span class="ln">69</span>        if (nombre == nombrePrograma) {
+<span class="ln">70</span>            error(linea, col,
+<span class="ln">71</span>                  "el nombre de funcion '" + nombre +
+<span class="ln">72</span>                  "' coincide con el nombre del programa");
+<span class="ln">73</span>        } else {
+<span class="ln">74</span>            error(linea, col,
+<span class="ln">75</span>                  "funcion '" + nombre + "' ya fue declarada antes");
+<span class="ln">76</span>        }
+<span class="ln">77</span>        // Marcamos el subarbol como "sucio" para que enterDeclaracion
+<span class="ln">78</span>        // ignore sus vars locales y no las atribuya al scope global.
+<span class="ln">79</span>        // exitFuncs limpiara la bandera.
+<span class="ln">80</span>        enFuncDuplicada = true;
+<span class="ln">81</span>        return;
+<span class="ln">82</span>    }
+<span class="ln">83</span>
+<span class="ln">84</span>    scopeActual = nuevo;</div>
+    <div class="explain">
+      <p>Intenta registrar la función. Si <code>agregar</code> devuelve <code>nullptr</code>, hay duplicado, y diferencia dos casos para producir un mensaje útil:</p>
+      <ul>
+        <li>Si el nombre coincide con el del programa, el mensaje lo dice claramente.</li>
+        <li>Si no, es duplicado simple entre dos funciones.</li>
+      </ul>
+      <p>Luego activa la bandera <code>enFuncDuplicada</code> y sale temprano para <strong>no cambiar <code>scopeActual</code></strong>. Es por esto que las vars locales de la función duplicada no van a ningún lado: <code>scopeActual</code> sigue apuntando al global, pero <code>enterDeclaracion</code> ve la bandera y se salta.</p>
+      <p>Si todo va bien (línea 84), el scope activo se mueve a la entrada recién creada.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">86</span>    // Procesar parametros (si los hay).
+<span class="ln">87</span>    auto* opc = ctx-&gt;paramsOpc();
+<span class="ln">88</span>    if (opc == nullptr) return;
+<span class="ln">89</span>    auto* lista = opc-&gt;paramLista();
+<span class="ln">90</span>    if (lista == nullptr) return; // epsilon -&gt; sin parametros</div>
+    <div class="explain">
+      <p>El subárbol de parámetros tiene la forma <code>paramsOpc → paramLista | ε</code>. Si el ctx de <code>paramsOpc</code> es null o su <code>paramLista()</code> es null (alternativa épsilon), la función no tiene parámetros y salimos.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">92</span>    // Primer parametro.
+<span class="ln">93</span>    {
+<span class="ln">94</span>        auto* pid = lista-&gt;ID();
+<span class="ln">95</span>        Tipo  ptipo = extraerTipo(lista-&gt;tipo());
+<span class="ln">96</span>        int   pl = static_cast&lt;int&gt;(pid-&gt;getSymbol()-&gt;getLine());
+<span class="ln">97</span>        int   pc = static_cast&lt;int&gt;(pid-&gt;getSymbol()-&gt;getCharPositionInLine());
+<span class="ln">98</span>        std::string pn = pid-&gt;getText();
+<span class="ln">99</span>        if (!scopeActual-&gt;variables.agregar(pn, ptipo, pl)) {
+<span class="ln">100</span>            error(pl, pc, "parametro '" + pn + "' duplicado en funcion '" + nombre + "'");
+<span class="ln">101</span>        } else {
+<span class="ln">102</span>            scopeActual-&gt;parametros.push_back({pn, ptipo});
+<span class="ln">103</span>        }
+<span class="ln">104</span>    }</div>
+    <div class="explain">
+      <p>Procesa el primer parámetro (sale "aparte" del bucle porque la gramática lo separa: <code>paramLista : ID DPUNTOS tipo paramResto</code>, donde el primer ID está en <code>paramLista</code> y los demás en la cadena <code>paramResto</code>).</p>
+      <ul>
+        <li>Líneas 94-98: extrae nombre, tipo y posición del primer parámetro.</li>
+        <li>Línea 99: intenta agregarlo a la tabla local. Si falla (duplicado entre parámetros), reporta error.</li>
+        <li>Línea 102: si tuvo éxito, también lo agrega al vector ordenado de parámetros. Solo entonces, para que los parámetros "no agregados" (por duplicado) no aparezcan en el dump.</li>
+      </ul>
+      <p>El bloque <code>{ ... }</code> es para limitar el scope de las variables locales temporales (<code>pid</code>, <code>ptipo</code>, etc.) para no chocar con el bucle siguiente.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">106</span>    // Parametros restantes (cadena de paramResto).
+<span class="ln">107</span>    auto* resto = lista-&gt;paramResto();
+<span class="ln">108</span>    while (resto != nullptr &amp;&amp; resto-&gt;ID() != nullptr) {
+<span class="ln">109</span>        auto* pid = resto-&gt;ID();
+<span class="ln">110</span>        Tipo  ptipo = extraerTipo(resto-&gt;tipo());
+<span class="ln">111</span>        int   pl = static_cast&lt;int&gt;(pid-&gt;getSymbol()-&gt;getLine());
+<span class="ln">112</span>        int   pc = static_cast&lt;int&gt;(pid-&gt;getSymbol()-&gt;getCharPositionInLine());
+<span class="ln">113</span>        std::string pn = pid-&gt;getText();
+<span class="ln">114</span>        if (!scopeActual-&gt;variables.agregar(pn, ptipo, pl)) {
+<span class="ln">115</span>            error(pl, pc, "parametro '" + pn + "' duplicado en funcion '" + nombre + "'");
+<span class="ln">116</span>        } else {
+<span class="ln">117</span>            scopeActual-&gt;parametros.push_back({pn, ptipo});
+<span class="ln">118</span>        }
+<span class="ln">119</span>        resto = resto-&gt;paramResto();
+<span class="ln">120</span>    }
+<span class="ln">121</span>}</div>
+    <div class="explain">
+      <p>Misma lógica para los parámetros restantes, recorriendo la cadena <code>paramResto → COMA ID DPUNTOS tipo paramResto | ε</code>. La condición del while (<code>resto != nullptr &amp;&amp; resto-&gt;ID() != nullptr</code>) corta cuando llegamos a la alternativa épsilon (donde el ctx existe pero <code>ID()</code> es null porque esa alternativa no tiene tokens).</p>
+      <p>Línea 119: avanza al siguiente <code>paramResto</code> de la cadena. Cuando llegamos al épsilon, el while termina.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-exit">Punto neurálgico 3: exitFuncs</h3>
+  <div class="block">
+    <div class="code"><span class="ln">123</span>// ---------- PUNTO NEURALGICO 3: exitFuncs ----------
+<span class="ln">124</span>// Al cerrar una funcion, el scope vuelve al global del programa.
+<span class="ln">125</span>// Tambien se limpia la bandera de "funcion duplicada" para que las
+<span class="ln">126</span>// siguientes declaraciones vuelvan a registrarse normalmente.
+<span class="ln">127</span>void SemanticAnalyzer::exitFuncs(PatitoParser::FuncsContext* /*ctx*/) {
+<span class="ln">128</span>    scopeActual = funcs.obtener(nombrePrograma);
+<span class="ln">129</span>    enFuncDuplicada = false;
+<span class="ln">130</span>}</div>
+    <div class="explain">
+      <p>Cuando el walker termina de recorrer una función, vuelve a global. Aquí:</p>
+      <ul>
+        <li>Línea 128: busca la entrada global por nombre y resetea <code>scopeActual</code>.</li>
+        <li>Línea 129: limpia la bandera. Si la función que acaba de cerrar era duplicada, la siguiente función / la siguiente decl de vars vuelven a funcionar normal.</li>
+      </ul>
+      <p>El parámetro <code>ctx</code> se ignora (no necesito información del subárbol al salir), por eso lo dejo entre comentarios para silenciar el warning de "parámetro sin usar".</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-decl">Punto neurálgico 4: enterDeclaracion</h3>
+  <div class="block">
+    <div class="code"><span class="ln">132</span>// ---------- PUNTO NEURALGICO 4: enterDeclaracion ----------
+<span class="ln">133</span>// Cuando entramos a una declaracion (un renglon de vars), recolectamos
+<span class="ln">134</span>// TODOS los ids de la idLista (puede ser uno o muchos separados por coma)
+<span class="ln">135</span>// y los registramos en la tabla del scope activo con el tipo declarado.
+<span class="ln">136</span>// Si un id ya existia en este scope, error de duplicado.
+<span class="ln">137</span>void SemanticAnalyzer::enterDeclaracion(PatitoParser::DeclaracionContext* ctx) {
+<span class="ln">138</span>    if (scopeActual == nullptr) return; // defensa: no deberia pasar
+<span class="ln">139</span>    if (enFuncDuplicada) return;        // subarbol de funcion duplicada: ignorar
+<span class="ln">140</span>
+<span class="ln">141</span>    Tipo tipo = extraerTipo(ctx-&gt;tipo());</div>
+    <div class="explain">
+      <p>Dos guardias al inicio:</p>
+      <ul>
+        <li>Línea 138: si <code>scopeActual</code> no apunta a nada, salimos. No debería pasar en flujo normal (siempre hay al menos el scope global tras <code>enterPrograma</code>), pero es defensa por si el parser entrega un árbol raro.</li>
+        <li>Línea 139: si estamos dentro de una función que ya se marcó duplicada, ignoramos sus declaraciones (ver explicación en el header).</li>
+      </ul>
+      <p>Línea 141: extrae el tipo. La regla <code>declaracion : idLista DPUNTOS tipo PCOMA</code> tiene un subárbol <code>tipo</code> que <code>extraerTipo</code> ya sabe procesar.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">143</span>    auto* lista = ctx-&gt;idLista();
+<span class="ln">144</span>    if (lista == nullptr) return;
+<span class="ln">145</span>
+<span class="ln">146</span>    // Primer id.
+<span class="ln">147</span>    {
+<span class="ln">148</span>        auto* idNode = lista-&gt;ID();
+<span class="ln">149</span>        std::string nombre = idNode-&gt;getText();
+<span class="ln">150</span>        int l = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getLine());
+<span class="ln">151</span>        int c = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getCharPositionInLine());
+<span class="ln">152</span>        if (!scopeActual-&gt;variables.agregar(nombre, tipo, l)) {
+<span class="ln">153</span>            error(l, c,
+<span class="ln">154</span>                  "variable '" + nombre + "' doblemente declarada en '" +
+<span class="ln">155</span>                  scopeActual-&gt;nombre + "'");
+<span class="ln">156</span>        }
+<span class="ln">157</span>    }</div>
+    <div class="explain">
+      <p>Procesa el primer id de la lista (igual que con los parámetros, la gramática lo separa: <code>idLista : ID idResto</code>, donde el primer ID está aparte y los demás en <code>idResto</code>).</p>
+      <ul>
+        <li>Líneas 148-151: extrae nombre y posición.</li>
+        <li>Línea 152: intenta agregarlo. Si falla (duplicado dentro de este mismo scope), reporta error.</li>
+        <li>El mensaje incluye el nombre del scope (<code>scopeActual-&gt;nombre</code>), que puede ser el nombre del programa o el nombre de la función — así el revisor sabe en qué scope ocurrió el duplicado.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">159</span>    // Ids restantes en la cadena de idResto.
+<span class="ln">160</span>    auto* resto = lista-&gt;idResto();
+<span class="ln">161</span>    while (resto != nullptr &amp;&amp; resto-&gt;ID() != nullptr) {
+<span class="ln">162</span>        auto* idNode = resto-&gt;ID();
+<span class="ln">163</span>        std::string nombre = idNode-&gt;getText();
+<span class="ln">164</span>        int l = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getLine());
+<span class="ln">165</span>        int c = static_cast&lt;int&gt;(idNode-&gt;getSymbol()-&gt;getCharPositionInLine());
+<span class="ln">166</span>        if (!scopeActual-&gt;variables.agregar(nombre, tipo, l)) {
+<span class="ln">167</span>            error(l, c,
+<span class="ln">168</span>                  "variable '" + nombre + "' doblemente declarada en '" +
+<span class="ln">169</span>                  scopeActual-&gt;nombre + "'");
+<span class="ln">170</span>        }
+<span class="ln">171</span>        resto = resto-&gt;idResto();
+<span class="ln">172</span>    }
+<span class="ln">173</span>}
+<span class="ln">174</span>
+<span class="ln">175</span>} // namespace patito</div>
+    <div class="explain">
+      <p>Mismo patrón que con los parámetros restantes: recorre la cadena <code>idResto → COMA ID idResto | ε</code> hasta que llegue al épsilon. Cada id se agrega con el mismo tipo (el de la declaración entera) y se valida contra el scope actual.</p>
+      <p>Esto cubre tanto <code>a, b, c : entero;</code> (3 vars distintas, todas válidas) como <code>a, b, a : entero;</code> (el segundo <code>a</code> falla con duplicado, mensaje preciso con su línea/columna).</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--               MAIN.CPP DELTA                -->
+<!-- =========================================== -->
+
+<section id="main-delta">
+  <h2 class="section">src/main.cpp — cambios respecto a Etapa 1</h2>
+  <div class="file-card modified">
+    <span class="tag">Modificado</span>
+    <div class="filename">src/main.cpp</div>
+    <div class="role">Tres cambios: include del analizador, soporte para la bandera <code>--dir</code>, y ejecución del listener tras el parseo.</div>
+  </div>
+
+  <h3 class="subsection">Include del módulo semántico</h3>
+  <div class="block">
+    <div class="code"><span class="ln">15</span>#include "antlr4-runtime.h"
+<span class="ln">16</span>#include "PatitoLexer.h"
+<span class="ln">17</span>#include "PatitoParser.h"
+<span class="ln">18</span>#include "semantic/SemanticAnalyzer.h"</div>
+    <div class="explain">
+      <p>Nueva línea 18: incluye el header del analizador. La ruta relativa <code>semantic/</code> funciona porque <code>CMakeLists.txt</code> agrega <code>src/</code> a los include paths (ver §CMakeLists).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection">Bandera --dir</h3>
+  <div class="block">
+    <div class="code"><span class="ln">54</span>int main(int argc, char *argv[]) {
+<span class="ln">55</span>    bool mostrarTokens = false;
+<span class="ln">56</span>    bool mostrarArbol = false;
+<span class="ln">57</span>    bool mostrarDir = false;
+<span class="ln">58</span>    std::string archivo;</div>
+    <div class="explain">
+      <p>Nueva línea 57: agrego <code>mostrarDir</code> para soportar la bandera que vuelca el directorio.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">60</span>    for (int i = 1; i &lt; argc; i++) {
+<span class="ln">61</span>        std::string arg = argv[i];
+<span class="ln">62</span>        if (arg == "--tokens") {
+<span class="ln">63</span>            mostrarTokens = true;
+<span class="ln">64</span>        } else if (arg == "--tree") {
+<span class="ln">65</span>            mostrarArbol = true;
+<span class="ln">66</span>        } else if (arg == "--dir") {
+<span class="ln">67</span>            mostrarDir = true;
+<span class="ln">68</span>        } else if (arg.rfind("--", 0) == 0) {
+<span class="ln">69</span>            std::cerr &lt;&lt; "Bandera desconocida: " &lt;&lt; arg &lt;&lt; std::endl;
+<span class="ln">70</span>            return 2;
+<span class="ln">71</span>        } else {
+<span class="ln">72</span>            archivo = arg;
+<span class="ln">73</span>        }
+<span class="ln">74</span>    }</div>
+    <div class="explain">
+      <p>Nuevas líneas 66-67: reconozco <code>--dir</code> en el parseo de argumentos.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection">Ejecución del analizador semántico</h3>
+  <div class="block">
+    <div class="code"><span class="ln">114</span>    int totalSintaxis = erroresLex.conteo + erroresPar.conteo;
+<span class="ln">115</span>
+<span class="ln">116</span>    // Etapa 2: solo corremos el analizador semantico si el parseo fue exitoso.
+<span class="ln">117</span>    // Un arbol con errores sintacticos puede tener nodos null que romperian
+<span class="ln">118</span>    // las visitas semanticas.
+<span class="ln">119</span>    int erroresSemantica = 0;
+<span class="ln">120</span>    patito::SemanticAnalyzer analizador(archivo);
+<span class="ln">121</span>    if (totalSintaxis == 0) {
+<span class="ln">122</span>        tree::ParseTreeWalker::DEFAULT.walk(&amp;analizador, arbol);
+<span class="ln">123</span>        erroresSemantica = analizador.errores();
+<span class="ln">124</span>
+<span class="ln">125</span>        if (mostrarDir) {
+<span class="ln">126</span>            std::cout &lt;&lt; std::endl;
+<span class="ln">127</span>            analizador.directorio().imprimir(std::cout);
+<span class="ln">128</span>            std::cout &lt;&lt; std::endl;
+<span class="ln">129</span>        }
+<span class="ln">130</span>    }
+<span class="ln">131</span>
+<span class="ln">132</span>    int total = totalSintaxis + erroresSemantica;</div>
+    <div class="explain">
+      <p>Esta es la integración. Después del parseo:</p>
+      <ul>
+        <li>Línea 114: renombro la variable que antes era <code>total</code> a <code>totalSintaxis</code>, porque ahora habrá dos conteos (sintaxis y semántica).</li>
+        <li>Líneas 119-120: instancia del analizador. Se crea siempre (no cuesta nada) pero solo se usa si el parseo fue limpio.</li>
+        <li>Línea 121: condición <strong>importante</strong> — solo se corre el listener si no hubo errores sintácticos. Razón: un árbol con errores sintácticos puede tener nodos null o malformados que harían crash al recorrer con <code>walk</code>.</li>
+        <li>Línea 122: <code>ParseTreeWalker::DEFAULT.walk</code> es la utility de ANTLR que recorre el árbol llamando los enter/exit del listener en pre-orden (enter) y post-orden (exit).</li>
+        <li>Línea 123: recoge el conteo.</li>
+        <li>Líneas 125-129: si pidió <code>--dir</code>, imprime el directorio entero al stdout.</li>
+        <li>Línea 132: suma final para decidir OK / FAIL.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--             CMAKELISTS DELTA                -->
+<!-- =========================================== -->
+
+<section id="cmake-delta">
+  <h2 class="section">CMakeLists.txt — cambios respecto a Etapa 1</h2>
+  <div class="file-card modified">
+    <span class="tag">Modificado</span>
+    <div class="filename">CMakeLists.txt</div>
+    <div class="role">Agregar el nuevo directorio <code>src/semantic/</code> al build (glob de fuentes + include path para que <code>#include "semantic/..."</code> funcione).</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">25</span>file(GLOB GENERATED_SRC   ${CMAKE_SOURCE_DIR}/src/generated/*.cpp)
+<span class="ln">26</span>file(GLOB SEMANTIC_SRC    ${CMAKE_SOURCE_DIR}/src/semantic/*.cpp)
+<span class="ln">27</span>
+<span class="ln">28</span>add_executable(patito
+<span class="ln">29</span>    src/main.cpp
+<span class="ln">30</span>    ${GENERATED_SRC}
+<span class="ln">31</span>    ${SEMANTIC_SRC}
+<span class="ln">32</span>)</div>
+    <div class="explain">
+      <p>Nueva línea 26: glob para recoger todos los <code>.cpp</code> dentro de <code>src/semantic/</code> (<code>SemanticCube.cpp</code>, <code>SymbolTable.cpp</code>, <code>SemanticAnalyzer.cpp</code>). Línea 31: se agregan al target.</p>
+      <p>Igual que con el glob de los generados, en el futuro si agregas un nuevo <code>.cpp</code> al directorio semántico, este glob lo recoge automáticamente al reconfigurar.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">34</span>target_include_directories(patito PRIVATE
+<span class="ln">35</span>    ${ANTLR4_INCLUDE_DIR}
+<span class="ln">36</span>    ${CMAKE_SOURCE_DIR}/src
+<span class="ln">37</span>    ${CMAKE_SOURCE_DIR}/src/generated
+<span class="ln">38</span>)</div>
+    <div class="explain">
+      <p>Nueva línea 36: agrego <code>src/</code> al include path. Esto es lo que hace que <code>#include "semantic/SemanticAnalyzer.h"</code> (desde <code>main.cpp</code>) y <code>#include "PatitoBaseListener.h"</code> (desde <code>SemanticAnalyzer.h</code>) funcionen.</p>
+      <p><code>src/generated</code> seguía estando porque el header del analizador necesita resolver <code>PatitoBaseListener.h</code> que vive ahí. <code>ANTLR4_INCLUDE_DIR</code> apunta a los headers del runtime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--             RUN_TESTS DELTA                 -->
+<!-- =========================================== -->
+
+<section id="runner-delta">
+  <h2 class="section">tests/run_tests.sh — cambios respecto a Etapa 1</h2>
+  <div class="file-card modified">
+    <span class="tag">Modificado</span>
+    <div class="filename">tests/run_tests.sh</div>
+    <div class="role">Agregar dos suites más al runner: <code>semantic_valid/</code> y <code>semantic_invalid/</code>. La lógica de <code>run_case</code> no cambia.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>#!/usr/bin/env bash
+<span class="ln">2</span># Runner del Test-Plan de Patito (Etapas 1 y 2).
+<span class="ln">3</span># Ejecuta cada programa con ./build/patito y verifica el exit code esperado:
+<span class="ln">4</span>#   tests/valid/*           -&gt; sintaxis OK     (exit 0)
+<span class="ln">5</span>#   tests/invalid/*         -&gt; sintaxis FAIL   (exit 1)
+<span class="ln">6</span>#   tests/semantic_valid/*  -&gt; semantica OK    (exit 0)
+<span class="ln">7</span>#   tests/semantic_invalid/*-&gt; semantica FAIL  (exit 1)</div>
+    <div class="explain">
+      <p>Comentario de cabecera actualizado para listar las cuatro suites. Importante por documentación interna: cualquiera que abra el script ve inmediatamente qué cubre.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">37</span>echo "========================================"
+<span class="ln">38</span>echo " SINTAXIS - VALIDOS  (Etapa 1, exit=0)"
+<span class="ln">39</span>echo "========================================"
+<span class="ln">40</span>for f in "$ROOT"/tests/valid/*.patito; do
+<span class="ln">41</span>    [ -e "$f" ] || continue
+<span class="ln">42</span>    run_case "$f" 0
+<span class="ln">43</span>done</div>
+    <div class="explain">
+      <p>El bloque de Etapa 1 sigue igual, solo cambia el título del encabezado para diferenciarlo de la nueva suite semántica.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">53</span>echo ""
+<span class="ln">54</span>echo "========================================"
+<span class="ln">55</span>echo " SEMANTICA - VALIDOS  (Etapa 2, exit=0)"
+<span class="ln">56</span>echo "========================================"
+<span class="ln">57</span>for f in "$ROOT"/tests/semantic_valid/*.patito; do
+<span class="ln">58</span>    [ -e "$f" ] || continue
+<span class="ln">59</span>    run_case "$f" 0
+<span class="ln">60</span>done
+<span class="ln">61</span>
+<span class="ln">62</span>echo ""
+<span class="ln">63</span>echo "========================================"
+<span class="ln">64</span>echo " SEMANTICA - INVALIDOS  (Etapa 2, exit=1)"
+<span class="ln">65</span>echo "========================================"
+<span class="ln">66</span>for f in "$ROOT"/tests/semantic_invalid/*.patito; do
+<span class="ln">67</span>    [ -e "$f" ] || continue
+<span class="ln">68</span>    run_case "$f" 1
+<span class="ln">69</span>done</div>
+    <div class="explain">
+      <p>Dos nuevos bloques con la misma estructura que los anteriores, ahora apuntando a las suites semánticas. La función <code>run_case</code> es la misma; solo cambia el directorio y el exit code esperado.</p>
+      <p>Notar que los semánticos válidos también deben pasar el filtro sintáctico (porque el driver corre sintaxis primero, y solo si pasa corre semántica). Los semánticos inválidos están escritos para tener sintaxis válida pero violar una regla semántica — así su FAIL se atribuye correctamente a la fase semántica.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Resultado:</strong> el runner ahora ejecuta 36 casos (14 + 10 + 4 + 8). Cualquier regresión en sintaxis o en semántica se detecta con una sola corrida de <code>./tests/run_tests.sh</code>.
+  </div>
+</section>
+
+<footer style="margin-top: 60px; padding: 24px 0; border-top: 1px solid #ccc; color: #777; font-size: 13px;">
+  <p>Walkthrough de Etapa 2 del proyecto Patito. Para el walkthrough de la gramática (<code>Patito.g4</code>), driver inicial y test runner, ver <code class="inline">Patito_Etapa1_Walkthrough.html</code>.</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

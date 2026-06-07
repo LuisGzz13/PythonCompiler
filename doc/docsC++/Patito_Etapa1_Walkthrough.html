@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito — Walkthrough línea por línea</title>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.55;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+  }
+  /* Sidebar */
+  .toc {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: #1f1f23;
+    color: #ddd;
+    padding: 24px 18px;
+    border-right: 1px solid #333;
+    font-size: 13px;
+  }
+  .toc h2 {
+    color: #fff;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 6px 0; }
+  .toc a {
+    color: #aab;
+    text-decoration: none;
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .toc a:hover { background: #2a2a30; color: #fff; }
+  .toc ol ol { margin-left: 12px; margin-top: 4px; }
+  .toc ol ol a { font-size: 12px; color: #889; padding: 2px 8px; }
+  .toc .file { font-weight: 600; color: #fff; }
+  /* Main */
+  main { padding: 40px 56px; max-width: 1100px; }
+  header.page {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #1a1a1a;
+  }
+  header.page h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+  }
+  header.page .sub {
+    color: #666;
+    font-size: 15px;
+  }
+  h2.section {
+    margin-top: 56px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+    font-size: 22px;
+  }
+  h3.subsection {
+    margin-top: 36px;
+    font-size: 17px;
+    color: #444;
+  }
+  p.intro { color: #444; max-width: 75ch; }
+  /* File header card */
+  .file-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #4a6fa5;
+    padding: 16px 20px;
+    margin: 16px 0 24px;
+    border-radius: 4px;
+  }
+  .file-card .filename {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a6fa5;
+  }
+  .file-card .role { color: #555; font-size: 14px; margin-top: 4px; }
+  /* Line blocks */
+  .block {
+    margin: 18px 0 24px;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .block .code {
+    background: #1f1f23;
+    color: #f0f0f0;
+    padding: 14px 18px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .block .code .ln {
+    display: inline-block;
+    width: 30px;
+    text-align: right;
+    margin-right: 14px;
+    color: #666;
+    user-select: none;
+  }
+  .block .explain {
+    padding: 14px 20px;
+    background: #f7f8fa;
+    border-top: 1px solid #e3e3e3;
+    font-size: 14px;
+    color: #2a2a2a;
+  }
+  .block .explain p { margin: 0 0 8px; }
+  .block .explain p:last-child { margin-bottom: 0; }
+  .block .explain ul { margin: 4px 0 8px; padding-left: 22px; }
+  .block .explain li { margin: 3px 0; }
+  .block .explain strong { color: #1a1a1a; }
+  .block .explain code {
+    background: #eef0f3;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    color: #1a1a1a;
+  }
+  /* Note box */
+  .note {
+    background: #fff8e6;
+    border-left: 4px solid #d8a020;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  .note strong { color: #8a5c00; }
+  .pipeline {
+    background: #f0f4fa;
+    border-left: 4px solid #4a6fa5;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  /* Generic helpers */
+  code.inline {
+    background: #eef0f3;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  table.def {
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+    width: 100%;
+  }
+  table.def th, table.def td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.def th { background: #f0f0f0; font-weight: 600; }
+  table.def td code { background: none; padding: 0; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .toc { position: static; height: auto; }
+    main { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="toc">
+  <h2>Walkthrough</h2>
+  <ol>
+    <li><a href="#intro" class="file">Visión general</a></li>
+    <li><a href="#grammar" class="file">grammar/Patito.g4</a>
+      <ol>
+        <li><a href="#g-header">Cabecera</a></li>
+        <li><a href="#g-programa">programa (raíz)</a></li>
+        <li><a href="#g-vars">Vars y declaraciones</a></li>
+        <li><a href="#g-funcs">Funciones y llamadas</a></li>
+        <li><a href="#g-cuerpo">Cuerpo y estatutos</a></li>
+        <li><a href="#g-asigna-cond-ciclo">Asigna, condicion, ciclo</a></li>
+        <li><a href="#g-imprime">Imprime</a></li>
+        <li><a href="#g-expr">Expresiones</a></li>
+        <li><a href="#g-lex-kw">Lexer: palabras reservadas</a></li>
+        <li><a href="#g-lex-op">Lexer: operadores</a></li>
+        <li><a href="#g-lex-punct">Lexer: puntuación</a></li>
+        <li><a href="#g-lex-id">Lexer: ID y literales</a></li>
+        <li><a href="#g-lex-ws">Lexer: whitespace</a></li>
+      </ol>
+    </li>
+    <li><a href="#main" class="file">src/main.cpp</a>
+      <ol>
+        <li><a href="#m-cabecera">Cabecera e includes</a></li>
+        <li><a href="#m-colector">ColectorErrores</a></li>
+        <li><a href="#m-tokens">imprimirTokens</a></li>
+        <li><a href="#m-args">main: parseo de argumentos</a></li>
+        <li><a href="#m-archivo">main: apertura de archivo</a></li>
+        <li><a href="#m-pipeline">main: pipeline lexer→parser</a></li>
+        <li><a href="#m-resultado">main: resultado y exit</a></li>
+      </ol>
+    </li>
+    <li><a href="#cmake" class="file">CMakeLists.txt</a></li>
+    <li><a href="#runner" class="file">tests/run_tests.sh</a></li>
+  </ol>
+</aside>
+
+<main>
+
+<header class="page">
+  <h1>Patito — Walkthrough línea por línea</h1>
+  <p class="sub">Etapa 1 · Scanner + Parser con ANTLR 4 (runtime C++) · Luis Manuel Gonzalez Martinez · A01722501</p>
+</header>
+
+<section id="intro">
+  <h2 class="section">Visión general</h2>
+  <p class="intro">El proyecto recibe un archivo con código en el lenguaje Patito (extensión <code class="inline">.patito</code>) y verifica que esté <strong>léxica y sintácticamente bien formado</strong>. Para lograrlo se usa la siguiente cadena:</p>
+
+  <div class="pipeline">
+    <strong>Pipeline:</strong><br>
+    archivo.patito → <code class="inline">PatitoLexer</code> (tokens) → <code class="inline">PatitoParser</code> (árbol de parseo) → <code class="inline">main.cpp</code> reporta OK / FAIL
+  </div>
+
+  <p class="intro">Hay cuatro archivos hechos a mano:</p>
+  <ul>
+    <li><code class="inline">grammar/Patito.g4</code> — la <strong>gramática</strong> del lenguaje en formato ANTLR4. Contiene tanto las reglas léxicas (qué es un token) como las sintácticas (cómo se combinan). ANTLR lee este archivo y genera el lexer y el parser en C++.</li>
+    <li><code class="inline">src/main.cpp</code> — el <strong>driver</strong> que lee el archivo de entrada, llama al lexer y al parser, y reporta resultados con línea y columna.</li>
+    <li><code class="inline">CMakeLists.txt</code> — la <strong>receta de compilación</strong> que indica a CMake qué archivos compilar, dónde está el runtime de ANTLR, y cómo enlazar todo.</li>
+    <li><code class="inline">tests/run_tests.sh</code> — el <strong>runner del test-plan</strong> que ejecuta los 24 programas de prueba y verifica que cada uno pase o falle como se espera.</li>
+  </ul>
+
+  <p class="intro">El resto de los archivos en <code class="inline">src/generated/</code> los produce ANTLR automáticamente — no los tocamos.</p>
+</section>
+
+<!-- =========================================== -->
+<!--                  PATITO.G4                  -->
+<!-- =========================================== -->
+
+<section id="grammar">
+  <h2 class="section">grammar/Patito.g4</h2>
+  <div class="file-card">
+    <div class="filename">grammar/Patito.g4</div>
+    <div class="role">Gramática unificada (lexer + parser) en formato ANTLR4. Es la traducción directa de la CFG y las expresiones regulares de Etapa 0.</div>
+  </div>
+
+  <p class="intro">ANTLR distingue las dos clases de reglas por la primera letra del nombre:</p>
+  <ul>
+    <li><strong>Reglas de parser</strong> (no-terminales) → empiezan con <em>minúscula</em>. Describen cómo se combinan los tokens para formar construcciones del lenguaje (programa, declaración, expresión...).</li>
+    <li><strong>Reglas de lexer</strong> (terminales/tokens) → empiezan con <em>MAYÚSCULA</em>. Describen los caracteres que forman cada token (palabras reservadas, números, identificadores...).</li>
+  </ul>
+
+  <h3 class="subsection" id="g-header">Cabecera</h3>
+  <div class="block">
+    <div class="code"><span class="ln">1</span>grammar Patito;</div>
+    <div class="explain">
+      <p>Declara que esta gramática se llama <strong>Patito</strong>. ANTLR exige que el nombre coincida con el del archivo (<code>Patito.g4</code>). Este nombre también se convierte en el prefijo de las clases generadas: <code>PatitoLexer</code>, <code>PatitoParser</code>, <code>PatitoVisitor</code>.</p>
+      <p>Como no especificamos <code>parser grammar</code> ni <code>lexer grammar</code>, ANTLR la trata como <strong>combinada</strong>: en este mismo archivo conviven las reglas léxicas y las sintácticas.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">3</span>// =================================================================
+<span class="ln">4</span>// PARSER RULES (no-terminales)
+<span class="ln">5</span>// Traduccion 1:1 de la CFG de Etapa 0
+<span class="ln">6</span>// =================================================================</div>
+    <div class="explain">
+      <p>Comentarios. Indican el inicio de la sección de reglas de parser. Los comentarios <code>// ...</code> se permiten en cualquier parte de un <code>.g4</code> y ANTLR los ignora. Aquí los uso para que el archivo sea legible: separa visualmente la zona del parser de la del lexer (que viene más abajo en la línea 188).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-programa">programa (la regla raíz)</h3>
+  <div class="block">
+    <div class="code"><span class="ln">8</span>programa
+<span class="ln">9</span>    : PROGRAMA ID PCOMA varsOpc funcsOpc INICIO cuerpo FIN
+<span class="ln">10</span>    ;</div>
+    <div class="explain">
+      <p>Esta es la <strong>regla raíz</strong>: el parser siempre empieza por aquí. Define la forma de un programa Patito completo, traduciendo el diagrama <code>&lt;Programa&gt;</code> de la rúbrica.</p>
+      <p>La línea 9 dice: para que un texto sea un programa válido, debe ser exactamente la secuencia:</p>
+      <ul>
+        <li><code>PROGRAMA</code> — la palabra reservada <code>programa</code></li>
+        <li><code>ID</code> — el nombre del programa</li>
+        <li><code>PCOMA</code> — el <code>;</code></li>
+        <li><code>varsOpc</code> — opcionalmente un bloque <code>vars</code></li>
+        <li><code>funcsOpc</code> — opcionalmente cero o más funciones</li>
+        <li><code>INICIO</code> — la palabra reservada <code>inicio</code></li>
+        <li><code>cuerpo</code> — el bloque <code>{ ... }</code> del programa principal</li>
+        <li><code>FIN</code> — la palabra reservada <code>fin</code></li>
+      </ul>
+      <p>El <code>:</code> introduce la(s) producción(es) y el <code>;</code> de la línea 10 cierra la regla. Esa sintaxis se repite en todas las reglas del archivo.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">12</span>varsOpc
+<span class="ln">13</span>    : vars
+<span class="ln">14</span>    |
+<span class="ln">15</span>    ;</div>
+    <div class="explain">
+      <p>Define una versión <strong>opcional</strong> del bloque <code>vars</code>. Tiene dos alternativas separadas por <code>|</code>:</p>
+      <ul>
+        <li>Línea 13: <code>vars</code> — usar el bloque vars completo</li>
+        <li>Línea 14: nada (después del <code>|</code> no hay tokens) — eso es <strong>épsilon</strong>, la cadena vacía</li>
+      </ul>
+      <p>Por eso un programa puede tener o no tener declaraciones globales. La rúbrica lo permite y el diagrama lo refleja con la flecha que se salta el bloque VARS.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">17</span>funcsOpc
+<span class="ln">18</span>    : funcs funcsOpc
+<span class="ln">19</span>    |
+<span class="ln">20</span>    ;</div>
+    <div class="explain">
+      <p>Permite <strong>cero o más funciones</strong> antes de <code>inicio</code>. Es una regla recursiva por la derecha:</p>
+      <ul>
+        <li>Línea 18: una función seguida de "más cosas que también son funciones opcionales".</li>
+        <li>Línea 19: épsilon, que corta la recursión.</li>
+      </ul>
+      <p>Si el programa no tiene funciones, esta regla se reduce inmediatamente a épsilon. Si tiene tres funciones, se expande tres veces antes de cortar.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-vars">Vars y declaraciones</h3>
+  <div class="block">
+    <div class="code"><span class="ln">22</span>vars
+<span class="ln">23</span>    : VARS declaracionList
+<span class="ln">24</span>    ;</div>
+    <div class="explain">
+      <p>Bloque <code>vars</code>: la palabra reservada seguida de una lista de declaraciones. La regla no admite alternativa épsilon porque si llegamos aquí ya decidimos que SÍ hay vars (la opción de "no vars" la maneja <code>varsOpc</code>).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">26</span>declaracionList
+<span class="ln">27</span>    : declaracion declaracionList
+<span class="ln">28</span>    | declaracion
+<span class="ln">29</span>    ;</div>
+    <div class="explain">
+      <p><strong>Una o más</strong> declaraciones (por lo menos una, porque el caso "lista vacía" no tiene sentido tras la palabra <code>vars</code>). Patrón estándar:</p>
+      <ul>
+        <li>Línea 27: una declaración seguida de la lista (recursión por la derecha)</li>
+        <li>Línea 28: solo una declaración (caso base)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">31</span>declaracion
+<span class="ln">32</span>    : idLista DPUNTOS tipo PCOMA
+<span class="ln">33</span>    ;</div>
+    <div class="explain">
+      <p>Una declaración tiene la forma <code>a, b, c : entero ;</code>:</p>
+      <ul>
+        <li><code>idLista</code> — uno o más identificadores separados por coma</li>
+        <li><code>DPUNTOS</code> — el <code>:</code></li>
+        <li><code>tipo</code> — <code>entero</code> o <code>flotante</code></li>
+        <li><code>PCOMA</code> — el <code>;</code> que cierra la declaración</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">35</span>idLista
+<span class="ln">36</span>    : ID idResto
+<span class="ln">37</span>    ;
+<span class="ln">38</span>
+<span class="ln">39</span>idResto
+<span class="ln">40</span>    : COMA ID idResto
+<span class="ln">41</span>    |
+<span class="ln">42</span>    ;</div>
+    <div class="explain">
+      <p>Esta es la traducción del bucle <code>id (, id)*</code> que aparece en el diagrama de <code>&lt;VARS&gt;</code>. La idea es:</p>
+      <ul>
+        <li><code>idLista</code> = exige <strong>al menos un</strong> ID, seguido del "resto"</li>
+        <li><code>idResto</code> = <strong>cero o más</strong> ", ID" después del primero. La recursión por la derecha permite encadenarlos: <code>, b , c , d</code>.</li>
+      </ul>
+      <p>Esta forma con dos reglas auxiliares (<code>idLista</code>/<code>idResto</code>) corresponde a una traducción "manual" del bucle del diagrama, similar a como se haría en una gramática LL(1) clásica. ANTLR4 también permite escribir <code>ID (',' ID)*</code> con menos código, pero mantengo este estilo para que el <code>.g4</code> mapee 1:1 con la CFG documentada en Etapa 0.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">44</span>tipo
+<span class="ln">45</span>    : ENTERO
+<span class="ln">46</span>    | FLOTANTE
+<span class="ln">47</span>    ;</div>
+    <div class="explain">
+      <p>Los únicos dos tipos del lenguaje. Cualquier intento de declarar otro tipo (por ejemplo <code>cadena</code>) cae en error porque el lexer leería <code>cadena</code> como un <code>ID</code> y el parser exige aquí <code>ENTERO</code> o <code>FLOTANTE</code> (token de palabra reservada). El test <code>05_tipo_invalido.patito</code> prueba precisamente eso.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-funcs">Funciones y llamadas</h3>
+  <div class="block">
+    <div class="code"><span class="ln">49</span>funcs
+<span class="ln">50</span>    : tipoFunc ID PIZQ paramsOpc PDER LLAVEIZQ varsOpc cuerpo LLAVEDER PCOMA
+<span class="ln">51</span>    ;</div>
+    <div class="explain">
+      <p>Forma completa de una declaración de función:</p>
+      <ul>
+        <li><code>tipoFunc</code> — el tipo de retorno (<code>nula</code>, <code>entero</code> o <code>flotante</code>)</li>
+        <li><code>ID</code> — nombre de la función</li>
+        <li><code>PIZQ</code> ... <code>PDER</code> — paréntesis que envuelven los parámetros</li>
+        <li><code>paramsOpc</code> — opcionalmente la lista de parámetros</li>
+        <li><code>LLAVEIZQ</code> ... <code>LLAVEDER</code> — llaves que envuelven todo el cuerpo de la función</li>
+        <li><code>varsOpc</code> — vars locales (opcionales)</li>
+        <li><code>cuerpo</code> — el bloque <code>{ estatutos }</code> con el código</li>
+        <li><code>PCOMA</code> — el <code>;</code> final que cierra la declaración (lo exige el diagrama)</li>
+      </ul>
+      <p>Nota la <strong>doble llave</strong>: la función se define como <code>{ varsOpc cuerpo }</code> donde <code>cuerpo</code> a su vez es <code>{ estatutos }</code>. Por eso en los tests las funciones se ven como <code>nombre() { { ... } } ;</code>. Esto viene directo del diagrama de <code>&lt;FUNCS&gt;</code> — las llaves externas envuelven vars+cuerpo, las internas son las del cuerpo.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">53</span>tipoFunc
+<span class="ln">54</span>    : NULA
+<span class="ln">55</span>    | tipo
+<span class="ln">56</span>    ;</div>
+    <div class="explain">
+      <p>El retorno puede ser <code>nula</code> (sin valor) o uno de los tipos básicos. Reusa la regla <code>tipo</code> en lugar de listar <code>ENTERO | FLOTANTE</code>, para evitar duplicación.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">58</span>paramsOpc
+<span class="ln">59</span>    : paramLista
+<span class="ln">60</span>    |
+<span class="ln">61</span>    ;
+<span class="ln">62</span>
+<span class="ln">63</span>paramLista
+<span class="ln">64</span>    : ID DPUNTOS tipo paramResto
+<span class="ln">65</span>    ;
+<span class="ln">66</span>
+<span class="ln">67</span>paramResto
+<span class="ln">68</span>    : COMA ID DPUNTOS tipo paramResto
+<span class="ln">69</span>    |
+<span class="ln">70</span>    ;</div>
+    <div class="explain">
+      <p>Misma estrategia que <code>idLista</code>/<code>idResto</code>, pero cada parámetro lleva además <code>: tipo</code>. Soporta:</p>
+      <ul>
+        <li>Cero parámetros: <code>paramsOpc</code> elige épsilon → <code>foo()</code></li>
+        <li>Uno: <code>paramLista</code> con <code>paramResto</code> en épsilon → <code>foo(x : entero)</code></li>
+        <li>Varios: el <code>paramResto</code> se repite → <code>foo(a : entero, b : flotante, c : entero)</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">72</span>llamada
+<span class="ln">73</span>    : ID PIZQ argsOpc PDER
+<span class="ln">74</span>    ;</div>
+    <div class="explain">
+      <p>Una <strong>llamada a función</strong>: nombre, paréntesis y lista opcional de argumentos. Importante: <strong>sin punto y coma</strong>, porque la llamada también puede aparecer dentro de una expresión (ver <code>factor</code>). Cuando se usa como estatuto, el <code>;</code> lo agrega <code>estatuto</code> en la línea 103 (<code>llamada PCOMA</code>).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">76</span>argsOpc
+<span class="ln">77</span>    : argLista
+<span class="ln">78</span>    |
+<span class="ln">79</span>    ;
+<span class="ln">80</span>
+<span class="ln">81</span>argLista
+<span class="ln">82</span>    : expresion argResto
+<span class="ln">83</span>    ;
+<span class="ln">84</span>
+<span class="ln">85</span>argResto
+<span class="ln">86</span>    : COMA expresion argResto
+<span class="ln">87</span>    |
+<span class="ln">88</span>    ;</div>
+    <div class="explain">
+      <p>Lista de argumentos en una llamada. Cada argumento es una <code>expresion</code> completa, no solo un identificador o constante. Por eso uno puede pasar <code>imprimir(a + 1, b * 2)</code>: cada argumento se parsea con todo el árbol de expresiones, operadores y paréntesis.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-cuerpo">Cuerpo y estatutos</h3>
+  <div class="block">
+    <div class="code"><span class="ln">90</span>cuerpo
+<span class="ln">91</span>    : LLAVEIZQ estatutoList LLAVEDER
+<span class="ln">92</span>    ;
+<span class="ln">93</span>
+<span class="ln">94</span>estatutoList
+<span class="ln">95</span>    : estatuto estatutoList
+<span class="ln">96</span>    |
+<span class="ln">97</span>    ;</div>
+    <div class="explain">
+      <p>Un cuerpo es un par de llaves con cero o más estatutos dentro. <code>estatutoList</code> permite épsilon, así que un cuerpo vacío <code>{ }</code> es válido (lo prueba <code>01_minimo.patito</code>).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">99</span>estatuto
+<span class="ln">100</span>    : asigna
+<span class="ln">101</span>    | condicion
+<span class="ln">102</span>    | ciclo
+<span class="ln">103</span>    | llamada PCOMA
+<span class="ln">104</span>    | imprime
+<span class="ln">105</span>    ;</div>
+    <div class="explain">
+      <p>Las cinco formas que puede tomar un estatuto, exactamente como aparecen en el diagrama de <code>&lt;ESTATUTO&gt;</code>:</p>
+      <ul>
+        <li><code>asigna</code> — <code>x = expr ;</code></li>
+        <li><code>condicion</code> — <code>si (...) { } sino { } ;</code></li>
+        <li><code>ciclo</code> — <code>mientras (...) haz { } ;</code></li>
+        <li><code>llamada PCOMA</code> — una llamada a función como sentencia, con el <code>;</code> agregado aquí (no es parte de <code>llamada</code> porque también se usa dentro de expresiones)</li>
+        <li><code>imprime</code> — <code>escribe(...) ;</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-asigna-cond-ciclo">Asignación, condición y ciclo</h3>
+  <div class="block">
+    <div class="code"><span class="ln">107</span>asigna
+<span class="ln">108</span>    : ID IGUAL expresion PCOMA
+<span class="ln">109</span>    ;</div>
+    <div class="explain">
+      <p>Asignación clásica: <code>id = expresion ;</code>. La parte derecha es una <code>expresion</code> (no un simple literal), lo cual permite cosas como <code>x = a + b * c;</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">111</span>condicion
+<span class="ln">112</span>    : SI PIZQ expresion PDER cuerpo sinoOpc PCOMA
+<span class="ln">113</span>    ;
+<span class="ln">114</span>
+<span class="ln">115</span>sinoOpc
+<span class="ln">116</span>    : SINO cuerpo
+<span class="ln">117</span>    |
+<span class="ln">118</span>    ;</div>
+    <div class="explain">
+      <p>Condicional <code>si</code>:</p>
+      <ul>
+        <li><code>SI PIZQ expresion PDER</code> — el <code>si (...)</code></li>
+        <li><code>cuerpo</code> — el bloque que se ejecuta si la condición es verdadera</li>
+        <li><code>sinoOpc</code> — opcionalmente un <code>sino { ... }</code></li>
+        <li><code>PCOMA</code> — el <code>;</code> final, que el diagrama exige al cerrar el <code>si</code></li>
+      </ul>
+      <p>Por esto los tests muestran <code>si (...) { ... } ; </code> con el punto y coma al final. Si lo omites cae en error: lo prueba <code>10_si_sin_pcoma.patito</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">120</span>ciclo
+<span class="ln">121</span>    : MIENTRAS PIZQ expresion PDER HAZ cuerpo PCOMA
+<span class="ln">122</span>    ;</div>
+    <div class="explain">
+      <p>Bucle <code>mientras (...) haz { ... } ;</code>. La palabra reservada <code>haz</code> conecta la condición con el cuerpo, tal como aparece en el diagrama. El <code>;</code> al final cierra el ciclo, igual que en <code>si</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-imprime">Imprime</h3>
+  <div class="block">
+    <div class="code"><span class="ln">124</span>imprime
+<span class="ln">125</span>    : ESCRIBE PIZQ impLista PDER PCOMA
+<span class="ln">126</span>    ;
+<span class="ln">127</span>
+<span class="ln">128</span>impLista
+<span class="ln">129</span>    : impElem impResto
+<span class="ln">130</span>    ;
+<span class="ln">131</span>
+<span class="ln">132</span>impResto
+<span class="ln">133</span>    : COMA impElem impResto
+<span class="ln">134</span>    |
+<span class="ln">135</span>    ;
+<span class="ln">136</span>
+<span class="ln">137</span>impElem
+<span class="ln">138</span>    : expresion
+<span class="ln">139</span>    | LETRERO
+<span class="ln">140</span>    ;</div>
+    <div class="explain">
+      <p>El <code>escribe</code> imprime <strong>uno o más elementos separados por coma</strong>. Cada elemento (<code>impElem</code>) puede ser:</p>
+      <ul>
+        <li>Una <code>expresion</code> aritmética/relacional (que se evaluará).</li>
+        <li>Un <code>LETRERO</code> (cadena literal entre comillas dobles), que se imprime tal cual.</li>
+      </ul>
+      <p>Por eso son válidas tanto <code>escribe("Hola");</code> como <code>escribe("x vale ", x + 1, " unidades");</code>. Esta mezcla viene del diagrama de <code>&lt;IMPRIME&gt;</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-expr">Expresiones</h3>
+  <div class="block">
+    <div class="code"><span class="ln">142</span>expresion
+<span class="ln">143</span>    : exp relOpc
+<span class="ln">144</span>    ;
+<span class="ln">145</span>
+<span class="ln">146</span>relOpc
+<span class="ln">147</span>    : opRel exp
+<span class="ln">148</span>    |
+<span class="ln">149</span>    ;
+<span class="ln">150</span>
+<span class="ln">151</span>opRel
+<span class="ln">152</span>    : MAYOR
+<span class="ln">153</span>    | MENOR
+<span class="ln">154</span>    | DISTINTO
+<span class="ln">155</span>    | IGUAL2
+<span class="ln">156</span>    ;</div>
+    <div class="explain">
+      <p>Una <code>expresion</code> es una <code>exp</code> aritmética seguida <strong>opcionalmente</strong> de un operador relacional y otra <code>exp</code>. Así modelo:</p>
+      <ul>
+        <li>Una expresión simple: <code>a + b</code> (relOpc en épsilon).</li>
+        <li>Una comparación: <code>a + b &lt; c * 2</code> (un solo nivel de comparación, sin encadenar).</li>
+      </ul>
+      <p>Esto refleja directo el diagrama de <code>&lt;EXPRESIÓN&gt;</code> y limita a <strong>una sola</strong> comparación por expresión, lo cual es típico en lenguajes simples (no se permite <code>a &lt; b &lt; c</code>). Los cuatro operadores relacionales son <code>&gt;</code>, <code>&lt;</code>, <code>!=</code> y <code>==</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">158</span>exp
+<span class="ln">159</span>    : exp MAS termino
+<span class="ln">160</span>    | exp MENOS termino
+<span class="ln">161</span>    | termino
+<span class="ln">162</span>    ;
+<span class="ln">163</span>
+<span class="ln">164</span>termino
+<span class="ln">165</span>    : termino POR factor
+<span class="ln">166</span>    | termino ENTRE factor
+<span class="ln">167</span>    | factor
+<span class="ln">168</span>    ;</div>
+    <div class="explain">
+      <p>Suma/resta y multiplicación/división. Estas son <strong>recursivas por la izquierda</strong>: el lado izquierdo de la regla aparece como primer símbolo de la producción. Eso le da al parser <strong>asociatividad izquierda</strong>:</p>
+      <p>Por ejemplo, <code>10 - 3 - 2</code> se interpreta como <code>(10 - 3) - 2 = 5</code>, no como <code>10 - (3 - 2) = 9</code>.</p>
+      <p>Y la <strong>precedencia</strong> aparece naturalmente porque <code>termino</code> está "más adentro" que <code>exp</code>: en <code>1 + 2 * 3</code>, el <code>2 * 3</code> es un <code>termino</code> y se reduce primero, dando <code>1 + 6 = 7</code>.</p>
+      <p>ANTLR4 acepta esta forma directa, internamente la reescribe sin perder asociatividad. En contraste, un parser LL(1) puro requeriría reescribirlo a <code>exp → termino exp'</code>, etc. Ese es uno de los motivos para escoger ANTLR4.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">170</span>factor
+<span class="ln">171</span>    : PIZQ expresion PDER
+<span class="ln">172</span>    | llamada
+<span class="ln">173</span>    | signoOpc ID
+<span class="ln">174</span>    | signoOpc cte
+<span class="ln">175</span>    ;</div>
+    <div class="explain">
+      <p>Las cuatro formas posibles de un operando "atómico" en una expresión:</p>
+      <ul>
+        <li><code>PIZQ expresion PDER</code> — una expresión entre paréntesis, que vuelve a entrar al ciclo recursivo.</li>
+        <li><code>llamada</code> — una llamada a función como operando, p. ej. <code>obtener() + 1</code>.</li>
+        <li><code>signoOpc ID</code> — un identificador, opcionalmente precedido por <code>+</code> o <code>-</code>: <code>x</code>, <code>-x</code>, <code>+x</code>.</li>
+        <li><code>signoOpc cte</code> — una constante (entera o flotante) con signo unario opcional: <code>5</code>, <code>-5</code>, <code>3.14</code>.</li>
+      </ul>
+      <p><strong>Por qué este orden:</strong> tanto <code>llamada</code> como <code>signoOpc ID</code> empiezan con <code>ID</code> (en el caso de <code>signoOpc</code> en épsilon). Para evitar ambigüedad, listo <code>llamada</code> antes de <code>signoOpc ID</code>: cuando ANTLR ve <code>nombre (</code> entiende que es una llamada; cuando ve <code>nombre</code> sin paréntesis adelante cae en <code>signoOpc ID</code>. ANTLR4 LL(*) maneja esta predicción automáticamente con varios tokens de lookahead.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">177</span>signoOpc
+<span class="ln">178</span>    : MAS
+<span class="ln">179</span>    | MENOS
+<span class="ln">180</span>    |
+<span class="ln">181</span>    ;
+<span class="ln">182</span>
+<span class="ln">183</span>cte
+<span class="ln">184</span>    : CTE_ENT
+<span class="ln">185</span>    | CTE_FLOT
+<span class="ln">186</span>    ;</div>
+    <div class="explain">
+      <p><code>signoOpc</code> permite un signo unario <code>+</code> o <code>-</code> opcional (la tercera alternativa épsilon equivale a "sin signo"). Solo aplica delante de <code>ID</code> o de <code>cte</code>, no delante de paréntesis ni de llamadas, tal como aparece en el diagrama de <code>&lt;FACTOR&gt;</code>.</p>
+      <p><code>cte</code> reúne los dos tipos de constantes numéricas: entera y flotante. Definir esto como una regla aparte permite que <code>factor</code> trate ambos casos con una sola alternativa (<code>signoOpc cte</code>).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-lex-kw">Lexer: palabras reservadas</h3>
+  <div class="block">
+    <div class="code"><span class="ln">188</span>// =================================================================
+<span class="ln">189</span>// LEXER RULES (tokens)
+<span class="ln">190</span>// Las palabras reservadas van ANTES de ID para que ganen el match
+<span class="ln">191</span>// =================================================================
+<span class="ln">192</span>
+<span class="ln">193</span>// Palabras reservadas
+<span class="ln">194</span>PROGRAMA : 'programa' ;
+<span class="ln">195</span>INICIO   : 'inicio' ;
+<span class="ln">196</span>FIN      : 'fin' ;
+<span class="ln">197</span>VARS     : 'vars' ;
+<span class="ln">198</span>ENTERO   : 'entero' ;
+<span class="ln">199</span>FLOTANTE : 'flotante' ;
+<span class="ln">200</span>ESCRIBE  : 'escribe' ;
+<span class="ln">201</span>SI       : 'si' ;
+<span class="ln">202</span>SINO     : 'sino' ;
+<span class="ln">203</span>MIENTRAS : 'mientras' ;
+<span class="ln">204</span>HAZ      : 'haz' ;
+<span class="ln">205</span>NULA     : 'nula' ;</div>
+    <div class="explain">
+      <p>Cada línea declara un <strong>token</strong> de palabra reservada. La sintaxis es <code>NOMBRE : 'literal' ;</code>. Cuando el lexer encuentra exactamente ese literal en el código fuente, emite un token con ese nombre.</p>
+      <p><strong>Por qué van antes que <code>ID</code> (línea 229):</strong> ANTLR resuelve los empates entre reglas de lexer por <strong>orden de aparición</strong>. La palabra <code>programa</code> también encajaría con <code>ID</code> (es una secuencia de letras), pero como <code>PROGRAMA</code> está declarado primero, gana. Si invirtiera el orden, <code>programa</code>, <code>inicio</code>, etc., serían reconocidos como identificadores y todo el parser fallaría. El test <code>02_keyword_como_id.patito</code> verifica que efectivamente no se pueda usar <code>entero</code> como identificador.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-lex-op">Lexer: operadores</h3>
+  <div class="block">
+    <div class="code"><span class="ln">207</span>// Operadores
+<span class="ln">208</span>MAS      : '+' ;
+<span class="ln">209</span>MENOS    : '-' ;
+<span class="ln">210</span>POR      : '*' ;
+<span class="ln">211</span>ENTRE    : '/' ;
+<span class="ln">212</span>MAYOR    : '>' ;
+<span class="ln">213</span>MENOR    : '<' ;
+<span class="ln">214</span>DISTINTO : '!=' ;
+<span class="ln">215</span>IGUAL2   : '==' ;
+<span class="ln">216</span>IGUAL    : '=' ;</div>
+    <div class="explain">
+      <p>Los operadores aritméticos (<code>+ - * /</code>), relacionales (<code>&gt; &lt; != ==</code>) y el de asignación (<code>=</code>). Cada uno se asocia a un nombre simbólico que las reglas del parser consumen.</p>
+      <p><strong>Punto sutil:</strong> <code>IGUAL2</code> (==) tiene dos caracteres y <code>IGUAL</code> (=) uno solo. ANTLR siempre prefiere el <strong>match más largo</strong> que sea posible. Cuando ve <code>==</code> reconoce <code>IGUAL2</code>, no <code>IGUAL IGUAL</code>. Lo mismo para <code>!=</code> que se reconoce como <code>DISTINTO</code> y no como otra cosa.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-lex-punct">Lexer: puntuación</h3>
+  <div class="block">
+    <div class="code"><span class="ln">218</span>// Puntuacion
+<span class="ln">219</span>PCOMA    : ';' ;
+<span class="ln">220</span>COMA     : ',' ;
+<span class="ln">221</span>DPUNTOS  : ':' ;
+<span class="ln">222</span>PIZQ     : '(' ;
+<span class="ln">223</span>PDER     : ')' ;
+<span class="ln">224</span>LLAVEIZQ : '{' ;
+<span class="ln">225</span>LLAVEDER : '}' ;</div>
+    <div class="explain">
+      <p>Los siete signos de puntuación que el lenguaje usa: punto y coma, coma, dos puntos, paréntesis y llaves. Cada uno en su propio token para que las reglas del parser los referencien por nombre simbólico.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-lex-id">Lexer: ID y literales</h3>
+  <div class="block">
+    <div class="code"><span class="ln">227</span>// Identificadores y literales
+<span class="ln">228</span>// CTE_FLOT debe ir antes que CTE_ENT para que 3.14 no se parsee como CTE_ENT '.' CTE_ENT
+<span class="ln">229</span>ID       : [a-zA-Z] [a-zA-Z0-9_]* ;
+<span class="ln">230</span>CTE_FLOT : [0-9]+ '.' [0-9]+ ;
+<span class="ln">231</span>CTE_ENT  : [0-9]+ ;
+<span class="ln">232</span>LETRERO  : '"' ~["\r\n]* '"' ;</div>
+    <div class="explain">
+      <p>Las cuatro reglas léxicas más interesantes:</p>
+      <ul>
+        <li><strong>ID</strong> (línea 229): empieza con una letra (mayúscula o minúscula), seguida de cero o más letras, dígitos o guiones bajos. Por eso <code>x</code>, <code>contador</code>, <code>i_2</code> son válidos pero <code>_x</code> o <code>2x</code> no.</li>
+        <li><strong>CTE_FLOT</strong> (línea 230): uno o más dígitos, un punto literal, uno o más dígitos. Exige al menos un dígito a cada lado del punto, así que <code>3.14</code> es válido pero <code>.5</code> o <code>3.</code> no.</li>
+        <li><strong>CTE_ENT</strong> (línea 231): uno o más dígitos.</li>
+        <li><strong>LETRERO</strong> (línea 232): una comilla doble, cero o más caracteres que <em>no</em> sean comilla, retorno de carro ni salto de línea, y otra comilla doble. La sintaxis <code>~["\r\n]</code> es la negación de clase de ANTLR. Por eso un letrero no puede contener saltos de línea ni comillas internas (no hay escapes).</li>
+      </ul>
+      <p><strong>Por qué <code>CTE_FLOT</code> va antes que <code>CTE_ENT</code>:</strong> con la entrada <code>3.14</code>, ambos podrían empezar a hacer match. Si <code>CTE_ENT</code> estuviera primero, ANTLR podría intentar reconocer <code>3</code> como entero, luego <code>.</code> como token desconocido, etc. Al poner <code>CTE_FLOT</code> primero, el lexer intenta la regla más específica antes y, gracias al match más largo, prefiere los 4 caracteres <code>3.14</code> sobre el solo <code>3</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="g-lex-ws">Lexer: whitespace</h3>
+  <div class="block">
+    <div class="code"><span class="ln">234</span>// Espacios en blanco: se descartan
+<span class="ln">235</span>WS       : [ \t\r\n]+ -> skip ;</div>
+    <div class="explain">
+      <p>Cualquier secuencia de espacio, tabulador, retorno de carro o salto de línea es un token <code>WS</code> ... pero <code>-&gt; skip</code> le dice a ANTLR que <strong>lo descarte</strong> en vez de pasarlo al parser. Sin esto, el parser tendría que considerar espacios entre cada par de tokens, lo cual no tiene sentido aquí.</p>
+      <p>Esto explica también por qué los programas Patito pueden tener formato libre: indentación, líneas en blanco y separación entre tokens son irrelevantes mientras la secuencia de tokens (no whitespace) sea la correcta.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Notación:</strong> en las reglas léxicas, <code>[a-z]</code> es una clase de caracteres, <code>+</code> es "uno o más", <code>*</code> es "cero o más", <code>~[X]</code> es la negación de la clase, <code>'literal'</code> es un carácter literal. Para el punto literal usamos comillas (<code>'.'</code>) porque <code>.</code> sin comillas significa "cualquier carácter".
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                  MAIN.CPP                   -->
+<!-- =========================================== -->
+
+<section id="main">
+  <h2 class="section">src/main.cpp</h2>
+  <div class="file-card">
+    <div class="filename">src/main.cpp</div>
+    <div class="role">Driver C++ que orquesta el lexer y el parser generados por ANTLR. Lee el archivo de entrada, ejecuta la cadena de análisis y reporta resultados.</div>
+  </div>
+
+  <h3 class="subsection" id="m-cabecera">Cabecera e includes</h3>
+  <div class="block">
+    <div class="code"><span class="ln">1</span>// Driver para el compilador Patito (Etapa 1: Lexico + Sintaxis).
+<span class="ln">2</span>// Uso:
+<span class="ln">3</span>//   patito archivo.patito              -&gt; parsea y reporta OK/FAIL
+<span class="ln">4</span>//   patito --tokens archivo.patito     -&gt; ademas imprime la lista de tokens
+<span class="ln">5</span>//   patito --tree   archivo.patito     -&gt; ademas imprime el arbol de parseo</div>
+    <div class="explain">
+      <p>Comentario de cabecera con el propósito del archivo y un resumen del uso del binario. Sirve como contrato visible para quien lea el código por primera vez.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">7</span>#include &lt;fstream&gt;
+<span class="ln">8</span>#include &lt;iostream&gt;
+<span class="ln">9</span>#include &lt;string&gt;</div>
+    <div class="explain">
+      <p>Tres headers de la librería estándar:</p>
+      <ul>
+        <li><code>&lt;fstream&gt;</code> — para abrir el archivo <code>.patito</code> con <code>std::ifstream</code>.</li>
+        <li><code>&lt;iostream&gt;</code> — para imprimir mensajes (<code>std::cout</code> y <code>std::cerr</code>).</li>
+        <li><code>&lt;string&gt;</code> — para manipular nombres de archivo, tokens, etc., con <code>std::string</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">11</span>#include "antlr4-runtime.h"
+<span class="ln">12</span>#include "PatitoLexer.h"
+<span class="ln">13</span>#include "PatitoParser.h"</div>
+    <div class="explain">
+      <p>Headers de ANTLR:</p>
+      <ul>
+        <li><code>antlr4-runtime.h</code> — el header agregador del runtime ANTLR4 en C++. Trae <code>ANTLRInputStream</code>, <code>CommonTokenStream</code>, <code>BaseErrorListener</code>, etc. CMake lo encuentra en <code>/opt/homebrew/include/antlr4-runtime/</code>.</li>
+        <li><code>PatitoLexer.h</code> y <code>PatitoParser.h</code> — los headers de las clases que ANTLR generó a partir de <code>Patito.g4</code>. Los nombres llevan el prefijo <code>Patito</code> porque así se llamó la gramática.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">15</span>using namespace antlr4;</div>
+    <div class="explain">
+      <p>Pone todo el namespace de ANTLR en alcance global del archivo. Así puedo escribir <code>BaseErrorListener</code> en lugar de <code>antlr4::BaseErrorListener</code>. En un archivo pequeño como este es aceptable; en un proyecto grande es preferible usar los nombres calificados.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-colector">Clase ColectorErrores</h3>
+  <div class="block">
+    <div class="code"><span class="ln">17</span>class ColectorErrores : public BaseErrorListener {
+<span class="ln">18</span>public:
+<span class="ln">19</span>    int conteo = 0;
+<span class="ln">20</span>    const std::string fuente;
+<span class="ln">21</span>    explicit ColectorErrores(std::string fuente) : fuente(std::move(fuente)) {}</div>
+    <div class="explain">
+      <p>Defino una subclase de <code>BaseErrorListener</code> para <strong>capturar los errores de parsing y lexing</strong> con un formato propio en lugar del de ANTLR.</p>
+      <ul>
+        <li>Línea 19: <code>conteo</code> lleva la cuenta de errores encontrados.</li>
+        <li>Línea 20: <code>fuente</code> guarda el nombre del archivo, para que aparezca en cada mensaje de error.</li>
+        <li>Línea 21: el constructor recibe el nombre del archivo y lo mueve al miembro. <code>explicit</code> evita conversiones implícitas accidentales.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">23</span>    void syntaxError(Recognizer * /*recognizer*/, Token * /*offendingSymbol*/,
+<span class="ln">24</span>                     size_t line, size_t charPositionInLine,
+<span class="ln">25</span>                     const std::string &amp;msg,
+<span class="ln">26</span>                     std::exception_ptr /*e*/) override {
+<span class="ln">27</span>        conteo++;
+<span class="ln">28</span>        std::cerr &lt;&lt; "[" &lt;&lt; fuente &lt;&lt; "] linea " &lt;&lt; line &lt;&lt; ":"
+<span class="ln">29</span>                  &lt;&lt; charPositionInLine &lt;&lt; "  " &lt;&lt; msg &lt;&lt; std::endl;
+<span class="ln">30</span>    }
+<span class="ln">31</span>};</div>
+    <div class="explain">
+      <p>Sobreescribe el método <code>syntaxError</code> que ANTLR llama cada vez que detecta un error léxico o sintáctico. La firma es la que el runtime define: recibe el recognizer (el lexer o el parser), el token ofensor, la línea, la columna, el mensaje generado por ANTLR y un puntero a la excepción asociada (los nombres entre comentarios <code>/*...*/</code> indican parámetros que no uso, técnica para silenciar warnings de "parámetro sin usar").</p>
+      <p>Línea 27: incrementa el contador.</p>
+      <p>Líneas 28–29: imprime el error a <code>std::cerr</code> con el formato <code>[archivo] linea L:C  mensaje</code>. Por eso los tests inválidos producen salidas tipo <code>[tests/invalid/03_paren_desbalanceado.patito] linea 6:18  missing ')' at ';'</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-tokens">Función imprimirTokens</h3>
+  <div class="block">
+    <div class="code"><span class="ln">33</span>static void imprimirTokens(PatitoLexer &amp;lexer, CommonTokenStream &amp;tokens) {
+<span class="ln">34</span>    std::cout &lt;&lt; "=== TOKENS ===" &lt;&lt; std::endl;
+<span class="ln">35</span>    auto &amp;vocab = lexer.getVocabulary();</div>
+    <div class="explain">
+      <p>Función auxiliar que imprime la lista de tokens (la usa la bandera <code>--tokens</code>). <code>static</code> limita su visibilidad a este archivo (no se exporta).</p>
+      <p>Línea 35: obtiene el "vocabulario" del lexer. El vocabulario es la tabla que mapea cada tipo numérico de token (1, 2, 3, ...) a su nombre simbólico (PROGRAMA, ID, ...). Sin él, los tipos serían solo números.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">36</span>    for (auto *tk : tokens.getTokens()) {
+<span class="ln">37</span>        size_t type = tk-&gt;getType();
+<span class="ln">38</span>        std::string nombre{vocab.getSymbolicName(type)};
+<span class="ln">39</span>        if (nombre.empty()) nombre = "&lt;EOF&gt;";
+<span class="ln">40</span>        std::string lex = tk-&gt;getText();
+<span class="ln">41</span>        if (lex == "&lt;EOF&gt;") lex = "";</div>
+    <div class="explain">
+      <p>Itera sobre la lista de tokens producida por el lexer.</p>
+      <ul>
+        <li>Línea 37: <code>getType()</code> devuelve el tipo numérico (entero) del token.</li>
+        <li>Línea 38: convierte ese número a su nombre simbólico usando el vocabulario. La construcción <code>std::string{...}</code> con llaves es necesaria porque <code>getSymbolicName</code> en ANTLR 4.13 devuelve un <code>std::string_view</code>, no un <code>std::string</code>; las llaves invocan el constructor explícito.</li>
+        <li>Línea 39: si el nombre viene vacío (caso del token EOF), pongo manualmente <code>&lt;EOF&gt;</code> para que el output no quede en blanco.</li>
+        <li>Líneas 40–41: extraigo el lexema (texto fuente del token) y lo limpio si es <code>&lt;EOF&gt;</code> (porque ANTLR pone ese texto sintético).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">42</span>        std::cout &lt;&lt; "  linea " &lt;&lt; tk-&gt;getLine() &lt;&lt; ":"
+<span class="ln">43</span>                  &lt;&lt; tk-&gt;getCharPositionInLine() &lt;&lt; "\t"
+<span class="ln">44</span>                  &lt;&lt; nombre &lt;&lt; "\t'" &lt;&lt; lex &lt;&lt; "'" &lt;&lt; std::endl;
+<span class="ln">45</span>    }
+<span class="ln">46</span>    std::cout &lt;&lt; std::endl;
+<span class="ln">47</span>}</div>
+    <div class="explain">
+      <p>Imprime una línea por token: línea, columna, nombre simbólico y lexema entre comillas. Por ejemplo:</p>
+      <pre style="background:#f0f0f0; padding:8px; font-size:12px; margin:6px 0;">  linea 1:0   PROGRAMA    'programa'
+  linea 1:9   ID          'hola'</pre>
+      <p>Esto demuestra que el scanner separa correctamente el código en tokens. Es la salida que se entregaría como evidencia del análisis léxico.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-args">main: parseo de argumentos</h3>
+  <div class="block">
+    <div class="code"><span class="ln">49</span>int main(int argc, char *argv[]) {
+<span class="ln">50</span>    bool mostrarTokens = false;
+<span class="ln">51</span>    bool mostrarArbol = false;
+<span class="ln">52</span>    std::string archivo;</div>
+    <div class="explain">
+      <p>Función <code>main</code> con la firma estándar de C++. Las dos banderas (<code>--tokens</code>, <code>--tree</code>) y el nombre del archivo se inicializan en falso/vacío y se llenan con el bucle siguiente.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">54</span>    for (int i = 1; i &lt; argc; i++) {
+<span class="ln">55</span>        std::string arg = argv[i];
+<span class="ln">56</span>        if (arg == "--tokens") {
+<span class="ln">57</span>            mostrarTokens = true;
+<span class="ln">58</span>        } else if (arg == "--tree") {
+<span class="ln">59</span>            mostrarArbol = true;
+<span class="ln">60</span>        } else if (arg.rfind("--", 0) == 0) {
+<span class="ln">61</span>            std::cerr &lt;&lt; "Bandera desconocida: " &lt;&lt; arg &lt;&lt; std::endl;
+<span class="ln">62</span>            return 2;
+<span class="ln">63</span>        } else {
+<span class="ln">64</span>            archivo = arg;
+<span class="ln">65</span>        }
+<span class="ln">66</span>    }</div>
+    <div class="explain">
+      <p>Recorre los argumentos a partir del índice 1 (el 0 es el nombre del programa).</p>
+      <ul>
+        <li>Línea 56: si es <code>--tokens</code>, activa la bandera correspondiente.</li>
+        <li>Línea 58: lo mismo para <code>--tree</code>.</li>
+        <li>Línea 60: si empieza con <code>--</code> pero no es ninguna conocida, error inmediato. <code>arg.rfind("--", 0) == 0</code> es la forma idiomática de "starts with" en C++17.</li>
+        <li>Línea 64: cualquier argumento no-bandera se considera el nombre del archivo.</li>
+      </ul>
+      <p>El <code>return 2</code> en el caso de bandera desconocida sigue una convención común: 0 = OK, 1 = errores en el código, 2 = error de uso del binario.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-archivo">main: apertura de archivo</h3>
+  <div class="block">
+    <div class="code"><span class="ln">68</span>    if (archivo.empty()) {
+<span class="ln">69</span>        std::cerr &lt;&lt; "Uso: patito [--tokens] [--tree] archivo.patito" &lt;&lt; std::endl;
+<span class="ln">70</span>        return 2;
+<span class="ln">71</span>    }
+<span class="ln">72</span>
+<span class="ln">73</span>    std::ifstream entrada(archivo);
+<span class="ln">74</span>    if (!entrada.is_open()) {
+<span class="ln">75</span>        std::cerr &lt;&lt; "No se pudo abrir " &lt;&lt; archivo &lt;&lt; std::endl;
+<span class="ln">76</span>        return 2;
+<span class="ln">77</span>    }</div>
+    <div class="explain">
+      <p>Validaciones básicas:</p>
+      <ul>
+        <li>Líneas 68–71: si no me pasaron archivo, imprimo el uso y salgo con error de uso.</li>
+        <li>Línea 73: abre el archivo en modo lectura (<code>std::ifstream</code>).</li>
+        <li>Líneas 74–77: si no se pudo abrir (no existe, sin permisos...), aviso y salgo.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-pipeline">main: pipeline lexer→parser</h3>
+  <div class="block">
+    <div class="code"><span class="ln">79</span>    ANTLRInputStream input(entrada);
+<span class="ln">80</span>    PatitoLexer lexer(&amp;input);</div>
+    <div class="explain">
+      <p>Aquí empieza la cadena de ANTLR.</p>
+      <ul>
+        <li>Línea 79: envuelve el <code>std::ifstream</code> en un <code>ANTLRInputStream</code>, que es la abstracción de "fuente de caracteres" que el lexer entiende.</li>
+        <li>Línea 80: instancia el <code>PatitoLexer</code> apuntando a esa fuente. Es la clase generada a partir de las reglas léxicas de <code>Patito.g4</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">82</span>    ColectorErrores erroresLex(archivo);
+<span class="ln">83</span>    lexer.removeErrorListeners();
+<span class="ln">84</span>    lexer.addErrorListener(&amp;erroresLex);</div>
+    <div class="explain">
+      <p>Reemplazo el reporter de errores por defecto del lexer:</p>
+      <ul>
+        <li>Línea 82: instancia mi colector con el nombre del archivo.</li>
+        <li>Línea 83: <strong>quita</strong> el listener por defecto (que imprime con un formato distinto al mío y a <code>std::cerr</code> directamente).</li>
+        <li>Línea 84: registra mi colector. A partir de aquí, cualquier error léxico (por ejemplo, una comilla sin cerrar) pasará por <code>ColectorErrores::syntaxError</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">86</span>    CommonTokenStream tokens(&amp;lexer);
+<span class="ln">87</span>    tokens.fill();</div>
+    <div class="explain">
+      <p>Línea 86: crea un <code>CommonTokenStream</code>, que es el "buffer" de tokens entre el lexer y el parser.</p>
+      <p>Línea 87: <code>fill()</code> fuerza al lexer a leer todo el archivo y producir todos los tokens de una sola vez. Es necesario hacerlo aquí (no es estrictamente requerido por ANTLR) para que <code>imprimirTokens</code> tenga la lista completa antes de pasar al parser.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">89</span>    if (mostrarTokens) {
+<span class="ln">90</span>        imprimirTokens(lexer, tokens);
+<span class="ln">91</span>    }</div>
+    <div class="explain">
+      <p>Si la bandera <code>--tokens</code> estaba activa, llama a la función auxiliar definida arriba para volcar la lista de tokens.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">93</span>    PatitoParser parser(&amp;tokens);
+<span class="ln">94</span>    ColectorErrores erroresPar(archivo);
+<span class="ln">95</span>    parser.removeErrorListeners();
+<span class="ln">96</span>    parser.addErrorListener(&amp;erroresPar);</div>
+    <div class="explain">
+      <p>Misma idea que con el lexer pero ahora para el parser:</p>
+      <ul>
+        <li>Línea 93: instancia el parser sobre el stream de tokens.</li>
+        <li>Líneas 94–96: cambia el listener de errores por uno propio. Uso <strong>dos</strong> colectores separados (<code>erroresLex</code> y <code>erroresPar</code>) para poder sumar sus conteos al final y saber si hubo errores en alguna fase.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">98</span>    auto *arbol = parser.programa();</div>
+    <div class="explain">
+      <p>Esta es la línea clave: <strong>arranca el parsing</strong> desde la regla <code>programa</code> (la regla raíz definida en <code>Patito.g4</code>). El parser consume tokens, intenta derivarlos según la gramática y devuelve un <strong>árbol de parseo</strong>.</p>
+      <p>Si todo va bien, <code>arbol</code> apunta a un árbol válido. Si hay errores, ANTLR igual devuelve un árbol parcial (con nodos de error), pero los listeners ya habrán anotado los problemas en <code>erroresPar</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">100</span>    if (mostrarArbol) {
+<span class="ln">101</span>        std::cout &lt;&lt; "=== ARBOL DE PARSEO ===" &lt;&lt; std::endl;
+<span class="ln">102</span>        std::cout &lt;&lt; arbol-&gt;toStringTree(&amp;parser, true) &lt;&lt; std::endl;
+<span class="ln">103</span>        std::cout &lt;&lt; std::endl;
+<span class="ln">104</span>    }</div>
+    <div class="explain">
+      <p>Si la bandera <code>--tree</code> está activa, imprime el árbol de parseo en formato LISP. <code>toStringTree(&amp;parser, true)</code> con <code>true</code> usa nombres legibles de las reglas (en lugar de números). El resultado se ve como <code>(programa programa hola ; varsOpc funcsOpc inicio (cuerpo { estatutoList }) fin)</code>. Útil para verificar visualmente la estructura.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="m-resultado">main: resultado y exit</h3>
+  <div class="block">
+    <div class="code"><span class="ln">106</span>    int total = erroresLex.conteo + erroresPar.conteo;
+<span class="ln">107</span>    if (total == 0) {
+<span class="ln">108</span>        std::cout &lt;&lt; "OK   " &lt;&lt; archivo &lt;&lt; std::endl;
+<span class="ln">109</span>        return 0;
+<span class="ln">110</span>    }
+<span class="ln">111</span>    std::cerr &lt;&lt; "FAIL " &lt;&lt; archivo &lt;&lt; "  (" &lt;&lt; total &lt;&lt; " error"
+<span class="ln">112</span>              &lt;&lt; (total == 1 ? "" : "es") &lt;&lt; ")" &lt;&lt; std::endl;
+<span class="ln">113</span>    return 1;
+<span class="ln">114</span>}</div>
+    <div class="explain">
+      <p>Suma los errores encontrados por ambos colectores. Si fueron cero, imprime <code>OK</code> y exit 0. Si hubo errores, imprime <code>FAIL</code> con el conteo (singular o plural según el caso) y exit 1.</p>
+      <p>Estos códigos de salida son los que el <code>run_tests.sh</code> verifica: 0 para programas válidos, 1 para programas inválidos. Si en el futuro la rúbrica pide otro convenio, se cambia aquí.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                CMAKELISTS                   -->
+<!-- =========================================== -->
+
+<section id="cmake">
+  <h2 class="section">CMakeLists.txt</h2>
+  <div class="file-card">
+    <div class="filename">CMakeLists.txt</div>
+    <div class="role">Receta de compilación. Le dice a CMake cómo localizar el runtime de ANTLR, qué archivos compilar y cómo enlazarlos en el binario <code>patito</code>.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>cmake_minimum_required(VERSION 3.20)
+<span class="ln">2</span>project(Patito CXX)</div>
+    <div class="explain">
+      <p>Línea 1: exige CMake 3.20 o superior, que es donde ya están bien soportados los targets modernos. La versión instalada por Homebrew es 4.3.2, así que sobra.</p>
+      <p>Línea 2: declara un proyecto llamado <code>Patito</code> que usa <code>CXX</code> (C++) como único lenguaje. Sin esto, CMake intentaría detectar también un compilador de C, lo cual no necesitamos.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">4</span>set(CMAKE_CXX_STANDARD 17)
+<span class="ln">5</span>set(CMAKE_CXX_STANDARD_REQUIRED ON)</div>
+    <div class="explain">
+      <p>Fija el estándar a C++17:</p>
+      <ul>
+        <li>Línea 4: pide C++17.</li>
+        <li>Línea 5: <code>REQUIRED ON</code> hace que sea un error fatal si el compilador no lo soporta (en lugar de bajar silenciosamente al estándar anterior).</li>
+      </ul>
+      <p>El runtime de ANTLR 4.13 requiere mínimo C++17, así que esto es lo más bajo que podemos pedir.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">7</span>find_path(ANTLR4_INCLUDE_DIR
+<span class="ln">8</span>    NAMES antlr4-runtime.h
+<span class="ln">9</span>    HINTS /opt/homebrew/include /usr/local/include
+<span class="ln">10</span>    PATH_SUFFIXES antlr4-runtime
+<span class="ln">11</span>)</div>
+    <div class="explain">
+      <p>Le pide a CMake que busque el directorio que contiene el header <code>antlr4-runtime.h</code>. Estrategia:</p>
+      <ul>
+        <li>Línea 8: el archivo a localizar.</li>
+        <li>Línea 9: directorios donde mirar primero. <code>/opt/homebrew/include</code> es la ruta de Homebrew en Apple Silicon; <code>/usr/local/include</code> es la de Intel y de instalaciones manuales.</li>
+        <li>Línea 10: dentro de esas rutas, prueba el subdirectorio <code>antlr4-runtime/</code>, que es donde Homebrew deja los headers.</li>
+      </ul>
+      <p>El resultado se guarda en la variable <code>ANTLR4_INCLUDE_DIR</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">13</span>find_library(ANTLR4_LIB
+<span class="ln">14</span>    NAMES antlr4-runtime
+<span class="ln">15</span>    HINTS /opt/homebrew/lib /usr/local/lib
+<span class="ln">16</span>)</div>
+    <div class="explain">
+      <p>Misma idea pero ahora para la librería compilada. Busca <code>libantlr4-runtime.dylib</code> (o <code>.a</code>) en los directorios típicos de Homebrew. Resultado en <code>ANTLR4_LIB</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">18</span>if(NOT ANTLR4_INCLUDE_DIR OR NOT ANTLR4_LIB)
+<span class="ln">19</span>    message(FATAL_ERROR "ANTLR4 C++ runtime no encontrado. Instala con: brew install antlr4-cpp-runtime")
+<span class="ln">20</span>endif()
+<span class="ln">21</span>
+<span class="ln">22</span>message(STATUS "ANTLR4 include: ${ANTLR4_INCLUDE_DIR}")
+<span class="ln">23</span>message(STATUS "ANTLR4 lib:     ${ANTLR4_LIB}")</div>
+    <div class="explain">
+      <p>Líneas 18–20: si CMake no encontró el header o la librería, aborta con un mensaje claro que dice qué hace falta instalar. Esto evita errores crípticos de compilación más adelante (cosas como <code>fatal error: 'antlr4-runtime.h' not found</code>).</p>
+      <p>Líneas 22–23: imprime las rutas encontradas como información, útil al configurar para confirmar que tomó las rutas correctas.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">25</span>file(GLOB GENERATED_SRC ${CMAKE_SOURCE_DIR}/src/generated/*.cpp)</div>
+    <div class="explain">
+      <p>Recoge todos los archivos <code>.cpp</code> dentro de <code>src/generated/</code> en una variable. Esos son los que ANTLR genera (<code>PatitoLexer.cpp</code>, <code>PatitoParser.cpp</code>, <code>PatitoVisitor.cpp</code>, etc.).</p>
+      <p>Con <code>file(GLOB ...)</code> no tengo que listarlos uno por uno — si en el futuro ANTLR genera un archivo nuevo, lo recogerá automáticamente. La advertencia clásica de CMake sobre GLOB es que no detecta cuando agregas archivos sin reconfigurar; aquí no es un problema porque cada vez que cambias <code>Patito.g4</code> regeneras y reconfiguras de todas formas.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">27</span>add_executable(patito
+<span class="ln">28</span>    src/main.cpp
+<span class="ln">29</span>    ${GENERATED_SRC}
+<span class="ln">30</span>)</div>
+    <div class="explain">
+      <p>Define el ejecutable <code>patito</code>. Sus fuentes son mi <code>main.cpp</code> (línea 28) y todos los <code>.cpp</code> generados por ANTLR (línea 29). El binario resultante se llama <code>patito</code> y se deposita en <code>build/patito</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">32</span>target_include_directories(patito PRIVATE
+<span class="ln">33</span>    ${ANTLR4_INCLUDE_DIR}
+<span class="ln">34</span>    ${CMAKE_SOURCE_DIR}/src/generated
+<span class="ln">35</span>)</div>
+    <div class="explain">
+      <p>Agrega dos directorios al search path de includes solo para este target (de ahí el <code>PRIVATE</code>):</p>
+      <ul>
+        <li>Línea 33: el directorio del runtime ANTLR, para que <code>#include "antlr4-runtime.h"</code> funcione.</li>
+        <li>Línea 34: el directorio donde están <code>PatitoLexer.h</code> y <code>PatitoParser.h</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">37</span>target_link_libraries(patito PRIVATE ${ANTLR4_LIB})</div>
+    <div class="explain">
+      <p>Enlaza el binario contra la librería del runtime ANTLR. Sin esto, los símbolos de <code>ANTLRInputStream</code>, <code>BaseErrorListener</code>, etc., quedarían sin resolver al linkear y el build fallaría con <code>undefined symbols</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<!--                RUN_TESTS.SH                 -->
+<!-- =========================================== -->
+
+<section id="runner">
+  <h2 class="section">tests/run_tests.sh</h2>
+  <div class="file-card">
+    <div class="filename">tests/run_tests.sh</div>
+    <div class="role">Runner del test plan. Ejecuta cada programa de prueba y compara el exit code con el esperado, generando un reporte PASS/FAIL.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">1</span>#!/usr/bin/env bash</div>
+    <div class="explain">
+      <p>Shebang. Le dice al sistema qué intérprete usar para correr el script. <code>/usr/bin/env bash</code> en lugar de <code>/bin/bash</code> directo es más portable, ya que en algunos sistemas Bash no está en <code>/bin</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">2</span># Runner del Test-Plan de Patito (Etapa 1).
+<span class="ln">3</span># Ejecuta cada programa con ./build/patito y verifica el exit code esperado:
+<span class="ln">4</span>#   tests/valid/*    -&gt; debe parsear OK   (exit 0)
+<span class="ln">5</span>#   tests/invalid/*  -&gt; debe fallar       (exit 1)</div>
+    <div class="explain">
+      <p>Comentario de cabecera con el contrato del runner: qué hace y qué espera. En Bash los comentarios empiezan con <code>#</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">7</span>set -u</div>
+    <div class="explain">
+      <p>Activa el modo "strict variables": si el script intenta usar una variable que no existe, aborta inmediatamente. Sin esto, un typo en un nombre de variable sería ignorado silenciosamente y daría resultados incorrectos.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">8</span>ROOT="$(cd "$(dirname "$0")/.." &amp;&amp; pwd)"
+<span class="ln">9</span>PATITO="$ROOT/build/patito"</div>
+    <div class="explain">
+      <p>Línea 8: calcula la ruta absoluta de la raíz del proyecto. Desglose: <code>$0</code> es el path del script en sí, <code>dirname "$0"</code> es el directorio donde vive (<code>tests/</code>), <code>cd .../..</code> sube un nivel a la raíz, <code>pwd</code> imprime la ruta absoluta. Así el script funciona aunque lo llames desde cualquier directorio.</p>
+      <p>Línea 9: arma la ruta del binario que vamos a ejecutar.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">11</span>if [ ! -x "$PATITO" ]; then
+<span class="ln">12</span>    echo "Binario no encontrado en $PATITO. Compila con: cmake --build build"
+<span class="ln">13</span>    exit 2
+<span class="ln">14</span>fi</div>
+    <div class="explain">
+      <p>Verifica que el binario exista y sea ejecutable (<code>-x</code>). Si no, imprime cómo construirlo y aborta con código 2 (error de uso). Esto evita el caso confuso donde corres el runner sin haber compilado y sale "FAIL" en cada test sin razón clara.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">16</span>PASS=0
+<span class="ln">17</span>FAIL=0
+<span class="ln">18</span>FAILED_FILES=()</div>
+    <div class="explain">
+      <p>Inicializa los contadores y un arreglo vacío para guardar la lista de archivos fallidos. <code>FAILED_FILES=()</code> declara un arreglo Bash vacío.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">20</span>run_case() {
+<span class="ln">21</span>    local file="$1"
+<span class="ln">22</span>    local expected="$2"  # 0 o 1
+<span class="ln">23</span>    "$PATITO" "$file" &gt;/dev/null 2&gt;&amp;1
+<span class="ln">24</span>    local got=$?</div>
+    <div class="explain">
+      <p>Define la función que ejecuta un caso de prueba.</p>
+      <ul>
+        <li>Líneas 21–22: <code>local</code> declara variables locales a la función. <code>$1</code> es el primer argumento (path al archivo) y <code>$2</code> el segundo (exit code esperado).</li>
+        <li>Línea 23: ejecuta el binario sobre el archivo. <code>&gt;/dev/null</code> descarta stdout y <code>2&gt;&amp;1</code> redirige stderr al mismo lugar (también descartado). No quiero ver el output del programa, solo el exit code.</li>
+        <li>Línea 24: <code>$?</code> es el exit code del último comando ejecutado.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">25</span>    # Normalizar: cualquier exit !=0 cuenta como fallo de parseo (1)
+<span class="ln">26</span>    if [ $got -ne 0 ]; then got=1; fi
+<span class="ln">27</span>    if [ $got -eq $expected ]; then
+<span class="ln">28</span>        printf "  PASS  %-50s (esperado=%d, obtenido=%d)\n" "$(basename "$file")" "$expected" "$got"
+<span class="ln">29</span>        PASS=$((PASS+1))
+<span class="ln">30</span>    else
+<span class="ln">31</span>        printf "  FAIL  %-50s (esperado=%d, obtenido=%d)\n" "$(basename "$file")" "$expected" "$got"
+<span class="ln">32</span>        FAIL=$((FAIL+1))
+<span class="ln">33</span>        FAILED_FILES+=("$file")
+<span class="ln">34</span>    fi
+<span class="ln">35</span>}</div>
+    <div class="explain">
+      <p>Línea 26: el binario puede salir con 0 (OK), 1 (errores de parseo) o 2 (error de uso). Para fines de comparación, todo lo que no sea 0 lo trato como 1, simplificando la lógica.</p>
+      <p>Líneas 27–34: si el exit observado coincide con el esperado, es PASS, si no, es FAIL. <code>printf</code> con <code>%-50s</code> alinea el nombre del archivo en una columna fija de 50 caracteres para que el reporte se vea como tabla.</p>
+      <p>Línea 33: el caso fallido se agrega al arreglo de fallos para reportarlo al final.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">37</span>echo "========================================"
+<span class="ln">38</span>echo " VALIDOS  (deben parsear OK, exit=0)"
+<span class="ln">39</span>echo "========================================"
+<span class="ln">40</span>for f in "$ROOT"/tests/valid/*.patito; do
+<span class="ln">41</span>    [ -e "$f" ] || continue
+<span class="ln">42</span>    run_case "$f" 0
+<span class="ln">43</span>done</div>
+    <div class="explain">
+      <p>Loop de los casos válidos. <code>"$ROOT"/tests/valid/*.patito</code> es un glob que se expande a la lista de archivos. Línea 41 (<code>[ -e "$f" ] || continue</code>) protege el caso degenerado donde el glob no encuentra nada (entonces <code>$f</code> contiene literalmente <code>*.patito</code>), saltándose esa "iteración fantasma".</p>
+      <p>Cada archivo se pasa a <code>run_case</code> con expected=0 (debe parsear OK).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">45</span>echo ""
+<span class="ln">46</span>echo "========================================"
+<span class="ln">47</span>echo " INVALIDOS  (deben fallar, exit=1)"
+<span class="ln">48</span>echo "========================================"
+<span class="ln">49</span>for f in "$ROOT"/tests/invalid/*.patito; do
+<span class="ln">50</span>    [ -e "$f" ] || continue
+<span class="ln">51</span>    run_case "$f" 1
+<span class="ln">52</span>done</div>
+    <div class="explain">
+      <p>Lo mismo pero con expected=1: estos programas tienen un error a propósito y deben provocar que el binario salga con 1.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">54</span>TOTAL=$((PASS+FAIL))
+<span class="ln">55</span>echo ""
+<span class="ln">56</span>echo "========================================"
+<span class="ln">57</span>echo " RESUMEN: $PASS / $TOTAL pasaron"
+<span class="ln">58</span>echo "========================================"
+<span class="ln">59</span>if [ $FAIL -gt 0 ]; then
+<span class="ln">60</span>    echo "Fallidos:"
+<span class="ln">61</span>    for f in "${FAILED_FILES[@]}"; do
+<span class="ln">62</span>        echo "  - $f"
+<span class="ln">63</span>    done
+<span class="ln">64</span>    exit 1
+<span class="ln">65</span>fi
+<span class="ln">66</span>exit 0</div>
+    <div class="explain">
+      <p>Resumen final:</p>
+      <ul>
+        <li>Línea 54: cuenta total de tests ejecutados.</li>
+        <li>Líneas 55–58: imprime el resumen "X / Y pasaron".</li>
+        <li>Líneas 59–65: si hubo fallos, lista cada archivo fallido y sale con código 1 para que un CI pueda detectar la falla.</li>
+        <li>Línea 66: si todo pasó, exit 0. Sirve para encadenar este runner con otros scripts (por ejemplo, en un futuro pre-commit hook).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer style="margin-top: 60px; padding: 24px 0; border-top: 1px solid #ccc; color: #777; font-size: 13px;">
+  <p>Walkthrough generado para el proyecto Patito · Etapa 1. Para regenerar lexer/parser tras cambiar la gramática, correr <code class="inline">cd grammar && antlr -Dlanguage=Cpp -visitor -no-listener -o ../src/generated Patito.g4</code> y luego <code class="inline">cmake --build build</code>.</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

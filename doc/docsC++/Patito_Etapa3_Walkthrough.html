@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patito Etapa 3 — Walkthrough línea por línea</title>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; background: #fafafa; line-height: 1.55; }
+  .layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+  .toc { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: #1f1f23; color: #ddd; padding: 24px 18px; border-right: 1px solid #333; font-size: 13px; }
+  .toc h2 { color: #fff; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #333; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 6px 0; }
+  .toc a { color: #aab; text-decoration: none; display: block; padding: 4px 8px; border-radius: 4px; }
+  .toc a:hover { background: #2a2a30; color: #fff; }
+  .toc ol ol { margin-left: 12px; margin-top: 4px; }
+  .toc ol ol a { font-size: 12px; color: #889; padding: 2px 8px; }
+  .toc .file { font-weight: 600; color: #fff; }
+  main { padding: 40px 56px; max-width: 1100px; }
+  header.page { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 2px solid #1a1a1a; }
+  header.page h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.02em; }
+  header.page .sub { color: #666; font-size: 15px; }
+  h2.section { margin-top: 56px; padding-bottom: 8px; border-bottom: 1px solid #ccc; font-size: 22px; }
+  h3.subsection { margin-top: 36px; font-size: 17px; color: #444; }
+  p.intro { color: #444; max-width: 75ch; }
+  .file-card { background: #fff; border: 1px solid #e0e0e0; border-left: 4px solid #4a6fa5; padding: 16px 20px; margin: 16px 0 24px; border-radius: 4px; }
+  .file-card.modified { border-left-color: #d8a020; }
+  .file-card .filename { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; color: #4a6fa5; }
+  .file-card.modified .filename { color: #8a5c00; }
+  .file-card .role { color: #555; font-size: 14px; margin-top: 4px; }
+  .file-card .tag { display: inline-block; font-size: 11px; background: #e6efff; color: #2a4a7a; padding: 2px 8px; border-radius: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .file-card.modified .tag { background: #fff0c8; color: #6a4500; }
+  .block { margin: 18px 0 24px; background: #fff; border: 1px solid #e3e3e3; border-radius: 6px; overflow: hidden; }
+  .block .code { background: #1f1f23; color: #f0f0f0; padding: 14px 18px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .block .code .ln { display: inline-block; width: 30px; text-align: right; margin-right: 14px; color: #666; user-select: none; }
+  .block .explain { padding: 14px 20px; background: #f7f8fa; border-top: 1px solid #e3e3e3; font-size: 14px; color: #2a2a2a; }
+  .block .explain p { margin: 0 0 8px; }
+  .block .explain p:last-child { margin-bottom: 0; }
+  .block .explain ul { margin: 4px 0 8px; padding-left: 22px; }
+  .block .explain li { margin: 3px 0; }
+  .block .explain strong { color: #1a1a1a; }
+  .block .explain code, code.inline { background: #eef0f3; padding: 1px 5px; border-radius: 3px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; color: #1a1a1a; }
+  .note { background: #fff8e6; border-left: 4px solid #d8a020; padding: 12px 16px; margin: 16px 0; font-size: 14px; border-radius: 4px; }
+  .note strong { color: #8a5c00; }
+  .pipeline { background: #f0f4fa; border-left: 4px solid #4a6fa5; padding: 12px 16px; margin: 16px 0; font-size: 14px; border-radius: 4px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .toc { position: static; height: auto; } main { padding: 24px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="toc">
+  <h2>Walkthrough Etapa 3</h2>
+  <ol>
+    <li><a href="#intro" class="file">Visión general</a></li>
+    <li><a href="#cuadruplo" class="file">Cuadruplo.h</a></li>
+    <li><a href="#asignador" class="file">AsignadorMemoria</a>
+      <ol>
+        <li><a href="#asignador-h">Header (rangos)</a></li>
+        <li><a href="#asignador-cpp">Implementación</a></li>
+      </ol>
+    </li>
+    <li><a href="#tabla" class="file">TablaConstantes</a>
+      <ol>
+        <li><a href="#tabla-h">Header</a></li>
+        <li><a href="#tabla-cpp">Implementación + dump</a></li>
+      </ol>
+    </li>
+    <li><a href="#gen" class="file">GeneradorCuadruplos</a>
+      <ol>
+        <li><a href="#gen-h">Header (las 3 pilas)</a></li>
+        <li><a href="#gen-cpp">Implementación de las operaciones</a></li>
+      </ol>
+    </li>
+    <li><a href="#analyzer" class="file">SemanticAnalyzer (extensiones)</a>
+      <ol>
+        <li><a href="#an-helpers">Helpers nuevos</a></li>
+        <li><a href="#an-pn-a">PN3-A exitFactor</a></li>
+        <li><a href="#an-pn-b">PN3-B enter/exitExp</a></li>
+        <li><a href="#an-pn-c">PN3-C enter/exitTermino</a></li>
+        <li><a href="#an-pn-d">PN3-D enter/exit relacional</a></li>
+        <li><a href="#an-pn-e">PN3-E exitAsigna</a></li>
+        <li><a href="#an-pn-f">PN3-F exitImpElem</a></li>
+        <li><a href="#an-pn-mod">Modificaciones a PNs Etapa 2</a></li>
+      </ol>
+    </li>
+    <li><a href="#deltas" class="file">Cambios a archivos existentes</a>
+      <ol>
+        <li><a href="#delta-types">SemanticTypes.h</a></li>
+        <li><a href="#delta-table">SymbolTable</a></li>
+        <li><a href="#delta-main">main.cpp</a></li>
+        <li><a href="#delta-runner">run_tests.sh</a></li>
+      </ol>
+    </li>
+  </ol>
+</aside>
+
+<main>
+
+<header class="page">
+  <h1>Patito Etapa 3 — Walkthrough línea por línea</h1>
+  <p class="sub">Generación de cuádruplos · Memoria virtual · Pilas + Fila · Luis Manuel Gonzalez Martinez · A01722501</p>
+</header>
+
+<section id="intro">
+  <h2 class="section">Visión general</h2>
+  <p class="intro">Etapa 3 agrega <strong>generación de código intermedio</strong> sobre lo que ya tenía Etapa 2. El analizador semántico ahora, además de llenar tablas, emite una secuencia de <strong>cuádruplos</strong> (operaciones de la forma <code>(op, izq, der, resultado)</code>) que representan el programa en una forma más cercana a lo que la VM (Etapa 5) podrá ejecutar.</p>
+
+  <div class="pipeline">
+    <strong>Pipeline actualizado:</strong><br>
+    archivo.patito → Lexer → Parser → SemanticAnalyzer (listener) → <strong>Tabla de Constantes + Fila de Cuádruplos</strong>
+  </div>
+
+  <p class="intro">Lo nuevo en esta etapa son <strong>7 archivos nuevos</strong> y modificaciones a 5 archivos existentes. El walkthrough cubre los archivos nuevos en su totalidad y muestra solo las partes añadidas/cambiadas de los modificados.</p>
+
+  <ul>
+    <li><strong>Memoria virtual:</strong> cada operando recibe una dirección entera dentro de uno de 12 rangos predefinidos. Esto lo maneja <code>AsignadorMemoria</code>.</li>
+    <li><strong>Deduplicación de constantes:</strong> los literales iguales comparten dirección. Lo maneja <code>TablaConstantes</code>.</li>
+    <li><strong>Las 3 PILAS + la FILA:</strong> conviven dentro de <code>GeneradorCuadruplos</code>, con la lógica para emitir cuádruplos binarios, asignaciones y prints.</li>
+    <li><strong>9 puntos neurálgicos nuevos</strong> en el <code>SemanticAnalyzer</code> que reaccionan al árbol de parseo y producen los cuádruplos.</li>
+  </ul>
+</section>
+
+<!-- =========================================== -->
+<section id="cuadruplo">
+  <h2 class="section">src/semantic/Cuadruplo.h</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/Cuadruplo.h</div>
+    <div class="role">Struct que representa una operación de código intermedio. Es la unidad que el generador emite y que la VM (Etapa 5) consumirá.</div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln"> 1</span>// Cuadruplo: unidad de codigo intermedio que produce el compilador.
+<span class="ln"> 2</span>// Cada cuadruplo es una operacion de la forma:
+<span class="ln"> 3</span>//
+<span class="ln"> 4</span>//     (operador, operando_izq, operando_der, resultado)
+<span class="ln"> 5</span>//
+<span class="ln"> 6</span>// Donde operandos y resultado son DIRECCIONES de memoria virtual.</div>
+    <div class="explain">
+      <p>Comentario de cabecera. Explica el formato de un cuádruplo y, crucial, que <strong>los campos son direcciones</strong>, no nombres ni valores. La VM en Etapa 5 traducirá esas direcciones a celdas reales de memoria.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">21</span>struct Cuadruplo {
+<span class="ln">22</span>    Operador op;
+<span class="ln">23</span>    int opIzq;     // direccion, o -1 si no aplica
+<span class="ln">24</span>    int opDer;     // direccion, o -1 si no aplica
+<span class="ln">25</span>    int resultado; // direccion del destino
+<span class="ln">26</span>};</div>
+    <div class="explain">
+      <p>Struct plano con 4 campos. Uso <code>int</code> para las direcciones porque los rangos definidos (1000–15999) caben de sobra. El sentinel <code>-1</code> indica "no aplica" — útil para operaciones unarias o de un solo operando (asignación, print).</p>
+      <ul>
+        <li><strong>Binario</strong> (<code>+ - * /</code> etc.): los 3 campos llenos.</li>
+        <li><strong>Asignación</strong> (<code>=</code>): <code>opIzq</code> = dirección origen, <code>opDer</code> = -1, <code>resultado</code> = destino.</li>
+        <li><strong>PRINT</strong>: <code>opIzq</code> = -1, <code>opDer</code> = -1, <code>resultado</code> = dirección del valor a imprimir.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<section id="asignador">
+  <h2 class="section">src/semantic/AsignadorMemoria</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/AsignadorMemoria.h + .cpp</div>
+    <div class="role">Reparte direcciones virtuales de los 9 rangos no-constantes (globales, locales, temporales × 3 tipos cada uno).</div>
+  </div>
+
+  <h3 class="subsection" id="asignador-h">Header — definición de rangos</h3>
+  <div class="block">
+    <div class="code"><span class="ln">26</span>namespace Rangos {
+<span class="ln">27</span>    constexpr int GLOBAL_ENT_INI   = 1000;
+<span class="ln">28</span>    constexpr int GLOBAL_ENT_FIN   = 1999;
+<span class="ln">29</span>    constexpr int GLOBAL_FLOT_INI  = 2000;
+<span class="ln">30</span>    constexpr int GLOBAL_FLOT_FIN  = 2999;
+<span class="ln">31</span>    constexpr int GLOBAL_BOOL_INI  = 3000;
+<span class="ln">32</span>    constexpr int GLOBAL_BOOL_FIN  = 3999;
+<span class="ln">33</span>
+<span class="ln">34</span>    constexpr int LOCAL_ENT_INI    = 5000;
+<span class="ln">35</span>    constexpr int LOCAL_ENT_FIN    = 5999;
+<span class="ln">36</span>    ...
+<span class="ln">49</span>    constexpr int CTE_LETRERO_INI  = 15000;
+<span class="ln">50</span>    constexpr int CTE_LETRERO_FIN  = 15999;
+<span class="ln">51</span>}</div>
+    <div class="explain">
+      <p>Los 12 rangos definidos como <code>constexpr int</code> dentro de un namespace anidado. Hacerlos <code>constexpr</code> permite que el compilador los evalúe en tiempo de compilación y los use en condiciones del propio compilador.</p>
+      <p><strong>Por qué huecos en 4000s, 8000s, 12000s:</strong> el primer dígito (o dos primeros) de cualquier dirección revela inmediatamente el segmento + tipo al debuggear. Esa es la razón estética/práctica del diseño.</p>
+      <p>La VM (Etapa 5+) importará este namespace para saber a qué arreglo dirigirse cuando lea un operando: <code>if (addr &lt; GLOBAL_FLOT_INI) usarEnterosGlobales[addr - 1000];</code></p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">53</span>class AsignadorMemoria {
+<span class="ln">54</span>public:
+<span class="ln">55</span>    AsignadorMemoria();
+<span class="ln">56</span>
+<span class="ln">57</span>    // Resetea contadores locales y temporales al entrar a una nueva funcion.
+<span class="ln">58</span>    // Globales NO se tocan.
+<span class="ln">59</span>    void resetScopeLocal();
+<span class="ln">60</span>
+<span class="ln">61</span>    int nuevaGlobal(Tipo tipo);
+<span class="ln">62</span>    int nuevaLocal(Tipo tipo);
+<span class="ln">63</span>    int nuevoTemporal(Tipo tipo);
+<span class="ln">64</span>
+<span class="ln">65</span>private:
+<span class="ln">66</span>    int gEnt, gFlot, gBool;     // globales
+<span class="ln">67</span>    int lEnt, lFlot, lBool;     // locales (reset por funcion)
+<span class="ln">68</span>    int tEnt, tFlot, tBool;     // temporales (reset por funcion)
+<span class="ln">69</span>};</div>
+    <div class="explain">
+      <p>API minimal con 4 métodos. <strong>9 contadores enteros</strong> como estado, uno por (segmento × tipo) no-constante. Las constantes no están aquí — viven en <code>TablaConstantes</code> porque requieren deduplicación (un map, no un contador).</p>
+      <p><code>resetScopeLocal()</code> es la clave del esquema por activation records: cada función arranca sus locales y temporales en el mismo número (5000, 6000, 9000, etc.) sin chocar con otras funciones porque la VM les dará espacio fresco al hacer la llamada.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="asignador-cpp">Implementación</h3>
+  <div class="block">
+    <div class="code"><span class="ln"> 5</span>AsignadorMemoria::AsignadorMemoria()
+<span class="ln"> 6</span>    : gEnt(Rangos::GLOBAL_ENT_INI),
+<span class="ln"> 7</span>      gFlot(Rangos::GLOBAL_FLOT_INI),
+<span class="ln"> 8</span>      gBool(Rangos::GLOBAL_BOOL_INI),
+<span class="ln"> 9</span>      lEnt(Rangos::LOCAL_ENT_INI),
+<span class="ln">10</span>      lFlot(Rangos::LOCAL_FLOT_INI),
+<span class="ln">11</span>      lBool(Rangos::LOCAL_BOOL_INI),
+<span class="ln">12</span>      tEnt(Rangos::TEMP_ENT_INI),
+<span class="ln">13</span>      tFlot(Rangos::TEMP_FLOT_INI),
+<span class="ln">14</span>      tBool(Rangos::TEMP_BOOL_INI) {}</div>
+    <div class="explain">
+      <p>Constructor: inicializa cada contador con el inicio de su rango. Lista de inicializadores es la forma idiomática de C++ para esto (más eficiente que asignaciones dentro del cuerpo).</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">16</span>void AsignadorMemoria::resetScopeLocal() {
+<span class="ln">17</span>    lEnt  = Rangos::LOCAL_ENT_INI;
+<span class="ln">18</span>    lFlot = Rangos::LOCAL_FLOT_INI;
+<span class="ln">19</span>    lBool = Rangos::LOCAL_BOOL_INI;
+<span class="ln">20</span>    tEnt  = Rangos::TEMP_ENT_INI;
+<span class="ln">21</span>    tFlot = Rangos::TEMP_FLOT_INI;
+<span class="ln">22</span>    tBool = Rangos::TEMP_BOOL_INI;
+<span class="ln">23</span>}</div>
+    <div class="explain">
+      <p>Resetea 6 contadores (locales + temporales × 3 tipos) al inicio de su rango. Globales no se tocan porque persisten entre funciones.</p>
+      <p>El <code>SemanticAnalyzer</code> llamará a esto en <code>enterFuncs</code>, antes de procesar los parámetros de la nueva función.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">25</span>int AsignadorMemoria::nuevaGlobal(Tipo tipo) {
+<span class="ln">26</span>    switch (tipo) {
+<span class="ln">27</span>        case Tipo::ENTERO:
+<span class="ln">28</span>            if (gEnt > Rangos::GLOBAL_ENT_FIN) return -1;
+<span class="ln">29</span>            return gEnt++;
+<span class="ln">30</span>        case Tipo::FLOTANTE:
+<span class="ln">31</span>            if (gFlot > Rangos::GLOBAL_FLOT_FIN) return -1;
+<span class="ln">32</span>            return gFlot++;
+<span class="ln">33</span>        case Tipo::BOOL:
+<span class="ln">34</span>            if (gBool > Rangos::GLOBAL_BOOL_FIN) return -1;
+<span class="ln">35</span>            return gBool++;
+<span class="ln">36</span>        default:
+<span class="ln">37</span>            return -1; // NULA, ERROR no son asignables como var
+<span class="ln">38</span>    }
+<span class="ln">39</span>}</div>
+    <div class="explain">
+      <p>Patrón repetido para los 3 métodos (Global / Local / Temporal). Para cada tipo: verifica que no se haya pasado el fin del rango, devuelve el contador y lo incrementa (post-incremento) en una sola línea.</p>
+      <p>El sentinel <code>-1</code> de overflow lo detecta el analizador, que reporta error. En programas pedagógicos no se llega ni de cerca al límite (1000 variables enteras globales).</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<section id="tabla">
+  <h2 class="section">src/semantic/TablaConstantes</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/TablaConstantes.h + .cpp</div>
+    <div class="role">Asigna dirección virtual única a cada literal (entero, flotante, letrero). Si el mismo literal aparece dos veces, devuelve la misma dirección (deduplicación).</div>
+  </div>
+
+  <h3 class="subsection" id="tabla-h">Header</h3>
+  <div class="block">
+    <div class="code"><span class="ln">21</span>class TablaConstantes {
+<span class="ln">22</span>public:
+<span class="ln">23</span>    TablaConstantes();
+<span class="ln">24</span>
+<span class="ln">25</span>    // Devuelve la direccion del literal numerico. Si ya existia, devuelve
+<span class="ln">26</span>    // la misma; si no, asigna una nueva del rango del tipo correspondiente.
+<span class="ln">27</span>    // Solo acepta tipo ENTERO o FLOTANTE; otros devuelven -1.
+<span class="ln">28</span>    int direccionDe(const std::string& lexema, Tipo tipo);
+<span class="ln">29</span>
+<span class="ln">30</span>    // Version separada para letreros (cadenas entre comillas), porque
+<span class="ln">31</span>    // el enum Tipo no incluye un valor "letrero" (es de uso interno).
+<span class="ln">32</span>    int direccionDeLetrero(const std::string& lexema);
+<span class="ln">33</span>
+<span class="ln">34</span>    void imprimir(std::ostream& os) const;
+<span class="ln">35</span>
+<span class="ln">36</span>    std::size_t tamano() const { return ents.size() + flots.size() + letreros.size(); }
+<span class="ln">37</span>
+<span class="ln">38</span>private:
+<span class="ln">39</span>    std::unordered_map&lt;std::string, int&gt; ents;     // "5" -&gt; 13000
+<span class="ln">40</span>    std::unordered_map&lt;std::string, int&gt; flots;    // "3.14" -&gt; 14000
+<span class="ln">41</span>    std::unordered_map&lt;std::string, int&gt; letreros; // "\"hola\"" -&gt; 15000
+<span class="ln">42</span>
+<span class="ln">43</span>    int contEnt, contFlot, contLet;
+<span class="ln">44</span>};</div>
+    <div class="explain">
+      <p>Tres hash maps (uno por tipo de constante). La clave es el <strong>lexema literal</strong> tal como apareció en el código fuente: <code>"5"</code>, <code>"3.14"</code>, <code>"\"hola\""</code> (las comillas son parte del lexema del letrero).</p>
+      <p><strong>Dos métodos en lugar de uno con overload</strong>: <code>direccionDe(lex, tipo)</code> para numéricos y <code>direccionDeLetrero(lex)</code> para letreros. Esta separación apareció en una refactorización temprana: el primer intento usaba un único método polimórfico pasando un Tipo "dummy" para letreros, lo cual era confuso porque el enum <code>Tipo</code> no tiene un valor "LETRERO".</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="tabla-cpp">Implementación con deduplicación</h3>
+  <div class="block">
+    <div class="code"><span class="ln">15</span>int TablaConstantes::direccionDe(const std::string& lexema, Tipo tipo) {
+<span class="ln">16</span>    switch (tipo) {
+<span class="ln">17</span>        case Tipo::ENTERO: {
+<span class="ln">18</span>            auto it = ents.find(lexema);
+<span class="ln">19</span>            if (it != ents.end()) return it->second; // dedup hit
+<span class="ln">20</span>            if (contEnt > Rangos::CTE_ENT_FIN) return -1;
+<span class="ln">21</span>            int dir = contEnt++;
+<span class="ln">22</span>            ents.emplace(lexema, dir);
+<span class="ln">23</span>            return dir;
+<span class="ln">24</span>        }
+<span class="ln">25</span>        ...</div>
+    <div class="explain">
+      <p>El patrón de deduplicación: <strong>busca primero</strong>, si encuentra devuelve la dirección existente; si no, asigna nueva y la registra.</p>
+      <p>Por eso un programa que dice <code>escribe("hola"); escribe("mundo"); escribe("hola");</code> solo registra <code>"hola"</code> una vez (dirección 15000). El segundo <code>"hola"</code> devuelve 15000 de nuevo. Esto se verifica en el test <code>11_escribe_letrero.patito</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">51</span>void TablaConstantes::imprimir(std::ostream& os) const {
+<span class="ln">52</span>    os << "=== TABLA DE CONSTANTES (" << tamano() << ") ===\n";
+<span class="ln">53</span>
+<span class="ln">54</span>    auto dump = [&os](const std::unordered_map&lt;std::string, int&gt;& m,
+<span class="ln">55</span>                      const char* etiqueta) {
+<span class="ln">56</span>        if (m.empty()) return;
+<span class="ln">57</span>        std::vector&lt;std::pair&lt;std::string, int&gt;&gt; ordenadas(m.begin(), m.end());
+<span class="ln">58</span>        std::sort(ordenadas.begin(), ordenadas.end(),
+<span class="ln">59</span>                  [](const auto& a, const auto& b) { return a.second < b.second; });
+<span class="ln">60</span>        ...</div>
+    <div class="explain">
+      <p>Mismo problema que en <code>FunctionDirectory::imprimir</code>: <code>unordered_map</code> no garantiza orden. Solución: copiar a <code>vector&lt;pair&gt;</code> y ordenar por dirección antes de imprimir.</p>
+      <p>El lambda <code>dump</code> es una utility local para evitar repetir el código tres veces (una por map).</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<section id="gen">
+  <h2 class="section">src/semantic/GeneradorCuadruplos</h2>
+  <div class="file-card">
+    <span class="tag">Nuevo</span>
+    <div class="filename">src/semantic/GeneradorCuadruplos.h + .cpp</div>
+    <div class="role">Las 3 PILAS + la FILA + las operaciones de generación. Es el corazón de la Etapa 3.</div>
+  </div>
+
+  <h3 class="subsection" id="gen-h">Header — las 3 pilas</h3>
+  <div class="block">
+    <div class="code"><span class="ln">58</span>private:
+<span class="ln">59</span>    std::stack&lt;int&gt;      pilaOperandos;
+<span class="ln">60</span>    std::stack&lt;Tipo&gt;     pilaTipos;
+<span class="ln">61</span>    std::stack&lt;Operador&gt; pilaOperadores;
+<span class="ln">62</span>    std::vector&lt;Cuadruplo&gt; _fila;
+<span class="ln">63</span>    AsignadorMemoria& mem;
+<span class="ln">64</span>    TablaConstantes&  cte;</div>
+    <div class="explain">
+      <p>Las 3 pilas (las que pide la rúbrica) son <code>std::stack&lt;T&gt;</code> — wrappers sobre <code>std::deque</code> con la API estándar de pila (push, pop, top).</p>
+      <ul>
+        <li><strong>pilaOperandos</strong>: direcciones de operandos pendientes (es lo que apilan exitFactor cuando ve un id o cte).</li>
+        <li><strong>pilaTipos</strong>: <em>en paralelo</em> con pilaOperandos. Mismo tamaño siempre. Cada vez que algo entra a una, también entra a la otra.</li>
+        <li><strong>pilaOperadores</strong>: operadores empujados al entrar a una regla binaria (enterExp/enterTermino) y popeados al salir.</li>
+      </ul>
+      <p>La <strong>fila</strong> es un <code>std::vector&lt;Cuadruplo&gt;</code> en lugar de <code>std::queue</code> porque Etapa 4 necesitará acceder por índice (backpatching).</p>
+      <p>Las referencias <code>mem</code> y <code>cte</code> permiten al generador asignar temporales y registrar constantes sin recibirlos en cada llamada.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="gen-cpp">Implementación — popYEmitirBinario</h3>
+  <div class="block">
+    <div class="code"><span class="ln">22</span>Tipo GeneradorCuadruplos::popYEmitirBinario() {
+<span class="ln">23</span>    _ultimoPropagado = false;
+<span class="ln">24</span>
+<span class="ln">25</span>    if (pilaOperadores.empty() || pilaOperandos.size() < 2) {
+<span class="ln">26</span>        return Tipo::ERROR;
+<span class="ln">27</span>    }
+<span class="ln">28</span>
+<span class="ln">29</span>    Operador op = pilaOperadores.top(); pilaOperadores.pop();
+<span class="ln">30</span>
+<span class="ln">31</span>    int dDer = pilaOperandos.top(); pilaOperandos.pop();
+<span class="ln">32</span>    Tipo tDer = pilaTipos.top();    pilaTipos.pop();
+<span class="ln">33</span>
+<span class="ln">34</span>    int dIzq = pilaOperandos.top(); pilaOperandos.pop();
+<span class="ln">35</span>    Tipo tIzq = pilaTipos.top();    pilaTipos.pop();
+<span class="ln">36</span>
+<span class="ln">37</span>    // Si alguno de los operandos ya viene marcado como ERROR (p.ej. var
+<span class="ln">38</span>    // no declarada reportada en exitFactor), propagamos en silencio.
+<span class="ln">39</span>    if (tIzq == Tipo::ERROR || tDer == Tipo::ERROR) {
+<span class="ln">40</span>        _ultimoPropagado = true;
+<span class="ln">41</span>        pilaOperandos.push(-1);
+<span class="ln">42</span>        pilaTipos.push(Tipo::ERROR);
+<span class="ln">43</span>        return Tipo::ERROR;
+<span class="ln">44</span>    }
+<span class="ln">45</span>
+<span class="ln">46</span>    Tipo tRes = SemanticCube::resultado(tIzq, op, tDer);
+<span class="ln">47</span>    if (tRes == Tipo::ERROR) {
+<span class="ln">48</span>        pilaOperandos.push(-1);
+<span class="ln">49</span>        pilaTipos.push(Tipo::ERROR);
+<span class="ln">50</span>        return Tipo::ERROR;
+<span class="ln">51</span>    }
+<span class="ln">52</span>
+<span class="ln">53</span>    int dRes = mem.nuevoTemporal(tRes);
+<span class="ln">54</span>    _fila.push_back(Cuadruplo{op, dIzq, dDer, dRes});
+<span class="ln">55</span>
+<span class="ln">56</span>    pilaOperandos.push(dRes);
+<span class="ln">57</span>    pilaTipos.push(tRes);
+<span class="ln">58</span>
+<span class="ln">59</span>    return tRes;
+<span class="ln">60</span>}</div>
+    <div class="explain">
+      <p>Esta es <strong>la operación central</strong> de la etapa. Cada operación binaria del programa (cada <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>&lt;</code>, etc.) termina aquí. Pasos:</p>
+      <ol>
+        <li>Línea 23: limpia el flag <code>_ultimoPropagado</code>. El caller lo lee después para decidir si suprimir el reporte (ver "Propagación de ERROR" más abajo).</li>
+        <li>Línea 25: defensa contra pilas mal balanceadas (no debería pasar si los enters/exits están bien).</li>
+        <li>Línea 29: pop del operador (LIFO: el último que entró sale primero).</li>
+        <li>Líneas 31-32: pop del operando DERECHO. Importante: viene primero en la pila porque fue el último empujado.</li>
+        <li>Líneas 34-35: pop del operando IZQUIERDO.</li>
+        <li>Líneas 39-44: <strong>propagación silenciosa</strong>. Si uno de los operandos ya es ERROR (porque exitFactor reportó "variable no declarada"), no consultamos el cubo: empujamos un sentinel ERROR de regreso a las pilas y marcamos <code>_ultimoPropagado</code>. Así el caller suprime el reporte redundante de "tipos incompatibles" y solo ve el error raíz una vez.</li>
+        <li>Línea 46: <strong>consulta al cubo semántico</strong> — la validación de tipos finalmente se usa aquí, después de haberse diseñado en Etapa 2.</li>
+        <li>Líneas 47-51: si el cubo dijo ERROR (mismatch genuino), empuja el sentinel ERROR a las pilas y devuelve. El analizador reporta el mensaje porque <code>_ultimoPropagado</code> es false.</li>
+        <li>Línea 53: pedir un temporal del tipo del resultado.</li>
+        <li>Línea 54: emitir el cuádruplo: <code>(op, izq, der, temporal)</code>.</li>
+        <li>Líneas 56-57: <strong>push del resultado</strong> a las pilas para que la operación enclosing lo use como operando.</li>
+      </ol>
+      <p><strong>Por qué push de ERROR en lugar de no hacer nada:</strong> mantener el balance de las pilas. Si esta operación falla pero la pila queda con dos operandos menos y ningún resultado empujado, la operación enclosing hace underflow.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">62</span>Tipo GeneradorCuadruplos::emitirAsignacion(int direccionDestino, Tipo tipoDestino) {
+<span class="ln">63</span>    _ultimoPropagado = false;
+<span class="ln">64</span>    if (pilaOperandos.empty()) return Tipo::ERROR;
+<span class="ln">65</span>
+<span class="ln">66</span>    int dOrigen = pilaOperandos.top(); pilaOperandos.pop();
+<span class="ln">67</span>    Tipo tOrigen = pilaTipos.top();    pilaTipos.pop();
+<span class="ln">68</span>
+<span class="ln">69</span>    if (tOrigen == Tipo::ERROR) {
+<span class="ln">70</span>        _ultimoPropagado = true;
+<span class="ln">71</span>        return Tipo::ERROR;
+<span class="ln">72</span>    }
+<span class="ln">73</span>
+<span class="ln">74</span>    Tipo tRes = SemanticCube::resultado(tipoDestino, Operador::ASIGNA, tOrigen);
+<span class="ln">75</span>    if (tRes == Tipo::ERROR) {
+<span class="ln">76</span>        return Tipo::ERROR;
+<span class="ln">77</span>    }
+<span class="ln">78</span>
+<span class="ln">79</span>    _fila.push_back(Cuadruplo{Operador::ASIGNA, dOrigen, -1, direccionDestino});
+<span class="ln">80</span>    return tRes;
+<span class="ln">81</span>}</div>
+    <div class="explain">
+      <p>Asignación: similar a binario pero <strong>asimétrico</strong>. El destino se pasa como parámetro (lo resuelve el analizador desde el lado izquierdo del <code>=</code>), el origen se pop de la pila.</p>
+      <p>Líneas 69-72: misma idea que <code>popYEmitirBinario</code> — si el RHS ya era ERROR (p.ej. <code>x = y;</code> con <code>y</code> no declarada), propagamos en silencio en lugar de reportar "tipos incompatibles" además del error de variable no declarada.</p>
+      <p>El cubo valida que <code>(tipoDestino, =, tipoOrigen)</code> sea legal. Esto detecta cosas como <code>x = 3.14;</code> donde <code>x</code> es entero (cubo devuelve ERROR para esa combinación).</p>
+      <p>El cuádruplo emitido es <code>(=, origen, -1, destino)</code>. El -1 indica que el campo <code>opDer</code> no aplica.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">62</span>void GeneradorCuadruplos::emitirPrint(int direccion) {
+<span class="ln">63</span>    _fila.push_back(Cuadruplo{Operador::PRINT, -1, -1, direccion});
+<span class="ln">64</span>}</div>
+    <div class="explain">
+      <p>El más simple. Solo recibe una dirección y emite un PRINT. Lo llama el analizador en <code>exitImpElem</code> una vez por elemento del <code>escribe(...)</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">66</span>void GeneradorCuadruplos::emitirDirecto(const Cuadruplo& q) {
+<span class="ln">67</span>    _fila.push_back(q);
+<span class="ln">68</span>}</div>
+    <div class="explain">
+      <p>Vía de escape para casos especiales como el signo unario, donde el cuádruplo no surge del flujo normal de pilas. Lo usa <code>exitFactor</code> para emitir <code>(-, 0, var, t)</code> cuando ve <code>-id</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code"><span class="ln">78</span>void GeneradorCuadruplos::imprimirFila(std::ostream& os) const {
+<span class="ln">79</span>    os << "=== FILA DE CUADRUPLOS (" << _fila.size() << ") ===\n";
+<span class="ln">80</span>    for (std::size_t i = 0; i < _fila.size(); i++) {
+<span class="ln">81</span>        const Cuadruplo& q = _fila[i];
+<span class="ln">82</span>        os << "  " << i << ": (" << opToStr(q.op)
+<span class="ln">83</span>           << ", " << (q.opIzq    == -1 ? "_" : std::to_string(q.opIzq))
+<span class="ln">84</span>           << ", " << (q.opDer    == -1 ? "_" : std::to_string(q.opDer))
+<span class="ln">85</span>           << ", " << (q.resultado == -1 ? "_" : std::to_string(q.resultado))
+<span class="ln">86</span>           << ")\n";
+<span class="ln">87</span>    }
+<span class="ln">88</span>}</div>
+    <div class="explain">
+      <p>Volcado legible para la bandera <code>--cuadruplos</code>. Cada cuádruplo en una línea, con índice (sirve para Etapa 4 donde se referenciarán por índice en GOTOs). Los campos <code>-1</code> se muestran como <code>_</code> para no ensuciar el output con valores especiales.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<section id="analyzer">
+  <h2 class="section">SemanticAnalyzer — extensiones de Etapa 3</h2>
+  <div class="file-card modified">
+    <span class="tag">Modificado</span>
+    <div class="filename">src/semantic/SemanticAnalyzer.{h,cpp}</div>
+    <div class="role">Agregados 9 nuevos overrides (puntos neurálgicos PN3) y modificados los 4 anteriores (PN2) para asignar direcciones.</div>
+  </div>
+
+  <h3 class="subsection" id="an-helpers">Helpers nuevos</h3>
+  <div class="block">
+    <div class="code">const VariableInfo* SemanticAnalyzer::buscarVar(const std::string&amp; nombre) const {
+    // Primero scope local actual, luego global.
+    if (scopeActual) {
+        if (auto* v = scopeActual->variables.obtener(nombre)) return v;
+    }
+    if (scopeActual &amp;&amp; scopeActual->nombre != nombrePrograma) {
+        auto* global = const_cast&lt;FunctionDirectory&amp;&gt;(funcs).obtener(nombrePrograma);
+        if (global) {
+            if (auto* v = global->variables.obtener(nombre)) return v;
+        }
+    }
+    return nullptr;
+}</div>
+    <div class="explain">
+      <p>Busca una variable por nombre. La regla de scoping de Patito: <strong>primero el scope local de la función actual, luego el scope global del programa</strong>. Si no está en ninguno, devuelve nullptr.</p>
+      <p>El <code>const_cast</code> es feo pero acotado: el método es const y solo necesita lectura del global. Una alternativa más limpia sería declarar el método no-const, pero no quiero modificar la API de "consulta".</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-a">PN3-A: exitFactor</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::exitFactor(PatitoParser::FactorContext* ctx) {
+    if (enFuncDuplicada) return;
+
+    // Caso 1: ( expresion )
+    if (ctx->PIZQ() != nullptr) {
+        return;  // ya hay un operando en el top de pilaOperandos
+    }
+
+    // Caso 2: llamada
+    if (ctx->llamada() != nullptr) {
+        ...
+        int dir = mem.nuevoTemporal(f->tipoRetorno);
+        gen.pushOperando(dir, f->tipoRetorno);
+        return;
+    }
+
+    // Casos 3 y 4: signoOpc ID  o  signoOpc cte
+    ...
+}</div>
+    <div class="explain">
+      <p>El factor tiene 4 alternativas en la gramática, y cada una se maneja distinto:</p>
+      <ol>
+        <li><strong><code>( expresion )</code></strong>: no hacer nada. La expresión interna ya ejecutó su propio flujo de exitExp/exitTermino y dejó su resultado en el top de pilaOperandos.</li>
+        <li><strong><code>llamada</code></strong>: reservar un temporal del tipo de retorno y empujarlo como "fantasma". Etapa 4 emitirá los cuádruplos reales (ERA/PARAM/GOSUB) que llenarán ese temporal con el verdadero retorno.</li>
+        <li><strong><code>signoOpc ID</code></strong>: buscar la variable, manejar signo unario, empujar.</li>
+        <li><strong><code>signoOpc cte</code></strong>: registrar la constante (con signo si aplica), empujar.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code">    if (ctx->ID() != nullptr) {
+        // signoOpc ID
+        ...
+        const VariableInfo* v = buscarVar(nombre);
+        if (v == nullptr) {
+            error(l, c,
+                  "variable '" + nombre + "' usada sin declarar en '" +
+                  (scopeActual ? scopeActual->nombre : "?") + "'");
+            gen.pushOperando(-1, Tipo::ERROR);
+            return;
+        }
+        if (tieneMenos) {
+            // Generamos t = 0 - id (signo unario aplicado a variable).
+            int cero = cte.direccionDe("0", Tipo::ENTERO);
+            int t = mem.nuevoTemporal(v->tipo);
+            gen.emitirDirecto(Cuadruplo{Operador::MENOS, cero, v->direccion, t});
+            gen.pushOperando(t, v->tipo);
+        } else {
+            gen.pushOperando(v->direccion, v->tipo);
+        }
+        return;
+    }</div>
+    <div class="explain">
+      <p><strong>Caso ID con posible signo</strong>:</p>
+      <ul>
+        <li>Busca la variable. Si no existe, reporta error y empuja <code>(-1, ERROR)</code> como phantom para no romper operaciones encerradoras.</li>
+        <li>Si tiene signo <code>-</code>, emite manualmente el cuádruplo de negación <code>t = 0 - id</code> (donde 0 es una constante registrada en la tabla). Esto requiere el método <code>emitirDirecto</code> porque la operación no fluye por las pilas normalmente.</li>
+        <li>Si no hay signo (o es <code>+</code>), simplemente empuja la dirección y tipo de la variable.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code">    if (ctx->cte() != nullptr) {
+        // signoOpc cte
+        ...
+        if (tieneMenos) {
+            lex = "-" + lex; // tratamos "-5" como una constante distinta de "5"
+        }
+        int dir = cte.direccionDe(lex, t);
+        ...
+        gen.pushOperando(dir, t);
+        return;
+    }</div>
+    <div class="explain">
+      <p><strong>Caso cte con posible signo</strong>: estrategia distinta — en lugar de generar un cuádruplo de negación, tratamos <code>-5</code> como una constante distinta de <code>5</code>. La tabla de constantes registra ambos lexemas por separado.</p>
+      <p>Ventaja: ahorra un cuádruplo en el caso común de literales negativos.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-b">PN3-B: enterExp y exitExp</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::enterExp(PatitoParser::ExpContext* ctx) {
+    if (enFuncDuplicada) return;
+    if (ctx->MAS())   gen.pushOperador(Operador::MAS);
+    if (ctx->MENOS()) gen.pushOperador(Operador::MENOS);
+}
+
+void SemanticAnalyzer::exitExp(PatitoParser::ExpContext* ctx) {
+    if (enFuncDuplicada) return;
+    if (ctx->MAS() == nullptr &amp;&amp; ctx->MENOS() == nullptr) return;
+    Tipo res = gen.popYEmitirBinario();
+    if (res == Tipo::ERROR &amp;&amp; !gen.ultimoFuePropagado()) {
+        int l = static_cast&lt;int&gt;(ctx->getStart()->getLine());
+        int c = static_cast&lt;int&gt;(ctx->getStart()->getCharPositionInLine());
+        std::string op = ctx->MAS() ? "+" : "-";
+        error(l, c, "tipos incompatibles para operador '" + op + "'");
+    }
+}</div>
+    <div class="explain">
+      <p>Patrón gemelo (enter + exit) para operaciones aritméticas de suma/resta.</p>
+      <ul>
+        <li><strong>enterExp</strong>: si la regla incluye un operador (MAS o MENOS), lo empuja a pilaOperadores. La detección se basa en si el ctx tiene el TerminalNode correspondiente.</li>
+        <li><strong>exitExp</strong>: si había operador, llama a <code>popYEmitirBinario</code>. Si el cubo dio ERROR <em>y no fue una propagación silenciosa</em> (<code>ultimoFuePropagado()</code> false), reporta con la posición del operador. Esto evita duplicar mensajes cuando un operando ya venía marcado como ERROR desde más abajo.</li>
+      </ul>
+      <p>El caso "exp es solo un termino" (sin operador) cae en el early-return en ambas funciones — no hace nada, deja el flujo del termino tal cual.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-c">PN3-C: enterTermino y exitTermino</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::enterTermino(PatitoParser::TerminoContext* ctx) {
+    if (enFuncDuplicada) return;
+    if (ctx->POR())   gen.pushOperador(Operador::POR);
+    if (ctx->ENTRE()) gen.pushOperador(Operador::ENTRE);
+}
+
+void SemanticAnalyzer::exitTermino(PatitoParser::TerminoContext* ctx) {
+    ...
+}</div>
+    <div class="explain">
+      <p>Análogo a exp pero con multiplicación y división. La estructura es <strong>idéntica</strong> — solo cambian los operadores que detecta.</p>
+      <p>La precedencia entre <code>*/</code> y <code>+-</code> sale "gratis" del árbol: como termino vive dentro de exp en la gramática, exitTermino siempre dispara antes que el exitExp que lo contiene, garantizando que <code>a + b * c</code> emite primero <code>b * c</code> y luego <code>a + (resultado)</code>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-d">PN3-D: enterRelOpc y exitExpresion</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::enterRelOpc(PatitoParser::RelOpcContext* ctx) {
+    if (enFuncDuplicada) return;
+    auto* opRel = ctx->opRel();
+    if (opRel == nullptr) return;
+
+    if (opRel->MAYOR())    gen.pushOperador(Operador::MAYOR);
+    if (opRel->MENOR())    gen.pushOperador(Operador::MENOR);
+    if (opRel->DISTINTO()) gen.pushOperador(Operador::DISTINTO);
+    if (opRel->IGUAL2())   gen.pushOperador(Operador::IGUAL2);
+}
+
+void SemanticAnalyzer::exitExpresion(PatitoParser::ExpresionContext* ctx) {
+    ...
+    Tipo res = gen.popYEmitirBinario();
+    ...
+}</div>
+    <div class="explain">
+      <p>Los operadores relacionales viven en una sub-regla aparte (<code>opRel</code>) porque la gramática los separa así. enterRelOpc detecta cuál de los 4 está presente y lo empuja.</p>
+      <p>El pop+emit ocurre en exitExpresion (no exitRelOpc) porque la expresión completa <code>a &lt; b</code> tiene su rama derecha (<code>b</code>) parseada DESPUÉS de relOpc. Solo cuando todo eso terminó es seguro hacer el pop.</p>
+      <p>El resultado de cualquier relacional es siempre tipo <code>BOOL</code> (el cubo lo devuelve), que se asigna a un temporal en el rango 11000–11999.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-e">PN3-E: exitAsigna</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::exitAsigna(PatitoParser::AsignaContext* ctx) {
+    if (enFuncDuplicada) return;
+
+    auto* idNode = ctx->ID();
+    std::string nombre = idNode->getText();
+    ...
+    const VariableInfo* v = buscarVar(nombre);
+    if (v == nullptr) {
+        error(...);
+        if (!gen.pilasOperandosVacia()) gen.popOperando();
+        return;
+    }
+
+    Tipo res = gen.emitirAsignacion(v->direccion, v->tipo);
+    if (res == Tipo::ERROR &amp;&amp; !gen.ultimoFuePropagado()) {
+        error(l, c,
+              "tipos incompatibles en asignacion a '" + nombre +
+              "' (" + tipoToStr(v->tipo) + ")");
+    }
+}</div>
+    <div class="explain">
+      <p>Punto neurálgico de la asignación. Pasos:</p>
+      <ol>
+        <li>Toma el id del lado izquierdo del <code>=</code>.</li>
+        <li>Lo busca en scope. Si no existe, reporta error y limpia el operando del RHS para que no contamine la siguiente expresión.</li>
+        <li>Si existe, delega a <code>gen.emitirAsignacion</code> con la dirección y tipo del destino.</li>
+        <li>Si el cubo rechaza la combinación (asignar flotante a entero) <strong>y no fue una propagación silenciosa</strong>, reporta. La cláusula <code>!gen.ultimoFuePropagado()</code> evita duplicar mensajes cuando el RHS ya venía como ERROR (p.ej. <code>x = y;</code> con <code>y</code> no declarada — se reporta una vez en exitFactor, no dos veces).</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-f">PN3-F: exitImpElem</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::exitImpElem(PatitoParser::ImpElemContext* ctx) {
+    if (enFuncDuplicada) return;
+
+    if (ctx->LETRERO() != nullptr) {
+        std::string lex = ctx->LETRERO()->getText();
+        int dir = cte.direccionDeLetrero(lex);
+        ...
+        gen.emitirPrint(dir);
+        return;
+    }
+    // Era una expresion: el top de pilaOperandos es lo que hay que imprimir.
+    if (gen.pilasOperandosVacia()) return;
+    int dir = gen.topOperando();
+    gen.emitirPrint(dir);
+    gen.popOperando();
+}</div>
+    <div class="explain">
+      <p>Cada elemento del <code>escribe(...)</code> dispara este punto:</p>
+      <ul>
+        <li>Si es un letrero: registrar en la tabla (con deduplicación) y emitir un PRINT con esa dirección.</li>
+        <li>Si es una expresión: ya está su resultado en el top de pilaOperandos. Pop, emitir PRINT, listo.</li>
+      </ul>
+      <p>Por eso un <code>escribe("hola", x, a + b)</code> genera 3 cuádruplos PRINT (más los cuádruplos para evaluar <code>a + b</code> que se emitieron antes).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="an-pn-mod">Modificaciones a los puntos neurálgicos de Etapa 2</h3>
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::enterFuncs(PatitoParser::FuncsContext* ctx) {
+    ...
+    scopeActual = nuevo;
+
+    // Etapa 3: resetear contadores locales y temporales para esta funcion.
+    mem.resetScopeLocal();
+
+    ...
+    // En cada parametro:
+    int direccion = mem.nuevaLocal(ptipo);
+    ...
+    scopeActual->variables.agregar(pn, ptipo, pl, direccion);
+}</div>
+    <div class="explain">
+      <p>enterFuncs ahora hace dos cosas más allá de su trabajo de Etapa 2:</p>
+      <ol>
+        <li>Llama <code>mem.resetScopeLocal()</code> apenas se confirma que estamos entrando a una función válida. Esto pone los contadores locales (5000+) y temporales (9000+) en su valor inicial para esta función.</li>
+        <li>Por cada parámetro, asigna una dirección local con <code>mem.nuevaLocal(ptipo)</code> antes de registrarlo en la tabla.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code">void SemanticAnalyzer::enterDeclaracion(PatitoParser::DeclaracionContext* ctx) {
+    ...
+    bool esGlobal = (scopeActual->nombre == nombrePrograma);
+
+    auto procesarId = [&amp;](antlr4::tree::TerminalNode* idNode) {
+        ...
+        int direccion = esGlobal ? mem.nuevaGlobal(tipo) : mem.nuevaLocal(tipo);
+        ...
+        scopeActual->variables.agregar(nombre, tipo, l, direccion);
+    };
+    ...
+}</div>
+    <div class="explain">
+      <p>enterDeclaracion decide si la variable va al rango global o al rango local según el scope actual. Esto es lo que permite que <code>x</code> declarada en el programa principal vaya a 1000 y <code>x</code> declarada en una función vaya a 5000.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== -->
+<section id="deltas">
+  <h2 class="section">Cambios a archivos existentes</h2>
+
+  <h3 class="subsection" id="delta-types">SemanticTypes.h — agregar PRINT</h3>
+  <div class="block">
+    <div class="code">enum class Operador {
+    MAS, MENOS, POR, ENTRE,
+    MAYOR, MENOR, DISTINTO, IGUAL2,
+    ASIGNA,
+    PRINT     // &lt;-- nuevo: para los cuadruplos de escribe
+};</div>
+    <div class="explain">
+      <p>El enum crece con un valor adicional. PRINT no pasa por el cubo semántico (no es validación, es emisión). El switch en <code>opToStr</code> y en <code>SemanticCube::resultado</code> también ganan un caso para PRINT (que retorna "PRINT" y ERROR respectivamente).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="delta-table">SymbolTable — agregar direccion</h3>
+  <div class="block">
+    <div class="code">struct VariableInfo {
+    std::string nombre;
+    Tipo tipo;
+    int linea;
+    int direccion; // &lt;-- nuevo: direccion de memoria virtual; -1 si aun no asignada
+};
+
+struct ParametroInfo {
+    std::string nombre;
+    Tipo tipo;
+    int direccion; // &lt;-- nuevo
+};</div>
+    <div class="explain">
+      <p>Ambos structs ganan un campo <code>direccion</code>. Para mantener compatibilidad con cualquier llamada antigua de <code>agregar(nombre, tipo, linea)</code>, el parámetro <code>direccion</code> en el método tiene default <code>= -1</code>.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="code">// En el dump de FunctionDirectory::imprimir:
+os &lt;&lt; "      " &lt;&lt; v-&gt;nombre &lt;&lt; " : " &lt;&lt; tipoToStr(v-&gt;tipo)
+   &lt;&lt; "  [dir=" &lt;&lt; v-&gt;direccion &lt;&lt; "]"
+   &lt;&lt; "  (linea " &lt;&lt; v-&gt;linea &lt;&lt; ")\n";</div>
+    <div class="explain">
+      <p>El dump del <code>--dir</code> ahora incluye la dirección entre corchetes: <code>x : entero  [dir=1000]  (linea 3)</code>. Útil para entender qué rangos se llenaron.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="delta-main">main.cpp — bandera --cuadruplos</h3>
+  <div class="block">
+    <div class="code">} else if (arg == "--cuadruplos") {
+    mostrarCuadruplos = true;
+}
+...
+if (mostrarCuadruplos) {
+    std::cout &lt;&lt; std::endl;
+    analizador.constantes().imprimir(std::cout);
+    std::cout &lt;&lt; std::endl;
+    analizador.generador().imprimirFila(std::cout);
+    std::cout &lt;&lt; std::endl;
+}</div>
+    <div class="explain">
+      <p>Una nueva bandera y un bloque que la consume. Imprime tabla de constantes y la fila completa de cuádruplos. Solo se ejecuta si la fase sintáctica pasó (igual que la fase semántica).</p>
+    </div>
+  </div>
+
+  <h3 class="subsection" id="delta-runner">run_tests.sh — 2 suites más</h3>
+  <div class="block">
+    <div class="code">echo "========================================"
+echo " CUADRUPLOS - VALIDOS  (Etapa 3, exit=0)"
+echo "========================================"
+for f in "$ROOT"/tests/cuadruplos_valid/*.patito; do
+    [ -e "$f" ] || continue
+    run_case "$f" 0
+done
+
+echo ""
+echo "========================================"
+echo " CUADRUPLOS - INVALIDOS  (Etapa 3, exit=1)"
+echo "========================================"
+for f in "$ROOT"/tests/cuadruplos_invalid/*.patito; do
+    [ -e "$f" ] || continue
+    run_case "$f" 1
+done</div>
+    <div class="explain">
+      <p>Dos loops más al runner, idénticos en estructura a los de Etapas 1 y 2 pero apuntando a los nuevos directorios. Función <code>run_case</code> sin cambios.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Resultado:</strong> el runner ahora ejecuta <strong>51 casos</strong> (14 sintaxis válidos + 10 sintaxis inválidos + 4 semánticos válidos + 8 semánticos inválidos + 12 cuádruplos válidos + 3 cuádruplos inválidos).
+  </div>
+</section>
+
+<footer style="margin-top: 60px; padding: 24px 0; border-top: 1px solid #ccc; color: #777; font-size: 13px;">
+  <p>Walkthrough de Etapa 3 del proyecto Patito. Para la auditoría visual de los puntos neurálgicos (con diagramas SVG), ver <code class="inline">Patito_Etapa3_PuntosNeuralgicos.html</code>.</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

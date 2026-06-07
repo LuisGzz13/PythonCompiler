@@ -86,19 +86,21 @@ class GeneradorCuadruplos:
     def __init__(self, mem, cte):
         self.mem = mem # asignador de memoria
         self.cte = cte
-        self.pila_operandos = [] 
-        self.pila_tipos = []
-        self.pila_operadores = []
+        self.pila_operandos = [] # direcciones de variables y constantes
+        self.pila_tipos = [] # tipos de las variables y constantes
+        self.pila_operadores = [] # direccion de los operadores + - * / > < != == = (push en enter, pop en exit)
         self.pila_saltos = [] # indices de saltos pendientes de backpatch
-        self.fila = []
-        self._ultimo_propagado = False
+        self.fila = [] # fila de cuadruplos
+        self._ultimo_propagado = False # bandera para evitar que un error se reporte duplicado y se convierta en una cascada.
         self.idx_goto_main = None # indice del GOTO inicial hacia main
     # --- Operaciones de pila ---
     def push_operando(self, direccion, tipo):
+        """Push de direccion y tipo de operando."""
         self.pila_operandos.append(direccion)
         self.pila_tipos.append(tipo)
 
     def push_operador(self, op):
+        """Push de operador."""
         self.pila_operadores.append(op)
 
     def pop_operando(self):
@@ -108,12 +110,15 @@ class GeneradorCuadruplos:
             self.pila_tipos.pop()
 
     def top_operando(self):
+        """Top de la pila de operandos."""
         return self.pila_operandos[-1] if self.pila_operandos else None
 
     def top_tipo(self):
+        """Top de la pila de tipos."""
         return self.pila_tipos[-1] if self.pila_tipos else None
 
     def pilas_operandos_vacia(self):
+        """Verifica si la pila de operandos esta vacia."""
         return len(self.pila_operandos) == 0
 
     # --- Generacion ---

@@ -24,7 +24,7 @@ from cuadruplos import TablaConstantes
 _DEFAULTS = {
     "entero":   0,
     "flotante": 0.0,
-    "bool":     False,
+    "bool":     0, # bool en patito es 0 y 1
 }
 
 _RANGOS = []
@@ -239,13 +239,13 @@ class MaquinaVirtual:
 
             # --- Relacionales ---
             elif op == "<":
-                self.escribir(q.resultado, self.leer(q.opIzq) <  self.leer(q.opDer))
+                self.escribir(q.resultado, int(self.leer(q.opIzq) <  self.leer(q.opDer)))
             elif op == ">":
-                self.escribir(q.resultado, self.leer(q.opIzq) >  self.leer(q.opDer))
+                self.escribir(q.resultado, int(self.leer(q.opIzq) >  self.leer(q.opDer)))
             elif op == "==":
-                self.escribir(q.resultado, self.leer(q.opIzq) == self.leer(q.opDer))
+                self.escribir(q.resultado, int(self.leer(q.opIzq) == self.leer(q.opDer)))
             elif op == "!=":
-                self.escribir(q.resultado, self.leer(q.opIzq) != self.leer(q.opDer))
+                self.escribir(q.resultado, int(self.leer(q.opIzq) != self.leer(q.opDer)))
 
             # --- Asignacion ---
             elif op == "=":

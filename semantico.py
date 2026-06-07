@@ -668,3 +668,24 @@ class SemanticAnalyzer(PatitoListener):
                 # Temporal fantasma: el retorno real se difiere (no toca la gramatica).
                 dir_temp = self.mem.nuevo_temporal(f.tipo_retorno)
                 self.gen.push_operando(dir_temp, f.tipo_retorno)
+    
+    
+    # ========================================================
+    # (utilidad): imprimir el directorio de funciones
+    # ========================================================
+    def imprimir_directorio(self, out=sys.stdout):
+        """Imprime el func_dir formateado para depuración (flag --dir)."""
+        print(f"=== DIRECTORIO DE FUNCIONES ({len(self.func_dir)}) ===", file=out)
+        for nombre, info in self.func_dir.items():
+            print(f"funcion '{nombre}' retorno={info.tipo_retorno} linea={info.linea}",
+                  file=out)
+            if info.params:
+                params_str = " ".join(f"{p.nombre}:{p.tipo}" for p in info.params)
+                print(f"  parametros: {params_str}", file=out)
+            if info.variables:
+                print(f"  variables locales ({len(info.variables)}):", file=out)
+                # Orden determinista por linea para salida estable entre corridas
+                for vname, vinfo in sorted(info.variables.items(),
+                                          key=lambda kv: kv[1].linea):
+                    print(f"    {vname} : {vinfo.tipo} (linea {vinfo.linea})", file=out)
+            print(file=out)  # linea en blanco entre funciones

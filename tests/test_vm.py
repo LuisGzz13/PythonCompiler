@@ -277,3 +277,12 @@ def test_cli_runtime_error_sale_con_exit_1(tmp_path):
     )
     assert r.returncode == 1
     assert "division por cero" in r.stderr
+
+# ======================================================================
+# Grupo 7: Escribe bool imprime 0 o 1
+# ======================================================================
+
+    
+def test_escribe_bool_imprime_0_o_1(capsys):
+    correr('programa p; vars a, b : entero; inicio { a = 5; b = 3; escribe(a > b); escribe(a < b); } fin')
+    assert _lineas(capsys) == ["1", "0"]
