@@ -153,7 +153,7 @@ class MaquinaVirtual:
         seg, tipo = seg_tipo
         if seg == "cte":
             return self.memoria_constantes[direccion]
-        if seg == "global":
+        if seg in ("global", "retorno"):
             return self.memoria_global.get(direccion, _DEFAULTS[tipo])
         f = self._frame_actual()
         store = f.locales if seg == "local" else f.temps
@@ -171,7 +171,7 @@ class MaquinaVirtual:
         seg, tipo = seg_tipo
         if seg == "cte":
             raise RuntimeError(f"VM: intento de escribir a una constante: {direccion}")
-        if seg == "global":
+        if seg in ("global", "retorno"):
             self.memoria_global[direccion] = valor
             return
         f = self._frame_actual()
@@ -243,9 +243,9 @@ class MaquinaVirtual:
             elif op == ">":
                 self.escribir(q.resultado, int(self.leer(q.opIzq) >  self.leer(q.opDer)))
             elif op == "==":
-                self.escribir(q.resultado, int(self.leer(q.opIzq) == self.leer(q.opDer)))
+                self.escribir(q.resultado, self.leer(q.opIzq) == self.leer(q.opDer))
             elif op == "!=":
-                self.escribir(q.resultado, int(self.leer(q.opIzq) != self.leer(q.opDer)))
+                self.escribir(q.resultado, self.leer(q.opIzq) != self.leer(q.opDer))
 
             # --- Asignacion ---
             elif op == "=":

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>5. Driver + Flujo - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>5. Driver + Flujo</strong>
+</nav>
+
+<h1>5. <code>patito.py</code> + Flujo end-to-end</h1>
+
+<p><strong>Tama&ntilde;o de patito.py</strong>: 108 l&iacute;neas.<br>
+<strong>Prop&oacute;sito</strong>: driver/CLI del compilador. Arma el pipeline completo
+(lexer -&gt; parser -&gt; semantico -&gt; opcional VM) y maneja flags + exit codes.</p>
+
+<div class="toc">
+<h3>Contenido</h3>
+<ul>
+<li><a href="#contador">5.1 ContadorErrores &mdash; tracking de errores sint&aacute;cticos</a></li>
+<li><a href="#main">5.2 main() &mdash; el pipeline</a></li>
+<li><a href="#flags">5.3 Flags soportados</a></li>
+<li><a href="#exits">5.4 Exit codes</a></li>
+<li><a href="#flujo">5.5 Flujo end-to-end: trace de un programa real</a></li>
+<li><a href="#tips">5.6 Tips de examen</a></li>
+</ul>
+</div>
+
+<h2 id="contador">5.1 ContadorErrores</h2>
+
+<pre><code>class ContadorErrores(ErrorListener):
+    """ErrorListener custom: imprime errores a stderr Y mantiene contador."""
+    def __init__(self):
+        super().__init__()
+        self.errores = 0
+
+    def syntaxError(self, recognizer, offendingSymbol, line, col, msg, e):
+        print(f"linea {line}:{col}  {msg}", file=sys.stderr)
+        self.errores += 1</code></pre>
+
+<div class="callout">
+<p>Sin esto, ANTLR imprime errores pero el parser sigue. No sabr&iacute;amos al final si hubo
+errores para decidir exit code. <strong>Los errores sem&aacute;nticos est&aacute;n en
+<code>SemanticAnalyzer.error()</code></strong> (un counter aparte llamado <code>analizador.errores</code>).</p>
+</div>
+
+<h2 id="main">5.2 main() &mdash; el pipeline</h2>
+
+<pre><code>def main():
+    # 1. Validar args
+    if len(sys.argv) &lt; 2:
+        print("Uso: python patito.py [--cuadruplos] [--dir] [--ejecutar] archivo.patito",
+              file=sys.stderr)
+        sys.exit(2)
+
+    args = sys.argv[1:]
+    imprimir_cuadruplos = "--cuadruplos" in args
+    ejecutar = "--ejecutar" in args
+    imprimir_directorio = "--dir" in args
+
+    archivos = [a for a in args if not a.startswith("--")]
+    if len(archivos) != 1:
+        print("Uso: ...", file=sys.stderr)
+        sys.exit(2)
+
+    # 2. Pipeline de lectura y analisis
+    archivo = archivos[0]
+    stream = FileStream(archivo)
+    lexer = PatitoLexer(stream)
+    tokens = CommonTokenStream(lexer)
+    parser = PatitoParser(tokens)
+
+    # 3. Custom error listener
+    err_sintaxis = ContadorErrores()
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(err_sintaxis)
+    parser.removeErrorListeners()
+    parser.addErrorListener(err_sintaxis)
+
+    # 4. Parse
+    tree = parser.programa()
+    if err_sintaxis.errores &gt; 0:
+        sys.exit(1)
+
+    # 5. Analisis semantico
+    analizador = SemanticAnalyzer()
+    walker = ParseTreeWalker()
+    walker.walk(analizador, tree)
+    if analizador.errores &gt; 0:
+        sys.exit(1)
+
+    # 6. Flags opcionales
+    if imprimir_cuadruplos:
+        analizador.cte.imprimir()
+        print()
+        analizador.gen.imprimir_fila()
+
+    if ejecutar:
+        try:
+            MaquinaVirtual(analizador).ejecutar()
+        except RuntimeError as e:
+            print(f"VM error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    if imprimir_directorio:
+        analizador.imprimir_directorio()
+
+    sys.exit(0)</code></pre>
+
+<h2 id="flags">5.3 Flags soportados</h2>
+
+<table>
+<tr><th>Flag</th><th>Qu&eacute; hace</th></tr>
+<tr><td><code>--cuadruplos</code></td><td>Imprime tabla de constantes + fila de cu&aacute;druplos a stdout</td></tr>
+<tr><td><code>--dir</code></td><td>Imprime el directorio de funciones (func_dir) formateado</td></tr>
+<tr><td><code>--ejecutar</code></td><td>Ejecuta el programa con la VM despu&eacute;s de compilar</td></tr>
+</table>
+
+<h2 id="exits">5.4 Exit codes</h2>
+
+<table>
+<tr><th>C&oacute;digo</th><th>Significado</th></tr>
+<tr><td>0</td><td>Compilaci&oacute;n (y ejecuci&oacute;n si <code>--ejecutar</code>) exitosa</td></tr>
+<tr><td>1</td><td>Error de sintaxis, sem&aacute;ntica, o runtime de la VM</td></tr>
+<tr><td>2</td><td>Error de uso (faltan argumentos)</td></tr>
+</table>
+
+<h2 id="flujo">5.5 Flujo end-to-end: trace de un programa real</h2>
+
+<p>Usamos un programa con un <code>mientras</code> para que el trace toque todas las etapas:</p>
+
+<pre><code>programa demo;
+vars i, s : entero;
+inicio
+{
+    i = 1;
+    s = 0;
+    mientras (i &lt; 4) haz {
+        s = s + i;
+        i = i + 1;
+    } ;
+    escribe(s);
+}
+fin</code></pre>
+
+<p><strong>Salida esperada</strong>: <code>6</code> (suma 1+2+3).</p>
+
+<h3>Etapa 1: L&eacute;xico/sintaxis</h3>
+
+<p>El parser produce un &aacute;rbol sint&aacute;ctico. Tokens clave del cuerpo del mientras:</p>
+
+<pre><code>MIENTRAS  PIZQ  IDENT(i)  MENOR  CTE_ENT(4)  PDER  HAZ  LLAVEIZQ
+  IDENT(s)  IGUAL  IDENT(s)  MAS  IDENT(i)  PCOMA
+  IDENT(i)  IGUAL  IDENT(i)  MAS  CTE_ENT(1)  PCOMA
+LLAVEDER</code></pre>
+
+<h3>Etapa 2: Sem&aacute;ntica</h3>
+
+<p>Al terminar:</p>
+
+<pre><code>func_dir = {
+    "demo": FuncInfo(
+        tipo_retorno="programa",
+        params=[],
+        variables={
+            "i": VarInfo(tipo="entero", dir=1000),
+            "s": VarInfo(tipo="entero", dir=1001),
+        },
+        cuad_inicio=None,  # se llena en enterCuerpo de main
+        recursos=None,     # se llena en exitPrograma
+    ),
+}</code></pre>
+
+<h3>Etapa 3+4: Generaci&oacute;n de cu&aacute;druplos</h3>
+
+<pre><code> 0: (GOTO,  _,     _,     8)        # initial GOTO -> backpatched a inicio de main
+ 1: (=,     13000, _,     1000)     # i = 1
+ 2: (=,     13001, _,     1001)     # s = 0
+ 3: (&lt;,     1000,  13002, 11000)    # i &lt; 4 -&gt; temp bool
+ 4: (GOTOF, 11000, _,     10)       # si !cond: sale del ciclo
+ 5: (+,     1001,  1000,  9001)     # s + i
+ 6: (=,     9001,  _,     1001)     # s = temp
+ 7: (+,     1000,  13000, 9002)     # i + 1 (cte '1' dedup -&gt; 13000)
+ 8: (=,     9002,  _,     1000)     # i = temp
+ 9: (GOTO,  _,     _,     3)        # back to cond
+10: (PRINT, _,     _,     1001)     # escribe(s)</code></pre>
+
+<h3>Etapa 5: Ejecuci&oacute;n por la VM</h3>
+
+<p>Estado inicial: <code>memoria_global = {}</code>, <code>pila_frames = [main_frame]</code>, IP=0.</p>
+
+<pre><code>IP=0  GOTO -&gt; IP=8                  (hmm — backpatched al cuerpo de main)
+                                     ESPERA, este trace es del ejemplo simplificado;
+                                     en el real, el GOTO inicial salta a IP=1
+                                     porque el cuerpo de main empieza en 1.
+
+IP=1  (=, 13000, _, 1000)           memoria_global[1000] = 1 (i=1)
+IP=2  (=, 13001, _, 1001)           memoria_global[1001] = 0 (s=0)
+
+--- iter 1 del while ---
+IP=3  (&lt;, 1000, 13002, 11000)       main.temps[11000] = int(1&lt;4) = 1
+IP=4  (GOTOF, 11000, _, 10)         no salta (cond = 1)
+IP=5  (+, 1001, 1000, 9001)         temps[9001] = 0+1 = 1
+IP=6  (=, 9001, _, 1001)            memoria_global[1001] = 1 (s=1)
+IP=7  (+, 1000, 13000, 9002)        temps[9002] = 1+1 = 2
+IP=8  (=, 9002, _, 1000)            memoria_global[1000] = 2 (i=2)
+IP=9  (GOTO, _, _, 3)               IP=3
+
+--- iter 2 ---
+IP=3  cond = int(2&lt;4) = 1
+IP=5  s = 1+2 = 3
+IP=7  i = 2+1 = 3
+
+--- iter 3 ---
+IP=3  cond = int(3&lt;4) = 1
+IP=5  s = 3+3 = 6
+IP=7  i = 3+1 = 4
+
+--- salida del ciclo ---
+IP=3  cond = int(4&lt;4) = 0
+IP=4  GOTOF: salta a IP=10
+IP=10 PRINT leer(1001)=6 -&gt; stdout "6"
+IP=11 (fuera de fila) -&gt; fin</code></pre>
+
+<p>Output final: <code>6\n</code>. Estado final: <code>memoria_global = {1000: 4, 1001: 6}</code>.</p>
+
+<h2 id="tips">5.6 Tips de examen</h2>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; <code>patito.py</code> instala su propio ErrorListener?"</strong></p>
+<p>Porque el ErrorListener default de ANTLR imprime a stderr pero NO trackea. Sin el custom,
+no podr&iacute;amos decidir exit code 0 o 1 al final. Adem&aacute;s el custom imprime el formato
+"linea L:C msg" que queremos.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Cu&aacute;ndo retorna exit code 1 vs exit code 2?"</strong></p>
+<p>Exit 2: usuario mal-invoc&oacute; el comando (faltan args). Exit 1: error de compilaci&oacute;n
+(sint&aacute;ctico, sem&aacute;ntico) o de ejecuci&oacute;n (RuntimeError de la VM). Exit 0: todo OK.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"Cu&aacute;l es el orden EXACTO de procesamiento desde un archivo .patito hasta stdout?"</strong></p>
+<p>1) FileStream lee el archivo<br>
+2) PatitoLexer convierte a tokens<br>
+3) CommonTokenStream buffer<br>
+4) PatitoParser construye el &aacute;rbol (raiz: regla <code>programa</code>)<br>
+5) Si hay errores sint&aacute;cticos -&gt; exit 1<br>
+6) ParseTreeWalker recorre el &aacute;rbol invocando los PNs del SemanticAnalyzer<br>
+7) Si hay errores sem&aacute;nticos -&gt; exit 1<br>
+8) Si <code>--cuadruplos</code>: imprime cte + fila<br>
+9) Si <code>--ejecutar</code>: instancia MaquinaVirtual y llama ejecutar()<br>
+10) Si <code>--dir</code>: imprime func_dir<br>
+11) exit 0</p>
+</div>
+
+<div class="callout tip">
+<p><strong>Para revisar el trace de un programa</strong>: usa <code>--cuadruplos --ejecutar</code> juntos.
+Imprime los cu&aacute;druplos PRIMERO (para que veas lo que se va a ejecutar), luego ejecuta
+y ves el output. Ideal para debugging.</p>
+</div>
+
+<footer>
+  <a href="04_vm.html">&larr; 4. VM</a>
+  <a href="index.html">Index</a>
+  <span></span>
+</footer>
+</body>
+</html>

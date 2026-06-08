@@ -1,0 +1,17 @@
+programa retornaEnSi;
+vars r : entero;
+
+entero positivo(x : entero) {
+    {
+        si (x > 0) {
+            retorna 1;
+        } ;
+        retorna 0;
+    }
+} ;
+
+inicio
+{
+    r = 0;
+}
+fin

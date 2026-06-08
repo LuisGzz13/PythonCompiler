@@ -393,3 +393,103 @@ def test_gotof_lleva_la_direccion_de_la_condicion_en_opIzq():
     gotof = [q for q in fila if q.op == "GOTOF"][0]
     assert gotof.opIzq == comp.resultado, \
         "GOTOF.opIzq debe ser la direccion del temp bool de la condicion"
+
+
+# ======================================================================
+# Retorno de funciones tipadas (retorna)
+# ======================================================================
+
+def test_retorna_emite_asignacion_a_slot_y_endfunc():
+    """retorna E debe emitir (=, dir_E, _, dir_retorno) + (ENDFUNC, _, _, _)."""
+    a = compilar('''
+        programa p; vars r : entero;
+        entero doble(x : entero) { { retorna x; } } ;
+        inicio { r = 0; } fin
+    ''')
+    fila = a.gen.fila
+    assert a.errores == 0
+    # doble es la primera funcion entero -> dir_retorno = 17000
+    assert a.func_dir["doble"].dir_retorno == 17000
+    retorno_quads = [q for q in fila if q.op == "=" and q.resultado == 17000]
+    assert len(retorno_quads) == 1, "exactamente un (=, _, _, 17000) del retorna"
+    idx_retorno = fila.index(retorno_quads[0])
+    assert fila[idx_retorno + 1].op == "ENDFUNC", \
+        "el cuadruplo despues del retorna debe ser ENDFUNC"
+
+
+def test_retorna_slots_separados_entero_y_flotante():
+    """Distintas funciones tipadas reciben slots distintos del segmento retorno."""
+    a = compilar('''
+        programa p; vars r : entero;
+        entero a() { { retorna 1; } } ;
+        entero b() { { retorna 2; } } ;
+        flotante c() { { retorna 1.0; } } ;
+        inicio { r = 0; } fin
+    ''')
+    assert a.func_dir["a"].dir_retorno == 17000
+    assert a.func_dir["b"].dir_retorno == 17001
+    assert a.func_dir["c"].dir_retorno == 18000
+
+
+def test_llamada_factor_emite_copy_post_gosub():
+    """Cuando la llamada se usa como factor, debe emitirse (=, dir_retorno, _, phantom)."""
+    a = compilar('''
+        programa p; vars r : entero;
+        entero doble(x : entero) { { retorna x * 2; } } ;
+        inicio { r = doble(5); } fin
+    ''')
+    fila = a.gen.fila
+    assert a.errores == 0
+    gosubs = [(i, q) for i, q in enumerate(fila) if q.op == "GOSUB" and q.opIzq == "doble"]
+    assert len(gosubs) == 1
+    i_gosub, _ = gosubs[0]
+    siguiente = fila[i_gosub + 1]
+    assert siguiente.op == "=", "post-GOSUB debe ser asignacion"
+    assert siguiente.opIzq == 17000, "post-GOSUB lee del slot de retorno (17000)"
+    assert 9000 <= siguiente.resultado < 10000, \
+        f"post-GOSUB escribe a temporal entero (9000s), no a {siguiente.resultado}"
+
+
+def test_llamada_nula_como_statement_no_emite_copy():
+    """Llamada a funcion nula como statement NO emite copia post-GOSUB."""
+    a = compilar('''
+        programa p;
+        nula saludo() { { escribe("hola"); } } ;
+        inicio { saludo(); } fin
+    ''')
+    fila = a.gen.fila
+    assert a.errores == 0
+    gosubs = [(i, q) for i, q in enumerate(fila) if q.op == "GOSUB" and q.opIzq == "saludo"]
+    assert len(gosubs) == 1
+    i_gosub, _ = gosubs[0]
+    if i_gosub + 1 < len(fila):
+        sig = fila[i_gosub + 1]
+        if sig.op == "=" and sig.opIzq is not None:
+            assert not (17000 <= sig.opIzq < 19000), \
+                "no debe haber copia de slot de retorno tras llamada a nula"
+
+
+def test_retorna_en_nula_es_error_semantico():
+    """retorna dentro de funcion nula debe reportar error."""
+    a = compilar('''
+        programa p;
+        nula saludo() { { retorna 1; } } ;
+        inicio { } fin
+    ''')
+    assert a.errores >= 1, "retorna en nula debe ser error"
+
+
+def test_retorna_en_main_es_error_semantico():
+    """retorna en el programa principal debe reportar error."""
+    a = compilar('programa p; inicio { retorna 1; } fin')
+    assert a.errores >= 1, "retorna en main debe ser error"
+
+
+def test_retorna_tipo_incompatible_es_error_semantico():
+    """retorna flotante en funcion entero debe ser error (estrechamiento prohibido)."""
+    a = compilar('''
+        programa p;
+        entero malo() { { retorna 3.14; } } ;
+        inicio { } fin
+    ''')
+    assert a.errores >= 1, "retorna flotante en entero debe ser error"

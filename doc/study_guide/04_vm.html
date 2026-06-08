@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>4. VM - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>4. VM</strong>
+</nav>
+
+<h1>4. <code>vm.py</code> &mdash; M&aacute;quina Virtual</h1>
+
+<p><strong>Tama&ntilde;o</strong>: 303 l&iacute;neas.<br>
+<strong>Prop&oacute;sito</strong>: ejecuta los cu&aacute;druplos producidos por el compilador.
+Convierte el c&oacute;digo intermedio en comportamiento real (lecturas, escrituras, prints, control de flujo).</p>
+
+<div class="toc">
+<h3>Contenido</h3>
+<ul>
+<li><a href="#imports">4.1 Imports + defaults + rangos</a></li>
+<li><a href="#segmento">4.2 <code>_segmento_y_tipo</code> &mdash; decodificar direcciones</a></li>
+<li><a href="#frame">4.3 La clase <code>Frame</code></a></li>
+<li><a href="#init">4.4 <code>MaquinaVirtual.__init__</code> &mdash; estado inicial</a></li>
+<li><a href="#memoria">4.5 Mapa de memoria (4 estructuras)</a></li>
+<li><a href="#leer_escribir">4.6 leer/escribir/escribir_en_prep &mdash; routing</a></li>
+<li><a href="#ejecutar">4.7 <code>ejecutar()</code> &mdash; loop principal + 12 opcodes</a></li>
+<li><a href="#reglas">4.8 Las 3 reglas que sostienen el modelo</a></li>
+<li><a href="#tips">4.9 Tips de examen</a></li>
+</ul>
+</div>
+
+<h2 id="imports">4.1 Imports + defaults + rangos</h2>
+
+<pre><code>from semantico import AsignadorMemoria
+from cuadruplos import TablaConstantes
+
+_DEFAULTS = {
+    "entero":   0,
+    "flotante": 0.0,
+    "bool":     0,    # bool en patito es 0 o 1 (no Python True/False)
+}
+
+_RANGOS = []
+for (seg, tipo), base in AsignadorMemoria._BASE.items():
+    _RANGOS.append((base, base + 1000, seg, tipo))
+for tipo, base in TablaConstantes._BASE.items():
+    _RANGOS.append((base, base + 1000, "cte", tipo))</code></pre>
+
+<div class="callout">
+<p><strong>&iquest;Por qu&eacute; <code>_RANGOS</code> se construye al cargar el m&oacute;dulo?</strong>
+Para que la VM siempre est&eacute; sincronizada con los rangos del compilador.
+Si <code>AsignadorMemoria._BASE</code> cambia (por ejemplo, agregar el segmento <code>retorno</code>),
+la VM autom&aacute;ticamente lo refleja sin tocar c&oacute;digo. &Uacute;nica fuente de verdad.</p>
+</div>
+
+<h2 id="segmento">4.2 <code>_segmento_y_tipo(direccion)</code></h2>
+
+<pre><code>def _segmento_y_tipo(direccion):
+    """Decodifica una direccion virtual en (segmento, tipo). None si invalida."""
+    if direccion is None:
+        return None
+    for start, end, seg, tipo in _RANGOS:
+        if start &lt;= direccion &lt; end:
+            return (seg, tipo)
+    return None</code></pre>
+
+<p>Recorre los 13 rangos derivados de <code>AsignadorMemoria._BASE</code> +
+<code>TablaConstantes._BASE</code>. Devuelve <code>("global", "entero")</code> para
+1500, <code>("retorno", "flotante")</code> para 18002, etc.</p>
+
+<h2 id="frame">4.3 La clase <code>Frame</code></h2>
+
+<pre><code>class Frame:
+    """Un frame de ejecucion: memoria local + temporal de UNA funcion activa."""
+    def __init__(self, nombre):
+        self.nombre = nombre      # debug y trazas
+        self.locales = {}         # {direccion -&gt; valor} para 5000s/6000s/7000s
+        self.temps = {}           # {direccion -&gt; valor} para 9000s/10000s/11000s
+        self.ip_retorno = None    # IP al que volver al ENDFUNC</code></pre>
+
+<div class="callout">
+<p>Cada llamada a una funci&oacute;n crea un <strong>Frame nuevo</strong>. Las locales
+y temps de ese frame son AISLADAS &mdash; cada frame parte sus 5000s/9000s en cero. Esto
+permite que dos funciones distintas usen la misma direcci&oacute;n local 5000 sin chocar
+(porque cada una vive en su propio Frame).</p>
+</div>
+
+<h2 id="init">4.4 <code>MaquinaVirtual.__init__</code></h2>
+
+<pre><code>def __init__(self, analizador):
+    self.fila = analizador.gen.fila
+    self.func_dir = analizador.func_dir
+    self.nombre_programa = analizador.nombre_programa
+
+    # Memoria global: persiste durante TODA la ejecucion
+    self.memoria_global = {}
+
+    # Memoria de constantes: direccion -&gt; valor (con type-conversion)
+    self.memoria_constantes = self._cargar_constantes(analizador.cte)
+
+    # Pila de frames de ejecucion. Main es el bottom (frame[0]).
+    main = self._nuevo_frame(self.nombre_programa)
+    self.pila_frames = [main]
+
+    # Pila de prep frames: ERA empuja, GOSUB activa
+    self.pila_prep = []
+
+    # IP arranca en 0
+    self.IP = 0</code></pre>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; main es <code>pila_frames[0]</code> en vez de un caso especial?"</strong></p>
+<p><strong>Regla 1 de las 3 reglas</strong>. Si tratamos main como caso especial
+("aqu&iacute; no hay frame"), el routing de leer/escribir tendr&iacute;a que ramificar:
+"si estoy en main usa memoria global, si estoy en una funci&oacute;n usa frame actual".
+Con main como frame inicial, el routing queda <strong>uniforme</strong>: las direcciones
+5000-11999 siempre van a <code>pila_frames[-1]</code>.</p>
+</div>
+
+<h2 id="memoria">4.5 Mapa de memoria (4 estructuras)</h2>
+
+<table>
+<tr><th>Estructura</th><th>Tipo Python</th><th>Vida</th><th>Quien la escribe</th></tr>
+<tr><td><code>memoria_global</code></td><td>dict</td><td>toda ejecuci&oacute;n</td><td>escribir() para dirs 1000-3999 y 17000-18999</td></tr>
+<tr><td><code>memoria_constantes</code></td><td>dict (inmutable)</td><td>toda ejecuci&oacute;n</td><td>cargada al inicio (no se modifica)</td></tr>
+<tr><td><code>pila_frames</code></td><td>list[Frame]</td><td>crece con GOSUB, decrece con ENDFUNC</td><td>_nuevo_frame()</td></tr>
+<tr><td><code>pila_prep</code></td><td>list[Frame]</td><td>crece con ERA, decrece con GOSUB</td><td>_nuevo_frame()</td></tr>
+</table>
+
+<h3>Mapa completo de rangos virtuales</h3>
+
+<table>
+<tr><th>Rango</th><th>Segmento</th><th>Tipo</th><th>Donde vive</th></tr>
+<tr><td>1000-1999</td><td>global</td><td>entero</td><td><code>memoria_global</code></td></tr>
+<tr><td>2000-2999</td><td>global</td><td>flotante</td><td><code>memoria_global</code></td></tr>
+<tr><td>3000-3999</td><td>global</td><td>bool</td><td><code>memoria_global</code></td></tr>
+<tr><td>5000-5999</td><td>local</td><td>entero</td><td><code>frame_actual.locales</code></td></tr>
+<tr><td>6000-6999</td><td>local</td><td>flotante</td><td><code>frame_actual.locales</code></td></tr>
+<tr><td>7000-7999</td><td>local</td><td>bool</td><td><code>frame_actual.locales</code></td></tr>
+<tr><td>9000-9999</td><td>temp</td><td>entero</td><td><code>frame_actual.temps</code></td></tr>
+<tr><td>10000-10999</td><td>temp</td><td>flotante</td><td><code>frame_actual.temps</code></td></tr>
+<tr><td>11000-11999</td><td>temp</td><td>bool</td><td><code>frame_actual.temps</code></td></tr>
+<tr><td>13000-13999</td><td>cte</td><td>entero</td><td><code>memoria_constantes</code></td></tr>
+<tr><td>14000-14999</td><td>cte</td><td>flotante</td><td><code>memoria_constantes</code></td></tr>
+<tr><td>15000-15999</td><td>cte</td><td>letrero</td><td><code>memoria_constantes</code></td></tr>
+<tr><td>17000-17999</td><td>retorno</td><td>entero</td><td><code>memoria_global</code> (alias)</td></tr>
+<tr><td>18000-18999</td><td>retorno</td><td>flotante</td><td><code>memoria_global</code> (alias)</td></tr>
+</table>
+
+<h2 id="leer_escribir">4.6 Routing: leer / escribir / escribir_en_prep</h2>
+
+<h3><code>leer(direccion)</code></h3>
+<pre><code>def leer(self, direccion):
+    seg_tipo = _segmento_y_tipo(direccion)
+    if seg_tipo is None:
+        raise RuntimeError(f"VM: direccion invalida al leer: {direccion}")
+    seg, tipo = seg_tipo
+    if seg == "cte":
+        return self.memoria_constantes[direccion]
+    if seg in ("global", "retorno"):           # &lt;-- retorno alias de global
+        return self.memoria_global.get(direccion, _DEFAULTS[tipo])
+    f = self._frame_actual()
+    store = f.locales if seg == "local" else f.temps
+    return store.get(direccion, _DEFAULTS[tipo])</code></pre>
+
+<h3><code>escribir(direccion, valor)</code></h3>
+<pre><code>def escribir(self, direccion, valor):
+    seg_tipo = _segmento_y_tipo(direccion)
+    if seg_tipo is None:
+        raise RuntimeError(f"VM: direccion invalida al escribir: {direccion}")
+    seg, tipo = seg_tipo
+    if seg == "cte":
+        raise RuntimeError(f"VM: intento de escribir a una constante: {direccion}")
+    if seg in ("global", "retorno"):           # &lt;-- retorno alias de global
+        self.memoria_global[direccion] = valor
+        return
+    f = self._frame_actual()
+    store = f.locales if seg == "local" else f.temps
+    store[direccion] = valor</code></pre>
+
+<h3><code>escribir_en_prep(direccion, valor)</code> &mdash; especial para PARAM</h3>
+<pre><code>def escribir_en_prep(self, direccion, valor):
+    """Escribe en el TOP de pila_prep (callee aun no activo)."""
+    if not self.pila_prep:
+        raise RuntimeError("VM: PARAM sin ERA previo")
+    seg_tipo = _segmento_y_tipo(direccion)
+    seg, _tipo = seg_tipo
+    if seg != "local":
+        raise RuntimeError(f"VM: PARAM destino no es local: {direccion}")
+    self.pila_prep[-1].locales[direccion] = valor</code></pre>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; PARAM no usa <code>escribir()</code> normal?"</strong></p>
+<p><strong>Regla 2 de las 3 reglas</strong>. Cuando se ejecuta PARAM, el "frame actual"
+es el CALLER (la funci&oacute;n que invoca). El callee tiene su frame en
+<code>pila_prep[-1]</code> pero a&uacute;n no est&aacute; activo (eso pasa con GOSUB).</p>
+<p>Si PARAM usara <code>escribir()</code> normal, los parametros del callee se escribir&iacute;an
+en el frame del CALLER &mdash; sobreescribiendo las locales del caller cuando comparten n&uacute;meros
+(que pasa siempre, porque cada funci&oacute;n parte locales en 5000).</p>
+</div>
+
+<h2 id="ejecutar">4.7 <code>ejecutar()</code> &mdash; loop principal</h2>
+
+<pre><code>def ejecutar(self):
+    LIMITE_FRAMES = 1000
+    while self.IP &lt; len(self.fila):
+        q = self.fila[self.IP]
+        op = q.op
+
+        if op == "+":
+            self.escribir(q.resultado, self.leer(q.opIzq) + self.leer(q.opDer))
+        elif op == "-":
+            self.escribir(q.resultado, self.leer(q.opIzq) - self.leer(q.opDer))
+        # ...
+        elif op == "GOTO":
+            self.IP = q.resultado
+            continue                              # &lt;-- continue, no IP += 1
+        elif op == "GOTOF":
+            if not self.leer(q.opIzq):
+                self.IP = q.resultado
+                continue
+        elif op == "ERA":
+            self.pila_prep.append(self._nuevo_frame(q.resultado))
+        elif op == "PARAM":
+            self.escribir_en_prep(q.resultado, self.leer(q.opIzq))
+        elif op == "GOSUB":
+            prep = self.pila_prep.pop()
+            prep.ip_retorno = self.IP + 1
+            self.pila_frames.append(prep)
+            if len(self.pila_frames) &gt; LIMITE_FRAMES:
+                raise RuntimeError(f"VM: stack overflow (&gt;{LIMITE_FRAMES} frames)")
+            self.IP = q.resultado
+            continue
+        elif op == "ENDFUNC":
+            frame = self.pila_frames.pop()
+            self.IP = frame.ip_retorno
+            continue
+        # ...
+        self.IP += 1                              # &lt;-- todos los no-saltos llegan aqu&iacute;</code></pre>
+
+<h3>Convenci&oacute;n del IP</h3>
+
+<div class="callout">
+<p>Una sola regla rige el avance del IP:</p>
+<ul>
+<li>Opcodes que <strong>saltan</strong> (GOTO/GOTOF/GOSUB/ENDFUNC): setean <code>IP</code> y hacen <code>continue</code>.</li>
+<li>Todos los dem&aacute;s: caen al <code>IP += 1</code> al final del while.</li>
+</ul>
+<p>As&iacute; ning&uacute;n opcode necesita pensar "&iquest;avanzo IP o no?".</p>
+</div>
+
+<h3>Los 12 opcodes</h3>
+
+<table>
+<tr><th>Opcode</th><th>opIzq</th><th>opDer</th><th>resultado</th><th>Acci&oacute;n</th></tr>
+<tr><td><code>+ - *</code></td><td>dir_a</td><td>dir_b</td><td>dir_res</td><td>res = a op b</td></tr>
+<tr><td><code>/</code></td><td>dir_a</td><td>dir_b</td><td>dir_res</td><td>int/int -&gt; //; float -&gt; /. Error si b == 0</td></tr>
+<tr><td><code>&lt; &gt; == !=</code></td><td>dir_a</td><td>dir_b</td><td>dir_res (bool 0/1)</td><td>res = int(a op b)</td></tr>
+<tr><td><code>=</code></td><td>dir_origen</td><td>_</td><td>dir_destino</td><td>destino = origen</td></tr>
+<tr><td><code>PRINT</code></td><td>_</td><td>_</td><td>dir</td><td>print(leer(dir))</td></tr>
+<tr><td><code>GOTO</code></td><td>_</td><td>_</td><td>destino</td><td>IP = destino</td></tr>
+<tr><td><code>GOTOF</code></td><td>dir_cond</td><td>_</td><td>destino</td><td>if !leer(cond): IP = destino</td></tr>
+<tr><td><code>ERA</code></td><td>_</td><td>_</td><td>nombre_func</td><td>pila_prep.append(_nuevo_frame(nombre))</td></tr>
+<tr><td><code>PARAM</code></td><td>dir_arg</td><td>_</td><td>dir_param</td><td>escribir_en_prep(param, leer(arg))</td></tr>
+<tr><td><code>GOSUB</code></td><td>nombre</td><td>_</td><td>cuad_inicio</td><td>pop prep, push como frame, IP = inicio</td></tr>
+<tr><td><code>ENDFUNC</code></td><td>_</td><td>_</td><td>_</td><td>pop frame, IP = ip_retorno</td></tr>
+</table>
+
+<h2 id="reglas">4.8 Las 3 reglas que sostienen el modelo</h2>
+
+<table>
+<tr><th>#</th><th>Regla</th><th>Consecuencia</th></tr>
+<tr><td><strong>1</strong></td><td>main es <code>pila_frames[0]</code></td><td>Routing uniforme: no hay caso especial para top-level</td></tr>
+<tr><td><strong>2</strong></td><td>PARAM lee del caller, escribe en el callee (top de pila_prep)</td><td>Locales del caller no se corrompen aunque compartan direcci&oacute;n con el param</td></tr>
+<tr><td><strong>3</strong></td><td>pila_prep es PILA, no slot</td><td>Soporta llamadas anidadas tipo f(g(x))</td></tr>
+</table>
+
+<h2 id="tips">4.9 Tips de examen</h2>
+
+<div class="callout exam">
+<p><strong>"&iquest;C&oacute;mo soporta la VM las llamadas anidadas como f(g(x))?"</strong></p>
+<p>Regla 3: <code>pila_prep</code> es PILA. Al evaluar <code>f(g(x))</code>:</p>
+<ol>
+<li>ERA f -&gt; push frame_f a pila_prep</li>
+<li>(evaluar g(x))
+  <ol>
+  <li>ERA g -&gt; push frame_g a pila_prep (ahora tiene [frame_f, frame_g])</li>
+  <li>PARAM x -&gt; escribe en TOP (frame_g)</li>
+  <li>GOSUB g -&gt; pop frame_g, push como activo</li>
+  </ol>
+</li>
+<li>PARAM g_result -&gt; escribe en TOP (frame_f, que sigue ah&iacute;)</li>
+<li>GOSUB f -&gt; pop frame_f</li>
+</ol>
+<p>Sin pila, el ERA de g sobrescribir&iacute;a el frame de f.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Qu&eacute; pasa con los defaults de variables no inicializadas?"</strong></p>
+<p><code>leer()</code> hace <code>store.get(direccion, _DEFAULTS[tipo])</code>. Si la variable
+no fue escrita, devuelve <code>_DEFAULTS["entero"]=0</code>, <code>_DEFAULTS["flotante"]=0.0</code>,
+<code>_DEFAULTS["bool"]=0</code>. Esto evita crashes por <code>KeyError</code> y permite el
+"phantom temporal" (variables de retorno que no se escribieron).</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; el l&iacute;mite de 1000 frames?"</strong></p>
+<p>Protecci&oacute;n anti-runaway: si hay recursi&oacute;n infinita por caso base mal definido,
+detecta el problema y reporta error en vez de colgar el proceso o consumir toda la RAM.
+Cualquier programa Patito razonable vive c&oacute;modamente debajo del l&iacute;mite (factorial
+hace ~5 frames).</p>
+</div>
+
+<div class="callout tip">
+<p><strong>El bool en Patito es 0/1 (entero), no Python True/False</strong>. La VM hace
+<code>int(...)</code> al evaluar relacionales: <code>self.escribir(q.resultado, int(leer(a) &lt; leer(b)))</code>.
+Esto evita que <code>True/False</code> se filtre al output cuando haces <code>escribe(a &lt; b)</code>.</p>
+</div>
+
+<footer>
+  <a href="03_semantico.html">&larr; 3. Semantico</a>
+  <a href="index.html">Index</a>
+  <a href="05_driver_y_flujo.html">5. Driver + Flujo &rarr;</a>
+</footer>
+</body>
+</html>

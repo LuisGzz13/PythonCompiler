@@ -150,6 +150,7 @@ class GeneradorCuadruplos:
             self.pila_tipos.append("error")
             return "error"
 
+        # Consulta el cubo semantico para obtener el tipo del resultado.
         t_res = tipo_resultado(op, t_izq, t_der)
         if t_res is None:
             # ERROR genuino del cubo. Empujamos sentinel para no romper el balance.
@@ -157,8 +158,10 @@ class GeneradorCuadruplos:
             self.pila_tipos.append("error")
             return "error"
 
+        # Asigna temporal y emite cuadruplo.
         d_res = self.mem.nuevo_temporal(t_res)
         self.fila.append(Cuadruplo(op=op, opIzq=d_izq, opDer=d_der, resultado=d_res))
+        # Push del resultado a las pilas para que la operacion enclosing lo use como operando.
         self.pila_operandos.append(d_res)
         self.pila_tipos.append(t_res)
         return t_res
@@ -231,6 +234,7 @@ class GeneradorCuadruplos:
         
 
     def ultimo_fue_propagado(self):
+        """Verifica si el ultimo operando fue propagado."""
         return self._ultimo_propagado
 
     def imprimir_fila(self, out=sys.stdout):

@@ -1,0 +1,20 @@
+programa retornaExpr;
+vars r : entero;
+
+entero sumarMas1(a : entero, b : entero) {
+    {
+        retorna a + b + 1;
+    }
+} ;
+
+flotante dividir(p : flotante, q : flotante) {
+    {
+        retorna p / q;
+    }
+} ;
+
+inicio
+{
+    r = 0;
+}
+fin

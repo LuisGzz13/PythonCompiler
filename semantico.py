@@ -60,6 +60,7 @@ class FuncInfo:
         self.linea = linea # asigna la linea de declaracion de la funcion
         self.cuad_inicio = None 
         self.recursos = None  # snapshot {(seg,tipo): count} para que la VM reserve el frame
+        self.dir_retorno = None  # direccion global del slot de retorno (solo entero/flotante)
 
 
 # ============================================================
@@ -91,6 +92,8 @@ class AsignadorMemoria:
         ("temp", "entero"):      9000,
         ("temp", "flotante"):   10000,
         ("temp", "bool"):       11000,
+        ("retorno", "entero"):  17000, # (gap 13-15: constantes en TablaConstantes; 16: buffer de retorno) 
+        ("retorno", "flotante"): 18000,
     }
 
     def __init__(self):
@@ -110,6 +113,14 @@ class AsignadorMemoria:
 
     def nuevo_temporal(self, tipo):
         return self._asignar("temp", tipo)
+    
+    def nueva_retorno(self, tipo):
+        """Reserva una direccion global para el slot de retorno de una funcion tipada.
+        
+        Se asigna UNA VEZ por funcion al registrarla (enterFuncs). NO se resetea
+        en reset_scope_local porque es un slot per-funcion que sobrevive frames.
+        """
+        return self._asignar("retorno", tipo)
 
     def _asignar(self, seg, tipo):
         clave = (seg, tipo)
@@ -256,6 +267,10 @@ class SemanticAnalyzer(PatitoListener):
             return
 
         nueva = FuncInfo(tipo_retorno=tipo_retorno, linea=linea)
+        # Si la funcion es tipada (entero/flotante), reservale su slot de retorno.
+        # Las funciones 'nula' no necesitan slot (no devuelven valor).
+        if tipo_retorno in ("entero", "flotante"):
+            nueva.dir_retorno = self.mem.nueva_retorno(tipo_retorno)
         self.func_dir[nombre] = nueva
         self.scope_actual = nueva
         self.mem.reset_scope_local()
@@ -665,10 +680,71 @@ class SemanticAnalyzer(PatitoListener):
                     f"no se puede usar funcion '{nombre}' (retorno nula) en una expresion")
                 self.gen.push_operando(None, "error")
             else:
-                # Temporal fantasma: el retorno real se difiere (no toca la gramatica).
+                # Reserva un temporal en el caller para recibir el retorno.
                 dir_temp = self.mem.nuevo_temporal(f.tipo_retorno)
+                # Copia el valor desde el slot global de retorno (escrito por
+                # retorna en el callee) al temporal del caller. La VM ejecuta
+                # este cuadruplo JUSTO DESPUES de regresar del GOSUB.
+                self.gen.emitir_directo(
+                    Cuadruplo(op="=", opIzq=f.dir_retorno, opDer=None, resultado=dir_temp))
                 self.gen.push_operando(dir_temp, f.tipo_retorno)
     
+    # ========================================================
+    # ETAPA RETORNA - retorno de valor en funciones tipadas
+    # ========================================================
+    
+    def exitRetorno(self, ctx):
+        """
+        PN-Retorno: 'retorna expr ;' termino de evaluarse.
+        
+        El resultado del expr esta en el top de pila_operandos. Lo asignamos
+        al slot global de retorno de la funcion actual (scope_actual.dir_retorno)
+        y emitimos ENDFUNC para terminar la funcion inmediatamente.
+        
+        Validaciones:
+          - scope_actual no puede ser 'programa' (el main no retorna nada)
+          - scope_actual.tipo_retorno no puede ser 'nula'
+          - tipo del expr debe ser asignable al tipo_retorno (cubo '=')
+        """
+        if self.en_func_duplicada:
+            return
+        
+        linea = ctx.start.line
+        
+        # Validacion 1: no puede haber 'retorna' en el programa principal
+        if self.scope_actual.tipo_retorno == "programa":
+            self.error(linea, 0,
+                "no se puede usar 'retorna' en el programa principal")
+            if not self.gen.pilas_operandos_vacia():
+                self.gen.pop_operando()
+            return
+        
+        # Validacion 2: no puede haber 'retorna' en funcion 'nula'
+        if self.scope_actual.tipo_retorno == "nula":
+            self.error(linea, 0,
+                f"no se puede usar 'retorna' en funcion 'nula' "
+                f"('{self.scope_actual_nombre()}')")
+            if not self.gen.pilas_operandos_vacia():
+                self.gen.pop_operando()
+            return
+        
+        # Aqui scope_actual.tipo_retorno es 'entero' o 'flotante',
+        # y scope_actual.dir_retorno tiene la direccion del slot global (asignada en enterFuncs).
+        tipo_destino = self.scope_actual.tipo_retorno
+        dir_destino = self.scope_actual.dir_retorno
+        
+        # emitir_asignacion reusa la logica de exitAsigna:
+        # pop del RHS, valida cubo('=', dest, src), emite (=, rhs, _, dir_retorno).
+        res = self.gen.emitir_asignacion(dir_destino, tipo_destino)
+        if res == "error" and not self.gen.ultimo_fue_propagado():
+            self.error(linea, 0,
+                f"tipo de 'retorna' incompatible con el tipo de retorno de la "
+                f"funcion '{self.scope_actual_nombre()}' ({tipo_destino})")
+        
+        # ENDFUNC: termina la funcion inmediatamente (early return).
+        # Si la funcion tiene MAS codigo despues del retorna, queda como dead code
+        # (nunca se ejecuta porque el frame ya se popeo).
+        self.gen.emitir_endfunc()
     
     # ========================================================
     # (utilidad): imprimir el directorio de funciones

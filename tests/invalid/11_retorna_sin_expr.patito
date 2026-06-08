@@ -1,0 +1,12 @@
+programa retornaSinExpr;
+
+entero malo(x : entero) {
+    {
+        retorna ;
+    }
+} ;
+
+inicio
+{
+}
+fin

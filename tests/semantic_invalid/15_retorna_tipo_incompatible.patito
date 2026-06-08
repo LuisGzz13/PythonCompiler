@@ -1,0 +1,12 @@
+programa retornaTipoMal;
+
+entero malo() {
+    {
+        retorna 3.14;
+    }
+} ;
+
+inicio
+{
+}
+fin

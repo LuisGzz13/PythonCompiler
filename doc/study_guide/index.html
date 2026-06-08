@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Index - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>Index</strong>
+</nav>
+
+<h1>Study Guide &mdash; Compilador Patito (Python)</h1>
+
+<p>Esta gu&iacute;a cubre los <strong>6 archivos fuente</strong> del compilador Patito en Python.
+Cada archivo se explica con su prop&oacute;sito, qu&eacute; provee, sus dependencias internas,
+walkthrough del c&oacute;digo, y c&oacute;mo se conecta con los dem&aacute;s.</p>
+
+<p>Pensada para <strong>preparaci&oacute;n de defensa de proyecto</strong>: cada secci&oacute;n
+cierra con tips de examen.</p>
+
+<div class="toc">
+<h3>Tabla de contenidos</h3>
+<ul>
+<li><a href="01_grammar.html">1. Gram&aacute;tica <code>Patito.g4</code></a> &mdash; l&eacute;xico + sintaxis + ANTLR</li>
+<li><a href="02_cubo_cuadruplos.html">2. <code>cubo.py</code> + <code>cuadruplos.py</code></a> &mdash; tipos + c&oacute;digo intermedio</li>
+<li><a href="03_semantico.html">3. <code>semantico.py</code></a> &mdash; clases + AsignadorMemoria + los 24 PNs</li>
+<li><a href="04_vm.html">4. <code>vm.py</code></a> &mdash; Frame + MaquinaVirtual + los 12 opcodes</li>
+<li><a href="05_driver_y_flujo.html">5. <code>patito.py</code> + Flujo end-to-end</a> &mdash; driver + trace real</li>
+</ul>
+</div>
+
+<h2>Arquitectura global</h2>
+
+<p>El compilador Patito procesa un <code>.patito</code> en <strong>5 etapas</strong> a trav&eacute;s
+de un pipeline lineal sin ciclos:</p>
+
+<div class="diagram">
++----------------------------------------------------------------------+
+|                       patito.py (driver)                              |
+|   parse args -> instancia lexer/parser -> llama analyzer -> opt VM    |
++----------------------------------------------------------------------+
+                                |
+                                v
+   +-----------+   +-----------+   +-----------------+   +-----------+
+   | ANTLR     |   | generated/|   | semantico.py    |   | vm.py     |
+   | Patito.g4 |-->| PatitoLex |-->| SemanticAnaly-  |-->| Maquina   |
+   | (grammar) |   | PatitoPars|   | zer + 24 PNs    |   | Virtual   |
+   +-----------+   +-----------+   +-----------------+   +-----------+
+                                              |
+                                  +-----------+-----------+
+                                  v           v           v
+                              +-------+  +----------+  +--------------+
+                              | cubo  |  | cuadrup- |  | (gen. fila + |
+                              | sem.  |  | los.py   |  | cte para VM) |
+                              +-------+  +----------+  +--------------+
+</div>
+
+<h2>Cadena de imports (sin ciclos)</h2>
+
+<div class="diagram">
+patito.py
+    | importa
+    +-> semantico.SemanticAnalyzer
+    +-> vm.MaquinaVirtual
+    +-> generated.PatitoLexer / PatitoParser
+
+semantico.py
+    | importa
+    +-> cuadruplos.Cuadruplo / TablaConstantes / GeneradorCuadruplos
+    +-> cubo.tipo_resultado
+    +-> generated.PatitoListener / PatitoParser (isinstance del padre)
+
+cuadruplos.py
+    | importa
+    +-> cubo.tipo_resultado
+
+vm.py
+    | importa
+    +-> semantico.AsignadorMemoria (para ._BASE)
+    +-> cuadruplos.TablaConstantes (para ._BASE)
+
+cubo.py
+    +-> (no importa nada; expone tipo_resultado + constantes)
+</div>
+
+<h2>Pipeline en 5 etapas</h2>
+
+<table>
+<tr><th>Etapa</th><th>Produce</th><th>Archivo</th><th>Quien consume</th></tr>
+<tr><td>1 - L&eacute;xico/sintaxis</td><td>&aacute;rbol sint&aacute;ctico (ANTLR)</td><td><code>Patito.g4</code></td><td>Etapa 2</td></tr>
+<tr><td>2 - Sem&aacute;ntica</td><td><code>func_dir</code>, scope, validaciones</td><td><code>semantico.py</code></td><td>Etapa 3</td></tr>
+<tr><td>3 - Expresiones</td><td><code>gen.fila</code>, <code>cte</code></td><td><code>semantico.py</code> + <code>cuadruplos.py</code></td><td>Etapas 4-5</td></tr>
+<tr><td>4 - Control + funciones</td><td>cu&aacute;druplos con saltos y llamadas</td><td><code>semantico.py</code></td><td>Etapa 5</td></tr>
+<tr><td>5 - Ejecuci&oacute;n</td><td>stdout (salida del programa)</td><td><code>vm.py</code></td><td>el usuario</td></tr>
+</table>
+
+<h2>C&oacute;mo usar esta gu&iacute;a</h2>
+
+<ol>
+<li><strong>Lee esta p&aacute;gina primero</strong> (arquitectura global)</li>
+<li><strong>01 Grammar</strong> &mdash; sin entender qu&eacute; reconoce el parser, no entiendes qu&eacute; dispara cada PN</li>
+<li><strong>02 Cubo + Cuadruplos</strong> &mdash; primitivas usadas por el analizador sem&aacute;ntico. Cortas pero importantes.</li>
+<li><strong>03 Sem&aacute;ntico</strong> &mdash; el m&aacute;s grande (766 l&iacute;neas). 24 PNs organizados en 5 grupos.</li>
+<li><strong>04 VM</strong> &mdash; c&oacute;mo se ejecutan los cu&aacute;druplos. 12 opcodes + 3 reglas de memoria.</li>
+<li><strong>05 Driver + Flujo</strong> &mdash; <code>patito.py</code> y trace end-to-end de un programa real.</li>
+</ol>
+
+<div class="callout tip">
+<p>Si vas a hacer el quiz interactivo despu&eacute;s, lee primero todo el guide y MARCA mentalmente las cosas que no te queden claras. Esas son las que el quiz va a reforzar.</p>
+</div>
+
+<h2>Recursos complementarios</h2>
+
+<ul>
+<li><code>doc/Etapa5.md</code> &mdash; documento t&eacute;cnico de la VM (incluye &sect;11 sobre <code>retorna</code>)</li>
+<li><code>doc/PNs_estudio.md</code> &mdash; fichas detalladas de los 24 PNs con flow diagrams</li>
+<li><code>doc/docInProcess/A01722501_Entrega4.docx</code> &mdash; entrega oficial del proyecto</li>
+</ul>
+
+<footer>
+  <span></span>
+  <a href="index.html">Index</a>
+  <a href="01_grammar.html">1. Gramatica &rarr;</a>
+</footer>
+</body>
+</html>

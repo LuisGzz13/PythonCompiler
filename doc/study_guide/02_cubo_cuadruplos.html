@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>2. Cubo + Cuadruplos - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>2. Cubo + Cuadruplos</strong>
+</nav>
+
+<h1>2. <code>cubo.py</code> + <code>cuadruplos.py</code></h1>
+
+<p>Building blocks que usa el analizador sem&aacute;ntico. <strong>Peque&ntilde;os</strong> pero fundamentales:
+<code>cubo.py</code> 80 l&iacute;neas, <code>cuadruplos.py</code> 241.</p>
+
+<div class="toc">
+<h3>Contenido</h3>
+<ul>
+<li><a href="#cubo">2.1 <code>cubo.py</code> &mdash; el cubo sem&aacute;ntico</a></li>
+<li><a href="#cuadruplo">2.2 La clase <code>Cuadruplo</code></a></li>
+<li><a href="#tabla">2.3 <code>TablaConstantes</code> &mdash; dedup de literales</a></li>
+<li><a href="#generador">2.4 <code>GeneradorCuadruplos</code> &mdash; las 5 pilas + fila</a></li>
+<li><a href="#tips">2.5 Tips de examen</a></li>
+</ul>
+</div>
+
+<h2 id="cubo">2.1 <code>cubo.py</code></h2>
+
+<p><strong>Prop&oacute;sito</strong>: dado un operador y dos tipos, &iquest;es v&aacute;lida la operaci&oacute;n y de qu&eacute; tipo es el resultado?</p>
+
+<p><strong>Representado como</strong>: <code>dict[(op, t_izq, t_der) -&gt; t_resultado]</code>.
+Si la tupla no existe en el dict, la operaci&oacute;n es <strong>inv&aacute;lida</strong>.</p>
+
+<h3>Tipos definidos</h3>
+<pre><code>ENTERO   = 'entero'
+FLOTANTE = 'flotante'
+BOOL     = 'bool'</code></pre>
+
+<h3>El cubo completo (40 entradas)</h3>
+
+<table>
+<tr><th>Operador</th><th>Tipos de operandos</th><th>Tipo resultado</th><th>Notas</th></tr>
+<tr><td><code>+ - * /</code></td><td>cualquier combo de entero/flotante</td><td>flotante si alguno es flotante; entero si ambos enteros</td><td>Ensanchamiento int-&gt;float autom&aacute;tico</td></tr>
+<tr><td><code>&lt; &gt; == !=</code></td><td>cualquier combo de entero/flotante</td><td>bool</td><td>Compara escalares</td></tr>
+<tr><td><code>=</code></td><td>(dest, src): entero=entero, flotante=flotante, flotante=entero</td><td>tipo del destino</td><td><strong>NO permite</strong> entero=flotante (estrechamiento prohibido)</td></tr>
+</table>
+
+<div class="callout">
+<p>El cubo <strong>incluye</strong> la asignaci&oacute;n. La misma funci&oacute;n
+<code>tipo_resultado('=', dest, src)</code> sirve para:</p>
+<ul>
+<li><code>r = 3 + 5</code> &mdash; valida asignaci&oacute;n a variable</li>
+<li><code>retorna E</code> &mdash; valida que tipo(E) sea asignable al tipo_retorno</li>
+<li>argumento de llamada &mdash; valida que tipo(arg) sea asignable al tipo del param</li>
+</ul>
+</div>
+
+<h3>API p&uacute;blica</h3>
+<pre><code>def tipo_resultado(op, tipo_izq, tipo_der):
+    """Retorna el tipo de resultado, o None si la combinacion no existe."""
+    return _CUBO.get((op, tipo_izq, tipo_der))</code></pre>
+
+<p><code>_CUBO</code> es privado (prefijo <code>_</code>); s&oacute;lo se accede v&iacute;a <code>tipo_resultado()</code>.</p>
+
+<h2 id="cuadruplo">2.2 La clase <code>Cuadruplo</code></h2>
+
+<pre><code>@dataclass
+class Cuadruplo:
+    op:        str
+    opIzq:     int = None
+    opDer:     int = None
+    resultado: int = None</code></pre>
+
+<p>Tupla de 4 campos. Unidad at&oacute;mica del c&oacute;digo intermedio.</p>
+
+<div class="diagram">
+EJEMPLOS:
+(+,    5000,  13000, 9000)     # 5000 + 13000 -&gt; 9000 (temp)
+(=,    9000,  _,     1000)     # 1000 = leer(9000)
+(GOTOF, 11000, _,    7)        # si !leer(11000): IP = 7
+(ERA,   _,    _,     'sumar')  # reserva frame para sumar
+(GOSUB, 'sumar', _,  3)        # invoca sumar, cuerpo en IP 3
+(ENDFUNC, _, _, _)             # pop frame, IP = ip_retorno
+</div>
+
+<p>Los campos son <strong>direcciones virtuales</strong> (no nombres). Cada uno apunta
+a un slot de memoria seg&uacute;n su rango (segmento &times; tipo).</p>
+
+<h2 id="tabla">2.3 <code>TablaConstantes</code> &mdash; dedup de literales</h2>
+
+<p>Cada literal del programa (e.g. <code>5</code>, <code>3.14</code>, <code>"hola"</code>)
+recibe una direcci&oacute;n virtual &uacute;nica. Si el mismo literal aparece N veces, se reusa la misma direcci&oacute;n (<strong>deduplicaci&oacute;n</strong>).</p>
+
+<h3>Rangos virtuales</h3>
+<pre><code>_BASE = {
+    "entero":   13000,
+    "flotante": 14000,
+    "letrero":  15000,
+}</code></pre>
+
+<p><strong>Atributo de clase</strong>. La VM lo importa directamente:
+<code>from cuadruplos import TablaConstantes; TablaConstantes._BASE</code>.
+&Uacute;nica fuente de verdad entre compilador y VM.</p>
+
+<h3>M&eacute;todos principales</h3>
+
+<pre><code>def direccion_de_numerica(self, lexema, tipo):
+    """Devuelve direccion (existente o nueva) para entero o flotante."""
+
+def direccion_de_letrero(self, lexema):
+    """Devuelve direccion (existente o nueva) para string."""</code></pre>
+
+<h3>Ejemplo de dedup</h3>
+<pre><code>i = 1;       # '1' -&gt; nueva direccion 13000
+j = 1;       # '1' dedup -&gt; misma 13000
+i = i + 1;   # otro '1' dedup -&gt; misma 13000
+i = -1;      # '-1' es lexema DISTINTO -&gt; nueva direccion 13001</code></pre>
+
+<div class="callout">
+<p>La dedup es por <strong>lexema</strong> (string), no por valor num&eacute;rico.
+<code>"1"</code> y <code>"1.0"</code> son distintos (uno entero, uno flotante).
+<code>"5"</code> y <code>"-5"</code> tambi&eacute;n.</p>
+</div>
+
+<h2 id="generador">2.4 <code>GeneradorCuadruplos</code></h2>
+
+<p>Clase principal. Maneja:</p>
+<ul>
+<li><strong>5 pilas auxiliares</strong> (todas <code>list</code> de Python)</li>
+<li><strong>1 fila</strong> de cu&aacute;druplos (la salida)</li>
+<li>M&eacute;todos para emitir cu&aacute;druplos</li>
+<li>M&eacute;todo de <strong>backpatch</strong> para resolver saltos pendientes</li>
+</ul>
+
+<h3>Estado</h3>
+<pre><code>def __init__(self, mem, cte):
+    self.mem = mem              # AsignadorMemoria (referencia)
+    self.cte = cte              # TablaConstantes (referencia)
+    self.pila_operandos  = []   # direcciones pendientes
+    self.pila_tipos      = []   # tipos paralelos
+    self.pila_operadores = []   # operadores pendientes (+, -, *, etc.)
+    self.pila_saltos     = []   # indices de cuadruplos pendientes de backpatch
+    self.fila            = []   # lista de Cuadruplos (la salida)
+    self._ultimo_propagado = False
+    self.idx_goto_main   = None # indice del GOTO inicial</code></pre>
+
+<div class="callout">
+<p><strong>Por qu&eacute; pilas paralelas</strong> (<code>pila_operandos</code> y <code>pila_tipos</code>):
+cuando emites un cu&aacute;druplo binario necesitas dos cosas: la direcci&oacute;n del operando
+(para meter en el cu&aacute;druplo) y el tipo (para consultar el cubo). Las pilas se mueven
+en sincron&iacute;a &mdash; push juntas, pop juntas.</p>
+</div>
+
+<h3>M&eacute;todos de generaci&oacute;n (los m&aacute;s usados)</h3>
+
+<table>
+<tr><th>M&eacute;todo</th><th>Para qu&eacute;</th><th>Quien lo invoca</th></tr>
+<tr><td><code>push_operando(dir, tipo)</code></td><td>operandos at&oacute;micos</td><td><code>exitFactor</code></td></tr>
+<tr><td><code>push_operador(op)</code></td><td>operadores binarios</td><td><code>enterExp</code>, <code>enterTermino</code>, <code>enterRelOpc</code></td></tr>
+<tr><td><code>pop_y_emitir_binario()</code></td><td>+ - * / &lt; &gt; == !=</td><td><code>exitExp/Termino/Expresion</code></td></tr>
+<tr><td><code>emitir_asignacion(dir, tipo)</code></td><td>=</td><td><code>exitAsigna</code>, <code>exitRetorno</code></td></tr>
+<tr><td><code>emitir_print(dir)</code></td><td>PRINT</td><td><code>exitImpElem</code></td></tr>
+<tr><td><code>emitir_directo(cuad)</code></td><td>cu&aacute;druplo manual</td><td><code>exitFactor</code> (signo unario), <code>exitLlamada</code> (copy retorno)</td></tr>
+<tr><td><code>emitir_goto()</code></td><td>GOTO con destino pendiente</td><td><code>enterPrograma</code>, <code>enterSinoOpc</code></td></tr>
+<tr><td><code>emitir_goto_falso(dir)</code></td><td>GOTOF con destino pendiente</td><td><code>_manejar_condicion</code></td></tr>
+<tr><td><code>emitir_goto_a(dest)</code></td><td>GOTO con destino fijo</td><td><code>exitCiclo</code></td></tr>
+<tr><td><code>emitir_era/param/gosub/endfunc()</code></td><td>opcodes de funciones</td><td><code>enterLlamada</code>, <code>_manejar_argumento</code>, <code>exitLlamada</code>, <code>exitFuncs</code>, <code>exitRetorno</code></td></tr>
+<tr><td><code>backpatch(indice, target)</code></td><td>rellenar destino de salto</td><td><code>exitCiclo</code>, <code>exitCondicion</code>, <code>enterSinoOpc</code>, <code>enterCuerpo</code></td></tr>
+</table>
+
+<h3>El m&eacute;todo clave: <code>pop_y_emitir_binario</code></h3>
+
+<pre><code>def pop_y_emitir_binario(self):
+    """Pop del operador + 2 operandos+tipos. Consulta el cubo.
+    Asigna temporal, emite cuadruplo, push del temporal."""
+    op = self.pila_operadores.pop()
+    d_der = self.pila_operandos.pop()
+    t_der = self.pila_tipos.pop()
+    d_izq = self.pila_operandos.pop()
+    t_izq = self.pila_tipos.pop()
+
+    # Propagacion silenciosa de errores
+    if t_izq == "error" or t_der == "error":
+        self.pila_operandos.append(None)
+        self.pila_tipos.append("error")
+        return "error"
+
+    # Consulta el cubo
+    t_res = tipo_resultado(op, t_izq, t_der)
+    if t_res is None:
+        return "error"
+
+    # Asigna temporal y emite
+    d_res = self.mem.nuevo_temporal(t_res)
+    self.fila.append(Cuadruplo(op=op, opIzq=d_izq, opDer=d_der, resultado=d_res))
+    self.pila_operandos.append(d_res)
+    self.pila_tipos.append(t_res)
+    return t_res</code></pre>
+
+<h3>Backpatch &mdash; resolver forward references</h3>
+
+<pre><code>def backpatch(self, indice, target):
+    """Muta el campo resultado del cuadruplo en self.fila[indice]."""
+    self.fila[indice].resultado = target</code></pre>
+
+<p>Resuelve <strong>forward references</strong>: emites <code>(GOTOF, dir, _, None)</code>
+sin saber a d&oacute;nde saltar, guardas el &iacute;ndice. Despu&eacute;s cuando ya sabes,
+llamas <code>backpatch(indice, target)</code> para rellenar.</p>
+
+<h2 id="tips">2.5 Tips de examen</h2>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; se llaman cu&aacute;druplos y no triples?"</strong></p>
+<p>Porque tienen <strong>4 campos</strong>: operador + 2 operandos + resultado.
+Es c&oacute;digo intermedio de 3 direcciones (3AC): "3" se refiere a las direcciones, no a los campos.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; TablaConstantes._BASE es atributo de clase?"</strong></p>
+<p>Porque la VM lo importa directamente. Si fuera de instancia, tendr&iacute;a que crear una
+<code>TablaConstantes()</code> s&oacute;lo para leer los rangos. Como atributo de clase es
+<strong>&uacute;nica fuente de verdad</strong>.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Qu&eacute; hace pop_y_emitir_binario si hay error de tipos?"</strong></p>
+<p>Empuja sentinel <code>(None, "error")</code> para mantener balance. Si NO empujara,
+las pilas quedar&iacute;an desbalanceadas y la siguiente operaci&oacute;n popear&iacute;a operandos equivocados.
+El error se reporta una vez y se propaga silenciosamente (<code>_ultimo_propagado=True</code>).</p>
+</div>
+
+<div class="callout tip">
+<p><strong>Las 5 pilas</strong>: las 3 de expresi&oacute;n (operandos, tipos, operadores) viven mientras dura UNA expresi&oacute;n.
+Las 2 de forward refs (saltos y llamadas) viven mientras dura UNA construcci&oacute;n / UNA llamada.
+Las 5 quedan vac&iacute;as al cerrar su contexto &mdash; esa es la invariante.</p>
+</div>
+
+<footer>
+  <a href="01_grammar.html">&larr; 1. Gramatica</a>
+  <a href="index.html">Index</a>
+  <a href="03_semantico.html">3. Semantico &rarr;</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,7 @@
+programa retornaEnMain;
+
+inicio
+{
+    retorna 1;
+}
+fin

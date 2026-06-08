@@ -1,0 +1,21 @@
+programa fibonacciDemo;
+vars r : entero;
+
+entero fib(n : entero) {
+    {
+        si (n == 0) {
+            retorna 0;
+        } ;
+        si (n == 1) {
+            retorna 1;
+        } ;
+        retorna fib(n - 1) + fib(n - 2);
+    }
+} ;
+
+inicio
+{
+    r = fib(10);
+    escribe(r);
+}
+fin

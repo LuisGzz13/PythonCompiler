@@ -1,0 +1,18 @@
+programa factorialDemo;
+vars r : entero;
+
+entero factorial(n : entero) {
+    {
+        si (n == 0) {
+            retorna 1;
+        } ;
+        retorna n * factorial(n - 1);
+    }
+} ;
+
+inicio
+{
+    r = factorial(5);
+    escribe(r);
+}
+fin

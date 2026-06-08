@@ -1,0 +1,16 @@
+programa demoRetornaSimple;
+vars r : entero;
+
+entero doble(x : entero) {
+    vars t : entero;
+    {
+        t = x * 2;
+        retorna t;
+    }
+} ;
+
+inicio
+{
+    r = 0;
+}
+fin

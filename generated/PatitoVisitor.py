@@ -139,6 +139,11 @@ class PatitoVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by PatitoParser#retorno.
+    def visitRetorno(self, ctx:PatitoParser.RetornoContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by PatitoParser#impLista.
     def visitImpLista(self, ctx:PatitoParser.ImpListaContext):
         return self.visitChildren(ctx)

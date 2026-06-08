@@ -1,0 +1,12 @@
+programa retornaSinPcoma;
+
+entero malo(x : entero) {
+    {
+        retorna x
+    }
+} ;
+
+inicio
+{
+}
+fin

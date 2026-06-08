@@ -286,3 +286,111 @@ def test_cli_runtime_error_sale_con_exit_1(tmp_path):
 def test_escribe_bool_imprime_0_o_1(capsys):
     correr('programa p; vars a, b : entero; inicio { a = 5; b = 3; escribe(a > b); escribe(a < b); } fin')
     assert _lineas(capsys) == ["1", "0"]
+
+
+# ======================================================================
+# Grupo 8: Retorno de funciones tipadas (retorna)
+# ======================================================================
+
+def test_retorna_funcion_simple_entero(capsys):
+    """Funcion tipada entero que retorna x*2."""
+    correr('''
+        programa p; vars r : entero;
+        entero doble(x : entero) { { retorna x * 2; } } ;
+        inicio { r = doble(7); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["14"]
+
+
+def test_retorna_funcion_simple_flotante(capsys):
+    """Funcion tipada flotante que retorna a/b."""
+    correr('''
+        programa p; vars r : flotante;
+        flotante division(a : flotante, b : flotante) { { retorna a / b; } } ;
+        inicio { r = division(15.0, 4.0); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["3.75"]
+
+
+def test_retorna_recursion_factorial(capsys):
+    """factorial(5) = 120 — recursion directa con retorna."""
+    correr('''
+        programa p; vars r : entero;
+        entero factorial(n : entero) {
+            {
+                si (n == 0) { retorna 1; } ;
+                retorna n * factorial(n - 1);
+            }
+        } ;
+        inicio { r = factorial(5); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["120"]
+
+
+def test_retorna_fibonacci(capsys):
+    """fib(10) = 55 — recursion DOBLE (rama 2 con 2 llamadas), prueba estres."""
+    correr('''
+        programa p; vars r : entero;
+        entero fib(n : entero) {
+            {
+                si (n == 0) { retorna 0; } ;
+                si (n == 1) { retorna 1; } ;
+                retorna fib(n - 1) + fib(n - 2);
+            }
+        } ;
+        inicio { r = fib(10); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["55"]
+
+
+def test_retorna_llamada_anidada(capsys):
+    """doble(triple(5)) = 30 — anidacion con dos retornos diferentes."""
+    correr('''
+        programa p; vars r : entero;
+        entero doble(x : entero) { { retorna x * 2; } } ;
+        entero triple(y : entero) { { retorna y * 3; } } ;
+        inicio { r = doble(triple(5)); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["30"]
+
+
+def test_retorna_misma_funcion_dos_veces(capsys):
+    """doble(2) + doble(3) = 10 — misma funcion con dos call sites distintos."""
+    correr('''
+        programa p; vars r : entero;
+        entero doble(x : entero) { { retorna x * 2; } } ;
+        inicio { r = doble(2) + doble(3); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["10"]
+
+
+def test_retorna_early_exit_en_si(capsys):
+    """retorna dentro de si termina la funcion antes — no llega al retorna final."""
+    correr('''
+        programa p; vars r : entero;
+        entero absoluto(x : entero) {
+            {
+                si (x < 0) {
+                    retorna 0 - x;
+                } ;
+                retorna x;
+            }
+        } ;
+        inicio {
+            r = absoluto(-7);
+            escribe(r);
+            r = absoluto(7);
+            escribe(r);
+        } fin
+    ''')
+    assert _lineas(capsys) == ["7", "7"]
+
+
+def test_retorna_entero_a_flotante_ensancha(capsys):
+    """retorna entero en funcion flotante — cubo permite ensanchamiento int->float."""
+    correr('''
+        programa p; vars r : flotante;
+        flotante mitad(x : entero) { { retorna x; } } ;
+        inicio { r = mitad(42); escribe(r); } fin
+    ''')
+    assert _lineas(capsys) == ["42"]

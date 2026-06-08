@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>1. Gramatica Patito.g4 - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>1. Gramatica Patito.g4</strong>
+</nav>
+
+<h1>1. Gram&aacute;tica &mdash; <code>grammar/Patito.g4</code></h1>
+
+<p><strong>Tama&ntilde;o</strong>: 241 l&iacute;neas.<br>
+<strong>Prop&oacute;sito</strong>: define la sintaxis del lenguaje Patito en notaci&oacute;n ANTLR4.<br>
+<strong>Procesado por</strong>: ANTLR (Java) que genera Python en <code>generated/</code>.</p>
+
+<div class="toc">
+<h3>Contenido</h3>
+<ul>
+<li><a href="#estructura">1.1 Estructura general</a></li>
+<li><a href="#programa">1.2 Reglas estructurales (programa, vars, funcs)</a></li>
+<li><a href="#expresiones">1.3 Expresiones con precedencia (exp, termino, factor)</a></li>
+<li><a href="#statements">1.4 Statements (asigna, condicion, ciclo, llamada, retorno)</a></li>
+<li><a href="#tokens">1.5 Tokens (palabras reservadas, operadores, literales)</a></li>
+<li><a href="#antlr">1.6 C&oacute;mo ANTLR genera el parser</a></li>
+<li><a href="#tips">1.7 Tips de examen</a></li>
+</ul>
+</div>
+
+<h2 id="estructura">1.1 Estructura general</h2>
+
+<p>Un programa Patito sigue siempre esta forma:</p>
+
+<pre><code>programa NOMBRE ;
+vars? funcs* inicio cuerpo fin</code></pre>
+
+<div class="diagram">
+programa  ---  id  ---  ;  ---  vars?  ---  funcs*  ---  inicio  ---  cuerpo  ---  fin
+   |                              |           |             |
+   v                              v           v             v
+"programa"                     vars       lista de       main block
+                              globales    funciones
+</div>
+
+<h2 id="programa">1.2 Reglas estructurales</h2>
+
+<h3>Programa</h3>
+<pre><code>programa
+    : PROGRAMA ID PCOMA varsOpc funcsOpc INICIO cuerpo FIN
+    ;</code></pre>
+
+<h3>Declaraciones de variables</h3>
+<pre><code>vars            : VARS declaracionList ;
+declaracionList : declaracion declaracionList | declaracion ;
+declaracion     : idLista DPUNTOS tipo PCOMA ;
+idLista         : ID idResto ;
+idResto         : COMA ID idResto | epsilon ;
+tipo            : ENTERO | FLOTANTE ;</code></pre>
+
+<p>Una declaraci&oacute;n puede listar m&uacute;ltiples IDs: <code>vars i, j, k : entero;</code>.</p>
+
+<h3>Funciones</h3>
+<pre><code>funcs
+    : tipoFunc ID PIZQ paramsOpc PDER LLAVEIZQ varsOpc cuerpo LLAVEDER PCOMA
+    ;
+
+tipoFunc   : NULA | tipo ;
+paramsOpc  : paramLista | epsilon ;
+paramLista : ID DPUNTOS tipo paramResto ;
+paramResto : COMA ID DPUNTOS tipo paramResto | epsilon ;</code></pre>
+
+<div class="callout">
+<p><code>tipoFunc</code> admite <code>NULA</code> o un <code>tipo</code> (entero/flotante).
+Las funciones pueden ser <code>nula</code>, <code>entero</code> o <code>flotante</code>
+&mdash; nunca <code>bool</code> (bool no est&aacute; en <code>tipo</code>).</p>
+</div>
+
+<h3>Llamadas a funciones</h3>
+<pre><code>llamada  : ID PIZQ argsOpc PDER ;
+argsOpc  : argLista | epsilon ;
+argLista : expresion argResto ;
+argResto : COMA expresion argResto | epsilon ;</code></pre>
+
+<h2 id="expresiones">1.3 Expresiones con precedencia</h2>
+
+<p>La gram&aacute;tica usa <strong>3 niveles</strong> para implementar precedencia:</p>
+
+<pre><code>expresion : exp relOpc ;
+relOpc    : opRel exp | epsilon ;
+opRel     : MAYOR | MENOR | DISTINTO | IGUAL2 ;
+
+exp     : exp MAS termino | exp MENOS termino | termino ;
+termino : termino POR factor | termino ENTRE factor | factor ;
+factor  : PIZQ expresion PDER
+        | llamada
+        | signoOpc ID
+        | signoOpc cte ;
+
+signoOpc : MAS | MENOS | epsilon ;
+cte      : CTE_ENT | CTE_FLOT ;</code></pre>
+
+<div class="callout exam">
+<p><strong>"&iquest;C&oacute;mo implementa Patito la precedencia de operadores?"</strong></p>
+<p>Respuesta: con jerarqu&iacute;a gramatical. <code>termino</code> se eval&uacute;a antes que <code>exp</code>,
+y <code>factor</code> antes que <code>termino</code>. Por eso <code>2 + 3 * 4</code> se reconoce
+como <code>2 + (3 * 4)</code>: la regla <code>termino -&gt; termino POR factor</code> atrapa
+la multiplicaci&oacute;n antes de que <code>exp</code> vea el <code>+</code>.</p>
+<p>Los relacionales est&aacute;n en el nivel m&aacute;s alto (menor precedencia) &mdash; bien para condiciones.</p>
+</div>
+
+<h3>Recursi&oacute;n por la izquierda</h3>
+<p>ANTLR4 maneja recursi&oacute;n izquierda autom&aacute;ticamente (a diferencia de yacc).
+Esto da <strong>asociatividad izquierda</strong>: <code>a - b - c</code> se eval&uacute;a
+como <code>(a - b) - c</code>.</p>
+
+<h2 id="statements">1.4 Statements</h2>
+
+<pre><code>cuerpo        : LLAVEIZQ estatutoList LLAVEDER ;
+estatutoList  : estatuto estatutoList | epsilon ;
+
+estatuto
+    : asigna
+    | condicion
+    | ciclo
+    | llamada PCOMA
+    | imprime
+    | retorno    /* agregado en la implementacion de retorna */
+    ;</code></pre>
+
+<h3>Asignaci&oacute;n</h3>
+<pre><code>asigna : ID IGUAL expresion PCOMA ;</code></pre>
+
+<h3>Condici&oacute;n (si/sino)</h3>
+<pre><code>condicion : SI PIZQ expresion PDER cuerpo sinoOpc PCOMA ;
+sinoOpc   : SINO cuerpo | epsilon ;</code></pre>
+
+<h3>Ciclo (mientras)</h3>
+<pre><code>ciclo : MIENTRAS PIZQ expresion PDER HAZ cuerpo PCOMA ;</code></pre>
+
+<h3>Escribe</h3>
+<pre><code>imprime  : ESCRIBE PIZQ impLista PDER PCOMA ;
+impLista : impElem impResto ;
+impResto : COMA impElem impResto | epsilon ;
+impElem  : expresion | LETRERO ;</code></pre>
+
+<h3>Retorno</h3>
+<pre><code>retorno : RETORNA expresion PCOMA ;</code></pre>
+
+<h2 id="tokens">1.5 Tokens</h2>
+
+<h3>Palabras reservadas (13)</h3>
+<pre><code>PROGRAMA : 'programa' ;     SI       : 'si' ;
+INICIO   : 'inicio' ;       SINO     : 'sino' ;
+FIN      : 'fin' ;          MIENTRAS : 'mientras' ;
+VARS     : 'vars' ;         HAZ      : 'haz' ;
+ENTERO   : 'entero' ;       NULA     : 'nula' ;
+FLOTANTE : 'flotante' ;     RETORNA  : 'retorna' ;
+ESCRIBE  : 'escribe' ;</code></pre>
+
+<h3>Operadores (9)</h3>
+<pre><code>MAS  : '+'    MAYOR    : '>'
+MENOS: '-'    MENOR    : '<'
+POR  : '*'    DISTINTO : '!='
+ENTRE: '/'    IGUAL2   : '=='
+              IGUAL    : '='</code></pre>
+
+<div class="callout">
+<p>Patito tiene <strong>4 operadores relacionales</strong> (no 6 como C):
+<code>&lt;</code>, <code>&gt;</code>, <code>==</code>, <code>!=</code>.
+No hay <code>&lt;=</code> ni <code>&gt;=</code>.</p>
+</div>
+
+<h3>Puntuaci&oacute;n (7)</h3>
+<pre><code>PCOMA : ';'   COMA : ','   DPUNTOS : ':'
+PIZQ  : '('   PDER : ')'   LLAVEIZQ : '{'  LLAVEDER : '}'</code></pre>
+
+<h3>Literales</h3>
+<pre><code>ID       : [a-zA-Z] [a-zA-Z0-9_]* ;
+CTE_FLOT : [0-9]+ '.' [0-9]+ ;   /* ANTES DE CTE_ENT */
+CTE_ENT  : [0-9]+ ;
+LETRERO  : '"' ~["\r\n]* '"' ;
+WS       : [ \t\r\n]+ -&gt; skip ;</code></pre>
+
+<div class="callout">
+<p><strong>&iquest;Por qu&eacute; CTE_FLOT antes de CTE_ENT?</strong>
+El lexer prioriza el token declarado primero ante ambig&uuml;edad.
+Si CTE_ENT fuera primero, <code>3.14</code> se parsear&iacute;a como
+<code>CTE_ENT('3') '.' CTE_ENT('14')</code> &mdash; error de sintaxis.</p>
+</div>
+
+<h2 id="antlr">1.6 C&oacute;mo ANTLR genera el parser</h2>
+
+<p>Comando (documentado en README.md):</p>
+
+<pre><code>( cd grammar &amp;&amp; antlr -Dlanguage=Python3 -visitor Patito.g4 -o ../generated )</code></pre>
+
+<p>Esto produce 4 archivos en <code>generated/</code>:</p>
+
+<table>
+<tr><th>Archivo</th><th>Qu&eacute; provee</th></tr>
+<tr><td><code>PatitoLexer.py</code></td><td>Lexer: texto a tokens</td></tr>
+<tr><td><code>PatitoParser.py</code></td><td>Parser: tokens a &aacute;rbol sint&aacute;ctico</td></tr>
+<tr><td><code>PatitoListener.py</code></td><td>Clase base con <code>enterX/exitX</code> vac&iacute;os por cada regla</td></tr>
+<tr><td><code>PatitoVisitor.py</code></td><td>Patr&oacute;n visitor (no usado en Patito)</td></tr>
+</table>
+
+<p><strong>SemanticAnalyzer</strong> en <code>semantico.py</code> hereda de <code>PatitoListener</code>
+y sobreescribe los <code>enterX/exitX</code> que le interesan. Los dem&aacute;s permanecen vac&iacute;os.</p>
+
+<h2 id="tips">1.7 Tips de examen</h2>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; Patito no tiene &lt;= ni &gt;=?"</strong></p>
+<p>Decisi&oacute;n deliberada. Para agregarlos: token nuevo en lexer +
+alternativa en <code>opRel</code> + entradas en <code>_CUBO</code> + handling en VM.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Qu&eacute; pasa si en un programa no hay <code>vars</code>?"</strong></p>
+<p><code>varsOpc</code> matchea la rama epsilon (vac&iacute;a),
+y <code>enterDeclaracion</code> nunca dispara. El programa compila normal sin globales.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Cu&aacute;l es la gram&aacute;tica de una funci&oacute;n?"</strong></p>
+<p><code>tipoFunc ID PIZQ paramsOpc PDER LLAVEIZQ varsOpc cuerpo LLAVEDER PCOMA</code>.
+Notar dos pares de llaves: las externas envuelven la funci&oacute;n completa
+(params + vars + cuerpo), las internas (dentro de <code>cuerpo</code>) envuelven los estatutos.</p>
+</div>
+
+<footer>
+  <a href="index.html">&larr; Index</a>
+  <a href="index.html">Index</a>
+  <a href="02_cubo_cuadruplos.html">2. Cubo + Cuadruplos &rarr;</a>
+</footer>
+</body>
+</html>

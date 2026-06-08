@@ -1,0 +1,12 @@
+programa retornaEnNula;
+
+nula saludo() {
+    {
+        retorna 1;
+    }
+} ;
+
+inicio
+{
+}
+fin

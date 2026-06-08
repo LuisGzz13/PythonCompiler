@@ -152,9 +152,12 @@ def leer(self, direccion):
     return store.get(direccion, _DEFAULTS[tipo])
 ```
 
-> **El default por tipo (`0`, `0.0`, `False`)** evita crashes por *phantom
+> **El default por tipo (`0`, `0.0`, `0` para bool)** evita crashes por *phantom
 > temporals* (función tipada usada como factor; el retorno real está diferido,
 > ver §8). Una variable nunca escrita devuelve el default — no `KeyError`.
+> Bool usa `0` (no Python `False`) porque Patito representa booleanos como
+> enteros 0/1 — coherente con C/C++ y con el resto del lenguaje, donde solo
+> existen tipos `entero` y `flotante` declarables (ver §8).
 
 ### `escribir(direccion, valor)`
 
@@ -196,7 +199,7 @@ Test que **cazaría** una violación de cada regla:
 |---|---|---|---|---|
 | `+` `-` `*` | dir_a | dir_b | dir_res | `escribir(res, leer(a) op leer(b))` |
 | `/` | dir_a | dir_b | dir_res | `int/int → //`; `float → /`. Error si `b == 0` |
-| `<` `>` `==` `!=` | dir_a | dir_b | dir_res (bool) | Mismo patrón |
+| `<` `>` `==` `!=` | dir_a | dir_b | dir_res (bool, 0 o 1) | `escribir(res, int(leer(a) op leer(b)))`. Se envuelve en `int(...)` para que Patito almacene 0/1 en lugar de `True`/`False` |
 | `=` | dir_origen | _ | dir_destino | `escribir(destino, leer(origen))` |
 | `PRINT` | _ | _ | dir | `print(leer(dir))` |
 | `GOTO` | _ | _ | destino | `IP = destino` |
@@ -236,13 +239,18 @@ a la VM.
 
 ## 8. Limitaciones documentadas
 
-- **Retorno de funciones (`retorna`) diferido.** Etapa 4 lo dejó así sin tocar
-  la gramática. `entero f() {...}` se compila y se invoca, pero el "valor de
-  retorno" es siempre `0` (default del *phantom temporal*). Para retornos
-  reales se necesitaría agregar el token `retorna` al lexer, una regla
-  `retorno : RETORNA expresion PCOMA` al parser, un PN `exitRetorno` que
-  copie a un slot de retorno, y unas 5 líneas más en `exitLlamada` y la VM
-  para leerlo.
+> **Nota histórica:** la limitación 8.1 (retorno de funciones diferido) **ya fue
+> implementada** en una extensión posterior — ver §11 "Implementación de `retorna`"
+> al final del documento. Se conserva la descripción histórica como referencia.
+
+- **~~Retorno de funciones (`retorna`) diferido.~~ IMPLEMENTADO** Etapa 4 lo dejó
+  diferido sin tocar la gramática. En su momento `entero f() {...}` se compilaba
+  e invocaba, pero el "valor de retorno" era siempre `0` (default del *phantom
+  temporal*). Se cerró agregando el token `RETORNA` al lexer, la regla
+  `retorno : RETORNA expresion PCOMA` al parser, el PN `exitRetorno` que copia
+  a un slot de retorno global, y la copia inversa en `exitLlamada` post-GOSUB
+  para llevar el valor al phantom temporal del caller. Diseño "return slot por
+  función": 0 opcodes nuevos en la VM. Detalle completo en §11.
 
 - **Recursión.** La VM soporta **recursión directa** (`f` se llama a sí misma)
   con su pila de frames. La **recursión mutua** (`a` llama a `b` que llama a
@@ -251,8 +259,14 @@ a la VM.
   todavía.
 
 - **Variables no inicializadas.** Devuelven el *default* por tipo
-  (`0`/`0.0`/`False`) en vez de lanzar error. Decisión deliberada para que el
+  (`0`/`0.0`/`0`) en vez de lanzar error. Decisión deliberada para que el
   phantom temporal degrade limpiamente.
+
+- **Sin tipo bool declarable.** La gramática solo permite tipos
+  `entero` y `flotante` en `vars`. El tipo bool existe **solo internamente**
+  como resultado de operadores relacionales (`<`, `>`, `==`, `!=`) y vive en
+  los rangos 11000s (temporales). Cuando `escribe` imprime un bool, sale como
+  `0` o `1` (coherente con la tradición académica y con C/C++ pre-C99).
 
 ---
 
@@ -263,9 +277,9 @@ a la VM.
 | `vm.py` | **NUEVO**: `Frame`, `_DEFAULTS`, `_RANGOS`, `_segmento_y_tipo`, `MaquinaVirtual` |
 | `semantico.py` | `snapshot_recursos`, `FuncInfo.recursos`, `exitPrograma`, snapshot en `exitFuncs`, `reset_scope_local` al entrar a `main` |
 | `cuadruplos.py` | `TablaConstantes._BASE` (atributo de clase: única fuente para 13000/14000/15000); fix de `emitir_goto_falso` (ahora pone `opIzq=dir_cond`) |
-| `patito.py` | Flag `--ejecutar` que importa y corre `MaquinaVirtual` |
-| `tests/test_vm.py` | **NUEVO**: 20 tests de ejecución con `capsys` + 2 tests de CLI |
-| `tests/test_codegen.py` | Test que blinda `GOTOF.opIzq = dir_cond` |
+| `patito.py` | Flag `--ejecutar` que importa y corre `MaquinaVirtual`. Flag `--dir` (utilidad de depuración) que imprime `func_dir` formateado vía `analizador.imprimir_directorio()` |
+| `tests/test_vm.py` | **NUEVO**: 19 tests de ejecución con `capsys` + 2 tests de CLI |
+| `tests/test_codegen.py` | Test que blinda `GOTOF.opIzq = dir_cond` + test que blinda `escribe(bool)` imprime 0/1 |
 | `tests/valid/15_ejecutar_demo.patito` | **NUEVO**: programa demo para tests de CLI |
 | `doc/Etapa5.md` | **NUEVO**: este documento |
 | `doc/Etapa5_diagramas.html` | **NUEVO**: diagramas visuales |
@@ -299,13 +313,16 @@ echo $?    # 0 si compila, != 0 si hay errores
 python3 -m pytest -q
 ```
 
-**107 tests** total:
-- 24 de sintaxis (E1)
-- 12 de semántica (E2)
-- 18 de generación de cuádruplos contenido + 6 inválidos (E3)
-- 10 de control de flujo y funciones contenido + 4 inválidos (E4)
-- 20 de ejecución de la VM + 2 de CLI (E5)
-- Más programas integradores en `tests/valid/`
+**108 tests** total, distribuidos en tres archivos:
+- `tests/test_compiler.py` (**59 tests**): cada `.patito` se ejecuta como
+  subproceso y se verifica `exit code` + `stderr`. Cubre sintaxis (E1: 15 válidos + 10 inválidos),
+  semántica (E2: 4 + 8), cuádruplos (E3: 12 + 6), y validaciones de Etapa 4
+  (E4: 4 nuevos inválidos).
+- `tests/test_codegen.py` (**28 tests**): asserts estructurales sobre la fila
+  de cuádruplos. Cubre precedencia, dedup, control de flujo (saltos),
+  llamadas (ERA/PARAM/GOSUB), y blindajes (`GOTOF.opIzq`, `escribe(bool)` = 0/1).
+- `tests/test_vm.py` (**21 tests**): 19 con `capsys` (output de programas)
+  + 2 con `subprocess` (flag `--ejecutar` end-to-end).
 
 ### Test cases destacados (Etapa 5)
 
@@ -321,3 +338,136 @@ python3 -m pytest -q
 | `test_recursion_infinita_se_detiene_con_stack_overflow` | Límite anti-runaway (1000 frames) detecta recursión sin caso base |
 | `test_division_por_cero_*` | Error de runtime con mensaje claro y exit 1 |
 | `test_cli_ejecutar_demo_corre_correctamente` | El flag `--ejecutar` produce el output esperado end-to-end |
+
+---
+
+## 11. Implementación de `retorna` (extensión post-Etapa 5)
+
+Esta sección documenta el cierre de la limitación 8.1. El feature se implementó
+en 6 secciones pequeñas, con tests entre cada una. El diseño elegido evita
+cualquier opcode nuevo en la VM: reutiliza el cuádruplo `=` existente.
+
+### 11.1 Diseño "return slot por función" (Design E)
+
+Cada función tipada (entero/flotante) recibe **una dirección global única** al
+ser registrada en `enterFuncs`. Esa dirección vive en un **nuevo segmento de
+memoria virtual** llamado `retorno`:
+
+| Segmento | Rango | Tipo |
+|---|---|---|
+| `("retorno", "entero")` | 17000–17999 | retorno entero |
+| `("retorno", "flotante")` | 18000–18999 | retorno flotante |
+
+(No hay `bool` retorno porque la gramática no permite funciones bool — `tipoFunc : NULA | tipo` y `tipo : ENTERO | FLOTANTE`.)
+
+El segmento `retorno` se rutea a `memoria_global` en la VM. Los slots
+**sobreviven** a cualquier frame pop — son globales en todo sentido.
+
+### 11.2 Flujo end-to-end (ejemplo: `r = doble(5)`)
+
+```
+Compilador emite:                      VM ejecuta:
+─────────────────────────────────────  ─────────────────────────────────────
+(ERA, _, _, doble)                     push frame de doble a pila_prep
+(PARAM, 13000, _, 5000)                escribir_en_prep: 5 → doble.x (5000)
+(GOSUB, doble, _, cuad_inicio_doble)   pop prep, push como frame actual, IP=cuerpo
+... cuerpo de doble ejecuta ...
+  (*, 5000, 13000, 9000)                 9000 = 5 * 2 = 10 (en frame de doble)
+  (=, 9000, _, 17000)  ← retorna         17000 = 10 (slot global de doble) ← NUEVO
+  (ENDFUNC, _, _, _)   ← del retorna     pop frame, IP regresa a caller
+(=, 17000, _, 9001)  ← post-GOSUB copy 9001 = leer(17000) = 10 (phantom en main) ← NUEVO
+(=, 9001, _, 1000)   ← r = phantom     1000 = 10 (r en global)
+```
+
+Las **dos líneas nuevas** son las marcadas con NUEVO:
+- El callee escribe su valor al slot global.
+- El caller copia el slot al phantom temporal **inmediatamente después del GOSUB**.
+
+### 11.3 PN nuevo: `exitRetorno`
+
+Dispara cuando ANTLR sale de la regla `retorno : RETORNA expresion PCOMA`.
+Comportamiento (semantico.py):
+
+1. Si `scope_actual.tipo_retorno` es `"programa"` o `"nula"` → reporta error semántico, popea operando defensivamente, return.
+2. Llama `gen.emitir_asignacion(dir_retorno, tipo_retorno)`. Eso reusa la lógica
+   de `exitAsigna`: pop del RHS, valida cubo (`=`), emite `(=, dir_expr, _, dir_retorno)`.
+3. Si el cubo falla (tipos incompatibles), reporta error.
+4. Emite `(ENDFUNC, _, _, _)` para terminar la función inmediatamente.
+
+### 11.4 Cambios en `exitLlamada`
+
+Cuando una llamada se usa como factor (dentro de una expresión), se agregaron
+2 líneas que emiten la copia post-GOSUB:
+
+```python
+dir_temp = self.mem.nuevo_temporal(f.tipo_retorno)
+self.gen.emitir_directo(
+    Cuadruplo(op="=", opIzq=f.dir_retorno, opDer=None, resultado=dir_temp))
+self.gen.push_operando(dir_temp, f.tipo_retorno)
+```
+
+### 11.5 Cambios en la VM
+
+Solamente 2 líneas modificadas en `vm.py`: ambos `leer()` y `escribir()`
+ahora rutean el segmento `"retorno"` a `memoria_global`:
+
+```python
+if seg in ("global", "retorno"):
+    return self.memoria_global.get(direccion, _DEFAULTS[tipo])
+```
+
+**No hay opcodes nuevos**. No cambia `GOSUB`, `ENDFUNC`, ni `PARAM`.
+
+### 11.6 Por qué la recursión funciona
+
+Aunque cada llamada recursiva **sobrescribe el mismo slot global**, la VM
+**lee inmediatamente al regresar del GOSUB** hacia un phantom único por
+call site. Trace conceptual de `factorial(5)`:
+
+```
+factorial(5) → factorial(4) → factorial(3) → factorial(2) → factorial(1) → factorial(0)
+                                                                              retorna 1; slot=1
+                                                       leer slot, phantom=1; retorna 1*1=1; slot=1
+                                  leer slot, phantom=1; retorna 2*1=2; slot=2
+            leer slot, phantom=2; retorna 3*2=6; slot=6
+leer slot, phantom=6; retorna 4*6=24; slot=24
+main: leer slot, phantom=120; r = phantom; escribe(r) → "120"
+```
+
+No hay race porque la VM es single-threaded.
+
+### 11.7 Test cases nuevos
+
+Cierra con **18 tests nuevos** (3 archivos `.patito` + 8 en `test_vm.py` + 7 en `test_codegen.py`):
+
+| Test | Demuestra |
+|---|---|
+| `test_retorna_funcion_simple_entero` | `doble(7) = 14` — caso básico |
+| `test_retorna_funcion_simple_flotante` | `division(15.0, 4.0) = 3.75` — slot flotante |
+| `test_retorna_recursion_factorial` | `factorial(5) = 120` — recursión simple |
+| `test_retorna_fibonacci` | `fib(10) = 55` — recursión doble (~177 llamadas) |
+| `test_retorna_llamada_anidada` | `doble(triple(5)) = 30` — pila_prep + 2 slots distintos |
+| `test_retorna_misma_funcion_dos_veces` | `doble(2) + doble(3) = 10` — phantoms únicos por call site |
+| `test_retorna_early_exit_en_si` | retorna dentro de si termina la función |
+| `test_retorna_entero_a_flotante_ensancha` | cubo permite ensanchamiento |
+| `test_retorna_emite_asignacion_a_slot_y_endfunc` | cuádruplos generados correctos |
+| `test_retorna_slots_separados_entero_y_flotante` | contadores 17000/18000 separados |
+| `test_llamada_factor_emite_copy_post_gosub` | la copia inversa se emite |
+| `test_retorna_en_nula_es_error_semantico` | validación: no retorna en nula |
+| `test_retorna_en_main_es_error_semantico` | validación: no retorna en programa |
+| `test_retorna_tipo_incompatible_es_error_semantico` | cubo previene estrechamiento |
+
+### 11.8 Diff total
+
+| Archivo | Cambios |
+|---|---|
+| `grammar/Patito.g4` | +1 token (`RETORNA`), +1 regla (`retorno`), +1 alternativa en `estatuto` |
+| `generated/*` | regenerado por ANTLR |
+| `semantico.py` | +12 líneas (memoria) + ~28 líneas (PN `exitRetorno`) + 3 líneas (`exitLlamada`) |
+| `vm.py` | 2 líneas modificadas (routing del segmento `retorno`) |
+| `tests/valid/` | +3 archivos (`20`, `21`, `22`) |
+| `tests/semantic_invalid/` | +3 archivos (`13`, `14`, `15`) |
+| `tests/test_vm.py` | +8 tests |
+| `tests/test_codegen.py` | +7 tests |
+| `doc/Etapa5.md` | esta sección §11 |
+| **Tests totales** | **117 → 135 (sin regresiones)** |

@@ -1,0 +1,21 @@
+programa anidadaDemo;
+vars r : entero;
+
+entero doble(x : entero) {
+    {
+        retorna x * 2;
+    }
+} ;
+
+entero triple(y : entero) {
+    {
+        retorna y * 3;
+    }
+} ;
+
+inicio
+{
+    r = doble(triple(5));
+    escribe(r);
+}
+fin

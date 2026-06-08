@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>3. Semantico - Patito Study Guide</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 900px; margin: 0 auto;
+  padding: 40px 20px 80px; line-height: 1.7; color: #222; background: #fdfdfd; }
+h1, h2, h3, h4 { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a3a5c; margin-top: 1.8em; margin-bottom: 0.6em; line-height: 1.25; }
+h1 { font-size: 2em; border-bottom: 3px solid #1a3a5c; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+h3 { font-size: 1.2em; color: #3a5c8a; }
+h4 { font-size: 1.05em; color: #555; }
+p { margin: 0.8em 0; }
+pre, code { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+code { background: #f0f0f5; padding: 0.1em 0.4em; border-radius: 3px; color: #8b2c2c; }
+pre { background: #f5f5f7; border: 1px solid #e0e0e5; border-radius: 6px;
+  padding: 14px 18px; overflow-x: auto; margin: 1em 0; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: 0.95em; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #f0f0f5; font-family: -apple-system, sans-serif; font-weight: 600; color: #1a3a5c; }
+tr:hover { background: #fafafa; }
+blockquote { border-left: 4px solid #1a3a5c; padding: 0.5em 1em; margin: 1em 0;
+  background: #f8f9fb; color: #444; font-style: italic; }
+.callout { border: 1px solid #f0c040; background: #fff9e6; padding: 12px 16px;
+  border-radius: 6px; margin: 1em 0; }
+.callout.exam { border-color: #d04040; background: #fff0f0; }
+.callout.exam::before { content: "PREGUNTA DE EXAMEN: "; font-weight: bold; color: #a02020; }
+.callout::before { content: "NOTA: "; font-weight: bold; color: #c08020; }
+.callout.tip::before { content: "TIP: "; font-weight: bold; color: #208040; }
+.callout.tip { border-color: #40c060; background: #f0fff0; }
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+nav.breadcrumb { background: #f0f0f5; padding: 10px 16px; border-radius: 6px;
+  margin-bottom: 2em; font-size: 0.9em; font-family: -apple-system, sans-serif; }
+nav.breadcrumb a { color: #1a3a5c; text-decoration: none; }
+nav.breadcrumb a:hover { text-decoration: underline; }
+.toc { background: #f8f9fb; border: 1px solid #e0e0e5; padding: 16px 24px;
+  border-radius: 6px; margin: 1.5em 0; }
+.toc h3 { margin-top: 0; font-size: 1em; color: #555; }
+.toc ul { margin: 0; padding-left: 1.4em; }
+.toc li { margin: 0.3em 0; }
+.toc a { color: #1a3a5c; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.diagram { background: #fafafa; border: 1px dashed #999; padding: 16px;
+  border-radius: 6px; font-family: monospace; white-space: pre; font-size: 0.85em;
+  overflow-x: auto; margin: 1em 0; line-height: 1.4; }
+footer { margin-top: 4em; padding-top: 1.5em; border-top: 2px solid #1a3a5c;
+  font-family: -apple-system, sans-serif; font-size: 0.9em;
+  display: flex; justify-content: space-between; color: #666; }
+footer a { color: #1a3a5c; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+.lineno { color: #999; font-style: italic; font-size: 0.85em; }
+.key { color: #a02020; font-weight: bold; }
+.muted { color: #888; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<nav class="breadcrumb">
+  <a href="index.html">Study Guide Patito</a> &nbsp;&rarr;&nbsp; <strong>3. Semantico</strong>
+</nav>
+
+<h1>3. <code>semantico.py</code></h1>
+
+<p><strong>Tama&ntilde;o</strong>: 766 l&iacute;neas (el m&aacute;s grande del proyecto).<br>
+<strong>Prop&oacute;sito</strong>: analizador sem&aacute;ntico que (a) valida que el programa
+tenga sentido (tipos correctos, vars declaradas, etc.) y (b) emite c&oacute;digo intermedio
+(cu&aacute;druplos) v&iacute;a el <code>GeneradorCuadruplos</code>.</p>
+
+<div class="toc">
+<h3>Contenido</h3>
+<ul>
+<li><a href="#imports">3.1 Imports y estructura del archivo</a></li>
+<li><a href="#registros">3.2 Registros de datos (VarInfo, ParamInfo, FuncInfo)</a></li>
+<li><a href="#asignador">3.3 AsignadorMemoria &mdash; direcciones virtuales</a></li>
+<li><a href="#helpers">3.4 Helpers (_ids_de_idLista, _params_de_paramsOpc)</a></li>
+<li><a href="#analyzer">3.5 SemanticAnalyzer &mdash; el estado</a></li>
+<li><a href="#pns">3.6 Los 24 PNs por grupos</a></li>
+<li><a href="#tips">3.7 Tips de examen</a></li>
+</ul>
+</div>
+
+<h2 id="imports">3.1 Imports y estructura del archivo</h2>
+
+<pre><code>import sys
+sys.path.insert(0, 'generated')
+
+from PatitoListener import PatitoListener
+from cuadruplos import Cuadruplo, TablaConstantes, GeneradorCuadruplos
+from PatitoParser import PatitoParser   # para isinstance del padre
+from cubo import tipo_resultado</code></pre>
+
+<p>El archivo est&aacute; organizado en bloques:</p>
+<ol>
+<li>Imports</li>
+<li>Registros: <code>VarInfo</code>, <code>ParamInfo</code>, <code>FuncInfo</code></li>
+<li><code>AsignadorMemoria</code></li>
+<li>Helpers para aplanar gram&aacute;tica</li>
+<li><code>SemanticAnalyzer(PatitoListener)</code> con los 24 PNs</li>
+<li>M&eacute;todo de utilidad <code>imprimir_directorio</code></li>
+</ol>
+
+<h2 id="registros">3.2 Registros de datos</h2>
+
+<h3>VarInfo</h3>
+<pre><code>class VarInfo:
+    """Info de una variable: tipo, linea, direccion virtual."""
+    def __init__(self, tipo, linea, direccion=None):
+        self.tipo = tipo           # 'entero', 'flotante'
+        self.linea = linea         # donde se declaro
+        self.direccion = direccion # direccion virtual asignada</code></pre>
+
+<h3>ParamInfo</h3>
+<pre><code>class ParamInfo:
+    """Info de un parametro: nombre, tipo, direccion. El orden importa."""
+    def __init__(self, nombre, tipo, direccion=None):
+        self.nombre = nombre
+        self.tipo = tipo
+        self.direccion = direccion</code></pre>
+
+<h3>FuncInfo</h3>
+<pre><code>class FuncInfo:
+    def __init__(self, tipo_retorno, linea):
+        self.tipo_retorno = tipo_retorno  # 'entero', 'flotante', 'nula' o 'programa'
+        self.params = []                  # lista de ParamInfo en orden
+        self.variables = {}               # {nombre -&gt; VarInfo} de locales + params
+        self.linea = linea
+        self.cuad_inicio = None           # Etapa 4 lo llena
+        self.recursos = None              # Etapa 5 lo llena (snapshot)
+        self.dir_retorno = None           # extension retorna (solo entero/flotante)</code></pre>
+
+<div class="callout">
+<p>El <strong>programa principal</strong> tambi&eacute;n se registra como un <code>FuncInfo</code>
+(con <code>tipo_retorno="programa"</code>). Esto reusa la misma estructura y evita casos
+especiales en el c&oacute;digo.</p>
+</div>
+
+<h2 id="asignador">3.3 AsignadorMemoria</h2>
+
+<p>Asigna direcciones virtuales por (segmento &times; tipo). <strong>11 segmentos</strong>
+(despu&eacute;s de la extensi&oacute;n <code>retorna</code>):</p>
+
+<pre><code>_BASE = {
+    ("global",  "entero"):     1000,
+    ("global",  "flotante"):   2000,
+    ("global",  "bool"):       3000,
+    ("local",   "entero"):     5000,
+    ("local",   "flotante"):   6000,
+    ("local",   "bool"):       7000,
+    ("temp",    "entero"):     9000,
+    ("temp",    "flotante"):  10000,
+    ("temp",    "bool"):      11000,
+    ("retorno", "entero"):    17000,   # NUEVO (extension retorna)
+    ("retorno", "flotante"):  18000,   # NUEVO
+}</code></pre>
+
+<p>Huecos intencionales en 4000, 8000, 12000, 16000 (buffer para futuras extensiones).
+13000-15999 lo usa <code>TablaConstantes</code>.</p>
+
+<h3>M&eacute;todos</h3>
+
+<table>
+<tr><th>M&eacute;todo</th><th>Qu&eacute; hace</th></tr>
+<tr><td><code>reset_scope_local()</code></td><td>Resetea contadores de <code>local</code> y <code>temp</code>. Llamado en cada <code>enterFuncs</code> + al entrar a main.</td></tr>
+<tr><td><code>nueva_global(tipo)</code></td><td>Asigna y avanza contador global.</td></tr>
+<tr><td><code>nueva_local(tipo)</code></td><td>Asigna y avanza contador local.</td></tr>
+<tr><td><code>nuevo_temporal(tipo)</code></td><td>Asigna y avanza contador temporal.</td></tr>
+<tr><td><code>nueva_retorno(tipo)</code></td><td>Asigna y avanza contador de retorno. <strong>No</strong> se resetea.</td></tr>
+<tr><td><code>snapshot_recursos()</code></td><td>Devuelve <code>{(seg, tipo) -&gt; count}</code> de cuanto se us&oacute; en el scope. Para la VM.</td></tr>
+</table>
+
+<div class="callout">
+<p>Los segmentos <code>global</code> y <code>retorno</code> <strong>nunca</strong> se resetean.
+Los segmentos <code>local</code> y <code>temp</code> S&Iacute; (en cada <code>enterFuncs</code> + al entrar a main).
+Eso permite que cada funci&oacute;n parta sus locales/temps en su _BASE.</p>
+</div>
+
+<h2 id="helpers">3.4 Helpers para aplanar gram&aacute;tica</h2>
+
+<p>La gram&aacute;tica de Patito usa <strong>recursi&oacute;n derecha</strong> para las listas
+(porque ANTLR4 no necesita LL recursi&oacute;n para esto). Eso da estructuras como:</p>
+
+<pre><code>idLista : ID idResto ;
+idResto : COMA ID idResto | epsilon ;</code></pre>
+
+<p>Si tienes <code>a, b, c, d</code>, el &aacute;rbol queda anidado:
+<code>idLista(a, idResto(b, idResto(c, idResto(d, eps))))</code>. Para procesar todos
+los IDs de un jal&oacute;n, dos helpers aplanan estas estructuras:</p>
+
+<pre><code>def _ids_de_idLista(idLista_ctx):
+    """Aplana idLista + idResto en lista de TerminalNode ID."""
+    if idLista_ctx is None:
+        return []
+    ids = [idLista_ctx.ID()]
+    resto = idLista_ctx.idResto()
+    while resto is not None and resto.ID() is not None:
+        ids.append(resto.ID())
+        resto = resto.idResto()
+    return ids
+
+
+def _params_de_paramsOpc(paramsOpc_ctx):
+    """Aplana paramLista + paramResto en lista de (ID_node, tipo_str)."""
+    # similar al anterior</code></pre>
+
+<h2 id="analyzer">3.5 SemanticAnalyzer &mdash; el estado</h2>
+
+<pre><code>class SemanticAnalyzer(PatitoListener):
+    def __init__(self):
+        self.func_dir = {}              # {nombre -&gt; FuncInfo}
+        self.scope_actual = None        # puntero al FuncInfo actual
+        self.nombre_programa = None
+        self.errores = 0
+        self.en_func_duplicada = False  # flag para abortar PNs en error
+        self.mem = AsignadorMemoria()
+        self.cte = TablaConstantes()
+        self.gen = GeneradorCuadruplos(self.mem, self.cte)
+        self.pila_llamadas = []         # contexto de llamadas (anidables)</code></pre>
+
+<div class="callout">
+<p><code>scope_actual</code> es un puntero al <code>FuncInfo</code> activo. Cambia en:
+<ul>
+<li><code>enterPrograma</code>: <code>scope_actual = func_dir[programa]</code></li>
+<li><code>enterFuncs</code>: <code>scope_actual = nueva_func_info</code></li>
+<li><code>exitFuncs</code>: <code>scope_actual = func_dir[programa]</code> (regresa al global)</li>
+</ul>
+Todas las decisiones que dependen del scope (registrar var como global o local,
+buscar var en variables locales) usan este puntero.</p>
+</div>
+
+<h3>Helper <code>_buscar_var</code></h3>
+<pre><code>def _buscar_var(self, nombre):
+    """Busca variable: primero local, luego global. Devuelve VarInfo o None."""
+    if nombre in self.scope_actual.variables:
+        return self.scope_actual.variables[nombre]
+    programa = self.func_dir[self.nombre_programa]
+    if self.scope_actual is not programa and nombre in programa.variables:
+        return programa.variables[nombre]
+    return None</code></pre>
+
+<p>Implementa el lookup de scope cl&aacute;sico: <strong>local primero, luego global</strong>.
+Si la var no est&aacute; ni en local ni en global, devuelve <code>None</code> &mdash; el caller
+reporta error "variable no declarada".</p>
+
+<h2 id="pns">3.6 Los 24 PNs por grupos</h2>
+
+<p><strong>24 PNs</strong> = 22 listeners (enter/exit) + 2 helpers (_manejar_*).
+Agrupados por prop&oacute;sito:</p>
+
+<table>
+<tr><th>Grupo</th><th>PNs</th><th>Cuantos</th></tr>
+<tr><td>A &mdash; Estructurales</td><td>enterPrograma, exitPrograma, enterFuncs, exitFuncs, enterCuerpo, enterDeclaracion</td><td>6</td></tr>
+<tr><td>B &mdash; Expresiones</td><td>exitFactor, enter/exitExp, enter/exitTermino, enterRelOpc, exitExpresion, exitAsigna, exitImpElem</td><td>9</td></tr>
+<tr><td>C &mdash; Control de flujo</td><td>_manejar_condicion, enterCiclo, exitCiclo, enterSinoOpc, exitCondicion</td><td>5</td></tr>
+<tr><td>D &mdash; Llamadas</td><td>enterLlamada, _manejar_argumento, exitLlamada</td><td>3</td></tr>
+<tr><td>E &mdash; Retorno (nuevo)</td><td>exitRetorno</td><td>1</td></tr>
+<tr><td></td><td><strong>TOTAL</strong></td><td><strong>24</strong></td></tr>
+</table>
+
+<div class="callout tip">
+<p>Para las fichas detalladas con flow diagrams ANTES/DESPU&Eacute;S de cada PN,
+consulta <code>doc/PNs_estudio.md</code>. Aqu&iacute; doy solo un overview agrupado.</p>
+</div>
+
+<h3>Grupo A &mdash; Estructurales</h3>
+<ul>
+<li><code>enterPrograma</code> (l.219): registra programa en func_dir, emite GOTO inicial</li>
+<li><code>exitPrograma</code> (l.230): snapshot recursos de main</li>
+<li><code>enterFuncs</code> (l.239): registra funci&oacute;n, abre scope, registra params; <strong>asigna dir_retorno si tipada</strong></li>
+<li><code>exitFuncs</code> (l.282): snapshot recursos, emite ENDFUNC, restaura scope al programa</li>
+<li><code>enterCuerpo</code> (l.299): s&oacute;lo para main: reset contadores + backpatch GOTO inicial</li>
+<li><code>enterDeclaracion</code> (l.312): registra cada variable con su direcci&oacute;n</li>
+</ul>
+
+<h3>Grupo B &mdash; Expresiones lineales</h3>
+<ul>
+<li><code>exitFactor</code> (l.338): push operando (ID, cte, signo unario)</li>
+<li><code>enterExp</code> (l.397): push operador + o -</li>
+<li><code>exitExp</code> (l.405): pop_y_emitir_binario para + o -</li>
+<li><code>enterTermino</code> (l.419): push * o /</li>
+<li><code>exitTermino</code> (l.427): pop_y_emitir_binario para * o /</li>
+<li><code>enterRelOpc</code> (l.441): push &lt; &gt; == !=</li>
+<li><code>exitExpresion</code> (l.456): emite relacional + DISPATCH a helper seg&uacute;n padre</li>
+<li><code>exitAsigna</code> (l.478): emite (=, rhs, _, destino)</li>
+<li><code>exitImpElem</code> (l.500): emite PRINT (uno por impElem)</li>
+</ul>
+
+<h3>Grupo C &mdash; Control de flujo</h3>
+<ul>
+<li><code>_manejar_condicion</code> (l.514, helper): emite GOTOF pendiente + push a saltos</li>
+<li><code>enterCiclo</code> (l.541): marca I_inicio (punto de regreso)</li>
+<li><code>exitCiclo</code> (l.547): pop, emite GOTO de regreso, backpatch GOTOF</li>
+<li><code>enterSinoOpc</code> (l.556): si hay SINO: emite GOTO que brinca el sino</li>
+<li><code>exitCondicion</code> (l.566): pop, backpatch del salto pendiente</li>
+</ul>
+
+<h3>Grupo D &mdash; Llamadas</h3>
+<ul>
+<li><code>enterLlamada</code> (l.578): valida funci&oacute;n existe, emite ERA, push contexto</li>
+<li><code>_manejar_argumento</code> (l.603, helper): empareja arg k con param k, emite PARAM</li>
+<li><code>exitLlamada</code> (l.635): valida # args, emite GOSUB; <strong>si es factor: emite copy del slot retorno al phantom</strong></li>
+</ul>
+
+<h3>Grupo E &mdash; Retorno (extensi&oacute;n)</h3>
+<ul>
+<li><code>exitRetorno</code> (l.691): valida scope tipado, emite (=, expr, _, dir_retorno) + ENDFUNC</li>
+</ul>
+
+<h2 id="tips">3.7 Tips de examen</h2>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; <code>_buscar_var</code> busca primero local y luego global?"</strong></p>
+<p>Para implementar <strong>shadowing</strong>: si una funci&oacute;n declara una variable
+<code>x</code> y existe una global con el mismo nombre, la local "tapa" a la global
+dentro del scope de la funci&oacute;n. Estilo l&eacute;xico/est&aacute;tico cl&aacute;sico.</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Cu&aacute;ndo se llama <code>reset_scope_local()</code>?"</strong></p>
+<p>En 2 lugares:
+<ol>
+<li><code>enterFuncs</code>: al entrar a una nueva funci&oacute;n, sus contadores locales/temp parten en sus _BASE.</li>
+<li><code>enterCuerpo</code> cuando el padre es ProgramaContext (es main): para que main no herede contadores de la &uacute;ltima funci&oacute;n.</li>
+</ol>
+NO en <code>exitFuncs</code> &mdash; ah&iacute; se hace snapshot ANTES de cualquier reset (para preservar los recursos).</p>
+</div>
+
+<div class="callout exam">
+<p><strong>"&iquest;Por qu&eacute; <code>exitExpresion</code> hace dispatch a helpers?"</strong></p>
+<p>Para evitar duplicar c&oacute;digo. Una expresi&oacute;n puede aparecer en 4 contextos:
+condici&oacute;n de si/mientras, argumento de llamada, RHS de asignaci&oacute;n, o argumento de escribe.
+En vez de tener 4 PNs distintos, <code>exitExpresion</code> revisa el padre y delega:
+condici&oacute;n -&gt; <code>_manejar_condicion</code>, argumento -&gt; <code>_manejar_argumento</code>.
+Asigna y escribe son PNs propios.</p>
+</div>
+
+<div class="callout tip">
+<p><strong>Diferencia clave entre <code>scope_actual</code> y <code>self.func_dir[programa]</code></strong>:
+el primero es din&aacute;mico (apunta al FuncInfo actualmente activo durante la compilaci&oacute;n),
+el segundo es est&aacute;tico (siempre apunta al FuncInfo del programa principal).
+<code>_buscar_var</code> usa ambos: primero el actual (locales), luego el global.</p>
+</div>
+
+<footer>
+  <a href="02_cubo_cuadruplos.html">&larr; 2. Cubo + Cuadruplos</a>
+  <a href="index.html">Index</a>
+  <a href="04_vm.html">4. VM &rarr;</a>
+</footer>
+</body>
+</html>

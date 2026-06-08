@@ -102,6 +102,7 @@ estatuto
     | ciclo
     | llamada PCOMA
     | imprime
+    | retorno
     ;
 
 asigna
@@ -123,6 +124,10 @@ ciclo
 
 imprime
     : ESCRIBE PIZQ impLista PDER PCOMA
+    ;
+
+retorno
+    : RETORNA expresion PCOMA
     ;
 
 impLista
@@ -203,6 +208,7 @@ SINO     : 'sino' ;
 MIENTRAS : 'mientras' ;
 HAZ      : 'haz' ;
 NULA     : 'nula' ;
+RETORNA  : 'retorna' ;
 
 // Operadores
 MAS      : '+' ;
