@@ -185,7 +185,7 @@ def _params_de_paramsOpc(paramsOpc_ctx):
 class SemanticAnalyzer(PatitoListener):
     """
     Subclase de PatitoListener (ANTLR4).
-    Implementa 13 puntos neuralgicos:
+    Implementa 24 puntos neuralgicos:
       Etapa 2 (4): enterPrograma, enterFuncs, exitFuncs, enterDeclaracion
       Etapa 3 (9): exitFactor, enter/exitExp, enter/exitTermino,
                    enterRelOpc, exitExpresion, exitAsigna, exitImpElem
@@ -233,7 +233,7 @@ class SemanticAnalyzer(PatitoListener):
         self.nombre_programa = nombre
         self.func_dir[nombre] = FuncInfo(tipo_retorno="programa", linea=linea)
         self.scope_actual = self.func_dir[nombre]
-        self.gen.idx_goto_main = self.gen.emitir_goto()
+        self.gen.idx_goto_main = self.gen.emitir_goto() # emite GOTO y guarda el indice para backpatch en enterCuerpo.
         
     # ========================================================
     # PN-1B (Etapa 5): exitPrograma -> snapshot de recursos de main
@@ -242,54 +242,55 @@ class SemanticAnalyzer(PatitoListener):
         # Main es el ultimo en compilarse (despues de todas las funciones).
         # Capturamos sus recursos para que la VM pueda reservar el frame inicial.
         programa = self.func_dir[self.nombre_programa]
-        programa.recursos = self.mem.snapshot_recursos()
+        programa.recursos = self.mem.snapshot_recursos() # enterCuerpo ya reseteo los contadores, ahora snapshot captura solo los que usa main.
 
     # ========================================================
     # PN-2 (Etapa 2): enterFuncs -> registra funcion + parametros
     # ========================================================
     def enterFuncs(self, ctx):
+        # si no hay ID, no hay funcion, return.
         if ctx.ID() is None:
             return
 
-        nombre = ctx.ID().getText()
-        linea = ctx.ID().getSymbol().line
+        nombre = ctx.ID().getText() # nombre de la funcion.
+        linea = ctx.ID().getSymbol().line # linea de la declaracion de la funcion.
         tipo_retorno = ctx.tipoFunc().getText()  # "nula", "entero" o "flotante"
 
-        if nombre == self.nombre_programa:
+        if nombre == self.nombre_programa: # si el nombre de la funcion es el mismo que el programa, reporta error y setea flag de funcion duplicada.
             self.error(linea, 0,
                 f"funcion '{nombre}' no puede tener el mismo nombre que el programa")
             self.en_func_duplicada = True
             return
 
-        if nombre in self.func_dir:
+        if nombre in self.func_dir: # si la funcion ya existe, reporta error y setea flag de funcion duplicada.
             self.error(linea, 0, f"funcion '{nombre}' ya esta declarada")
             self.en_func_duplicada = True
             return
 
-        nueva = FuncInfo(tipo_retorno=tipo_retorno, linea=linea)
+        nueva = FuncInfo(tipo_retorno=tipo_retorno, linea=linea) # crea nueva funcion con tipo de retorno y linea de declaracion.
         # Si la funcion es tipada (entero/flotante), reservale su slot de retorno.
         # Las funciones 'nula' no necesitan slot (no devuelven valor).
         if tipo_retorno in ("entero", "flotante"):
-            nueva.dir_retorno = self.mem.nueva_retorno(tipo_retorno)
+            nueva.dir_retorno = self.mem.nueva_retorno(tipo_retorno) # reserva direccion global para el slot de retorno de la funcion.
         self.func_dir[nombre] = nueva
-        self.scope_actual = nueva
-        self.mem.reset_scope_local()
-        nueva.cuad_inicio = len(self.gen.fila)
+        self.scope_actual = nueva # cambia el scope actual a la nueva funcion.
+        self.mem.reset_scope_local() # resetea los contadores de los locales y temporales.
+        nueva.cuad_inicio = len(self.gen.fila) # guarda el indice del primer cuadruplo del cuerpo de la funcion. DESTINO DEL GOSUB
 
-        for id_node, tipo in _params_de_paramsOpc(ctx.paramsOpc()):
-            self._registrar_parametro(id_node, tipo)
+        for id_node, tipo in _params_de_paramsOpc(ctx.paramsOpc()): #helper que aplana lista parametros.
+            self._registrar_parametro(id_node, tipo) # registra cada parametro con su direccion local.
 
     def _registrar_parametro(self, id_node, tipo):
-        nombre = id_node.getText()
+        nombre = id_node.getText() 
         linea = id_node.getSymbol().line
 
-        if nombre in self.scope_actual.variables:
+        if nombre in self.scope_actual.variables: #scope actual es el scope de la funcion actual, lo cambio en enterFuncs.
             self.error(linea, 0, f"parametro '{nombre}' duplicado en la funcion")
             return
 
-        direccion = self.mem.nueva_local(tipo)
-        self.scope_actual.variables[nombre] = VarInfo(tipo=tipo, linea=linea, direccion=direccion)
-        self.scope_actual.params.append(ParamInfo(nombre=nombre, tipo=tipo, direccion=direccion))
+        direccion = self.mem.nueva_local(tipo) # asigna direccion local para el parametro.
+        self.scope_actual.variables[nombre] = VarInfo(tipo=tipo, linea=linea, direccion=direccion) # registra el parametro en el scope actual.
+        self.scope_actual.params.append(ParamInfo(nombre=nombre, tipo=tipo, direccion=direccion)) # agrega el parametro a la lista de parametros de la funcion.
 
     # ========================================================
     # PN-3 (Etapa 2): exitFuncs -> cierra el scope local
@@ -304,6 +305,7 @@ class SemanticAnalyzer(PatitoListener):
         # Snapshot ANTES del switch de scope, self.scope_actual aun apunta a la funcion actual.
         self.scope_actual.recursos = self.mem.snapshot_recursos()
         self.gen.emitir_endfunc()
+        # regresa el scope actual al programa principal.
         self.scope_actual = self.func_dir[self.nombre_programa]
         
         
@@ -324,7 +326,7 @@ class SemanticAnalyzer(PatitoListener):
     # ========================================================
     # PN-4 (Etapa 2): enterDeclaracion -> registra cada variable
     # ========================================================
-    def enterDeclaracion(self, ctx):
+    def enterDeclaracion(self, ctx): #dispara para cada declaracion de variable.
         if self.en_func_duplicada:
             return
 
@@ -371,6 +373,7 @@ class SemanticAnalyzer(PatitoListener):
             linea = ctx.ID().getSymbol().line
 
             v = self._buscar_var(nombre)
+            # si la variable no existe, reporta error y empuja error a la pila.
             if v is None:
                 self.error(linea, 0,
                     f"variable '{nombre}' usada sin declarar en '{self.scope_actual_nombre()}'")
@@ -497,6 +500,7 @@ class SemanticAnalyzer(PatitoListener):
         linea = ctx.ID().getSymbol().line
 
         v = self._buscar_var(nombre)
+        # si la variable no existe, reporta error y empuja error a la pila.
         if v is None:
             self.error(linea, 0,
                 f"variable '{nombre}' usada sin declarar en '{self.scope_actual_nombre()}'")
@@ -556,14 +560,17 @@ class SemanticAnalyzer(PatitoListener):
     def enterCiclo(self, ctx):
         if self.en_func_duplicada:
             return
-        # Punto de retorno: aqui empieza la condicion; el GOTO del final regresa aca.
+        # GUARDAMOS el indice donde empezara la condicion del while.
+        # len(gen.fila) en este momento = indice del PROXIMO cuadruplo a emitir.
+        # Como el siguiente paso de ANTLR es procesar la condicion, ese indice
+        # apunta exactamente a donde el GOTO final debera regresar para reciclar.
         self.gen.pila_saltos.append(len(self.gen.fila))
 
     def exitCiclo(self, ctx):
         if self.en_func_duplicada:
             return
-        falso = self.gen.pila_saltos.pop()     # GOTOF de la condicion
-        retorno = self.gen.pila_saltos.pop()   # inicio de la condicion
+        falso = self.gen.pila_saltos.pop()     # GOTOF de la condicion se llena(que esta al principio)
+        retorno = self.gen.pila_saltos.pop()   # GOTO a inicio de la condicion para evaluar la condicion nuevamente
         self.gen.emitir_goto_a(retorno)        # regresa a re-evaluar la condicion
         self.gen.backpatch(falso, len(self.gen.fila))  # GOTOF -> salida del ciclo
             
@@ -579,6 +586,29 @@ class SemanticAnalyzer(PatitoListener):
         self.gen.backpatch(falso, len(self.gen.fila))  # GOTOF -> inicio del 'sino'
 
     def exitCondicion(self, ctx):
+        """
+        Cierra el bloque 'si'. Hay UN salto pendiente en pila_saltos que necesita
+        apuntar al final del si completo.
+        
+        Cual cuadruplo es ese salto pendiente depende de si hubo 'sino':
+        
+        SIN sino:
+            - _manejar_condicion emitió (GOTOF, dir_cond, _, None) y pusheó su indice.
+            - enterSinoOpc no hizo nada (return early).
+            - Aqui en exitCondicion, el top de pila_saltos es el INDICE del GOTOF.
+            - Lo backpatcheamos: GOTOF -> fin del si.
+        
+        CON sino:
+            - _manejar_condicion emitió (GOTOF, dir_cond, _, None) y pusheó su indice.
+            - enterSinoOpc HIZO 4 cosas: pop GOTOF, emitir GOTO nuevo, push GOTO,
+            backpatch del GOTOF. El cuadruplo GOTOF YA TIENE destino (al inicio
+            del sino). El que quedo pendiente es el GOTO nuevo.
+            - Aqui en exitCondicion, el top de pila_saltos es el INDICE del GOTO.
+            - Lo backpatcheamos: GOTO -> fin del sino (= fin del si completo).
+        
+        En ambos casos hacemos lo mismo: pop + backpatch a len(fila). El cuadruplo
+        que se actualiza es distinto, pero la mecanica es identica.
+        """
         if self.en_func_duplicada:
             return
         # Salto pendiente: el GOTOF (si no hubo 'sino') o el GOTO (si lo hubo).

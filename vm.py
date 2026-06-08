@@ -61,9 +61,9 @@ class Frame:
     """
     def __init__(self, nombre):
         self.nombre = nombre
-        self.locales = {}
-        self.temps = {}
-        self.ip_retorno = None
+        self.locales = {} # diccionario de locales.
+        self.temps = {} # diccionario de temporales.
+        self.ip_retorno = None # IP al que volver cuando esta funcion termine (lo escribe GOSUB).
 
 class MaquinaVirtual:
     def __init__(self, analizador):

@@ -1,0 +1,19 @@
+programa fibonacciIterativo;
+vars a, b, t, i, n : entero;
+
+inicio
+{
+    n = 10;
+    a = 0;
+    b = 1;
+    i = 0;
+    mientras (i < n) haz {
+        t = a + b;
+        a = b;
+        b = t;
+        i = i + 1;
+    } ;
+    escribe("fib(10) iterativo =");
+    escribe(a);
+}
+fin

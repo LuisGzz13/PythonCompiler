@@ -1,0 +1,12 @@
+programa print1a100;
+vars i : entero;
+
+inicio
+{
+    i = 1;
+    mientras (i < 101) haz {
+        escribe(i);
+        i = i + 1;
+    } ;
+}
+fin

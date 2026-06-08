@@ -1,0 +1,16 @@
+programa sumatoria;
+vars suma, i, n : entero;
+
+inicio
+{
+    n = 100;
+    suma = 0;
+    i = 1;
+    mientras (i < n + 1) haz {
+        suma = suma + i;
+        i = i + 1;
+    } ;
+    escribe("suma de 1 a 100 =");
+    escribe(suma);
+}
+fin

@@ -1,0 +1,19 @@
+programa mcdEuclides;
+vars resultado : entero;
+
+entero mcd(a : entero, b : entero) {
+    {
+        si (b == 0) {
+            retorna a;
+        } ;
+        retorna mcd(b, a - (a / b) * b);
+    }
+} ;
+
+inicio
+{
+    resultado = mcd(48, 36);
+    escribe("mcd(48, 36) =");
+    escribe(resultado);
+}
+fin

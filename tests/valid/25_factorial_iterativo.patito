@@ -1,0 +1,16 @@
+programa factorialIterativo;
+vars resultado, i, n : entero;
+
+inicio
+{
+    n = 5;
+    resultado = 1;
+    i = 0;
+    mientras (i < n) haz {
+        i = i + 1;
+        resultado = resultado * i;
+    } ;
+    escribe("factorial(5) iterativo =");
+    escribe(resultado);
+}
+fin

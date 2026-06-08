@@ -1,0 +1,37 @@
+programa showcase;
+vars
+    i, suma : entero;
+    promedio : flotante;
+
+entero cuadrado(x : entero) {
+    {
+        retorna x * x;
+    }
+} ;
+
+entero esPar(x : entero) {
+    {
+        si (x - (x / 2) * 2 == 0) {
+            retorna 1;
+        } ;
+        retorna 0;
+    }
+} ;
+
+inicio
+{
+    suma = 0;
+    i = 1;
+    mientras (i < 11) haz {
+        si (esPar(i) == 1) {
+            suma = suma + cuadrado(i);
+        } ;
+        i = i + 1;
+    } ;
+    escribe("suma de cuadrados de pares 1-10 =");
+    escribe(suma);
+    promedio = suma / 5.0;
+    escribe("promedio (5 pares) =");
+    escribe(promedio);
+}
+fin

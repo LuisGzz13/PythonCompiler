@@ -1,0 +1,23 @@
+programa cuboDemo;
+vars
+    enteroVar, divEntera : entero;
+    flotanteVar, divFlot, mixto : flotante;
+
+inicio
+{
+    enteroVar = 5;
+    flotanteVar = 2.5;
+
+    mixto = enteroVar + flotanteVar;
+    escribe("entero + flotante =");
+    escribe(mixto);
+
+    divFlot = enteroVar / 2.0;
+    escribe("5 / 2.0 (flotante) =");
+    escribe(divFlot);
+
+    divEntera = 5 / 2;
+    escribe("5 / 2 (entera) =");
+    escribe(divEntera);
+}
+fin

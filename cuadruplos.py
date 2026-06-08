@@ -41,16 +41,18 @@ class TablaConstantes:
         """Para constantes numericas. Devuelve direccion (existente o nueva)."""
         if tipo == "entero":
             tabla, contador_attr = self._ents, "_next_ent"
+            # Si es entero tabla apunta a dict enteros, y contador_attr es el string _next_ent no su valor todavia.
             # doble asignacion, y usamos "papelito intercambiable" de contador_attr para no duplicar codigo, y poder cambiar el atributo en tiempo de ejecucion.
         elif tipo == "flotante":
             tabla, contador_attr = self._floats, "_next_float"
         else:
             raise ValueError(f"tipo invalido para constante numerica: {tipo}")
-
+        #deduplicacion
         if lexema in tabla:
-            return tabla[lexema] # si la variable ta existe regresa la direccion virtual asignada.
+            return tabla[lexema] # si la variable ya existe regresa la direccion virtual asignada.
+        # si la variable no existe, obtenemos la direccion virtual siguiente vacia.
         direccion = getattr(self, contador_attr) # obtenemos el valor actual del contador lo cual depende de nuestro "papelito intercambiable" si es entero o flotante.
-        tabla[lexema] = direccion
+        tabla[lexema] = direccion # asignamos la direccion virtual a la variable.
         setattr(self, contador_attr, direccion + 1) # incrementamos el contador para la proxima constante.
         return direccion
 
@@ -63,9 +65,11 @@ class TablaConstantes:
         self._next_letrero += 1 # incrementamos el contador para la proxima constante.
         return direccion # regresa la direccion virtual asignada.
 
+    # imprime tabla de constantes ordenada por direccion.
     def imprimir(self, out=sys.stdout):
         """Para el flag --cuadruplos."""
         print("=== TABLA DE CONSTANTES ===", file=out)
+        # recorre enteros por direccion, devuelve pares lex, dir y finalmente los ordena con lambda kv(1) que es por direccion, para coincidir con el orden de asignacion. 13000, 13001, 13002, etc.
         for lex, dir_ in sorted(self._ents.items(), key=lambda kv: kv[1]):
             print(f"  {dir_}: {lex} (entero)", file=out)
         for lex, dir_ in sorted(self._floats.items(), key=lambda kv: kv[1]):
@@ -93,6 +97,7 @@ class GeneradorCuadruplos:
         self.fila = [] # fila de cuadruplos
         self._ultimo_propagado = False # bandera para evitar que un error se reporte duplicado y se convierta en una cascada.
         self.idx_goto_main = None # indice del GOTO inicial hacia main
+        
     # --- Operaciones de pila ---
     def push_operando(self, direccion, tipo):
         """Push de direccion y tipo de operando."""
@@ -122,6 +127,7 @@ class GeneradorCuadruplos:
         return len(self.pila_operandos) == 0
 
     # --- Generacion ---
+    # lo usa exitExp, exitTermino, exitExpresion(relacionales) para emitir cuadruplos binarios.
     def pop_y_emitir_binario(self):
         """
         Pop del operador + 2 operandos+tipos. Consulta el cubo.
@@ -134,9 +140,11 @@ class GeneradorCuadruplos:
         """
         self._ultimo_propagado = False
 
+        # si no hay operadores o no hay 2 operandos, devuelve error.
         if not self.pila_operadores or len(self.pila_operandos) < 2:
             return "error"
 
+        # pop LIFO: ANTLR proceso el lado derecho de la operacion al final.
         op = self.pila_operadores.pop()
         d_der = self.pila_operandos.pop()
         t_der = self.pila_tipos.pop()
@@ -158,27 +166,31 @@ class GeneradorCuadruplos:
             self.pila_tipos.append("error")
             return "error"
 
-        # Asigna temporal y emite cuadruplo.
+        # Asigna temporal del tipo correcto y emite cuadruplo.
         d_res = self.mem.nuevo_temporal(t_res)
         self.fila.append(Cuadruplo(op=op, opIzq=d_izq, opDer=d_der, resultado=d_res))
-        # Push del resultado a las pilas para que la operacion enclosing lo use como operando.
+        # Push del resultado a las pilas para que la operacion enclosing lo use como operando. (A + B -> T1)
+        # push T1
         self.pila_operandos.append(d_res)
         self.pila_tipos.append(t_res)
         return t_res
 
+    # lo usa exitAsigna y exitRetorno para asignar el resultado de la funcion a la variable global.
     def emitir_asignacion(self, direccion_destino, tipo_destino):
         """Pop del RHS, valida cubo (=), emite (=, rhs, _, destino)."""
         self._ultimo_propagado = False
         if not self.pila_operandos:
             return "error"
-
+        #pop del RHS(Right Hand Side) de direccion y tipo.
         d_origen = self.pila_operandos.pop()
         t_origen = self.pila_tipos.pop()
 
+        # si el tipo del origen es error, propagacion silenciosa.
         if t_origen == "error":
             self._ultimo_propagado = True
             return "error"
 
+        # consulta el cubo semantico para obtener el tipo del resultado.
         t_res = tipo_resultado("=", tipo_destino, t_origen)
         if t_res is None:
             return "error"
@@ -186,18 +198,21 @@ class GeneradorCuadruplos:
         self.fila.append(Cuadruplo(op="=", opIzq=d_origen, opDer=None, resultado=direccion_destino))
         return t_res
 
+    # lo usa exitImpElem para emitir el cuadruplo de PRINT.
     def emitir_print(self, direccion):
         self.fila.append(Cuadruplo(op="PRINT", opIzq=None, opDer=None, resultado=direccion))
 
+    # lo usa exitFactor(signo unario), y exitLlamada(copy retorno post GOSUB) para emitir cuadruplos directos.
     def emitir_directo(self, cuadruplo):
         """Para cuadruplos que no surgen del flujo binario (p.ej. signo unario)."""
         self.fila.append(cuadruplo)
-
+    # lo usa enterCuerpo, exitCondicion, enterSinoOpc, enterCiclo para resolver saltos GOTOF/GOTO.
     def backpatch(self, indice, target):
         """
         Muta el campo resultado del cuadruplo en self.fila[indice].
         (resolver saltos GOTOF/GOTO).
         """
+        #modifica in place el campo resultado del cuadruplo en self.fila[indice].
         self.fila[indice].resultado = target
         
     # --- Saltos (control de flujo) ---
@@ -231,7 +246,6 @@ class GeneradorCuadruplos:
     def emitir_endfunc(self):
         """ENDFUNC, emite el cuadruplo"""
         self.fila.append(Cuadruplo(op="ENDFUNC", opIzq=None, opDer=None, resultado=None))
-        
 
     def ultimo_fue_propagado(self):
         """Verifica si el ultimo operando fue propagado."""

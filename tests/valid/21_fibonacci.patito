@@ -15,7 +15,7 @@ entero fib(n : entero) {
 
 inicio
 {
-    r = fib(10);
+    r = fib(20);
     escribe(r);
 }
 fin

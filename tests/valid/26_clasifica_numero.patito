@@ -1,0 +1,23 @@
+programa clasificaNumero;
+
+nula clasifica(x : entero) {
+    {
+        si (x > 0) {
+            escribe("positivo");
+        } sino {
+            si (x < 0) {
+                escribe("negativo");
+            } sino {
+                escribe("cero");
+            } ;
+        } ;
+    }
+} ;
+
+inicio
+{
+    clasifica(5);
+    clasifica(0);
+    clasifica(-3);
+}
+fin
